@@ -1,0 +1,25 @@
+{
+  "name": "@kottster/common",
+  "version": "1.0.0",
+  "main": "dist/index.js",
+  "license": "Apache-2.0",
+  "scripts": {
+    "clean": "rimraf ./dist",
+    "build": "npm run clean && tsc",
+    "lint": "npx eslint ./lib",
+    "prepare": "husky"
+  },
+  "dependencies": {
+    "esbuild": "^0.23.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.7.0",
+    "@types/eslint__js": "^8.42.3",
+    "@types/node": "^20.14.11",
+    "eslint": "^9.7.0",
+    "husky": "^9.1.1",
+    "rimraf": "^5.0.5",
+    "typescript": "^5.5.3",
+    "typescript-eslint": "^7.16.1"
+  }
+}

@@ -1,5 +1,5 @@
 import { PublicDataSource } from "./dataSource.model";
-import { Page } from "./page.module";
+import { Page } from "./page.model";
 import { Procedure } from "./procedure.model";
 
 // Contains basic page information

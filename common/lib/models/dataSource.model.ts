@@ -17,6 +17,7 @@ export interface DataSourceTypeInfo {
   type: DataSourceType;
   name: string;
   icon: string;
+  isActive: boolean;
 }
 
 export interface DataSource {

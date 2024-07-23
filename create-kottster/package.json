@@ -1,7 +1,7 @@
 {
   "name": "create-kottster",
   "version": "1.3.0",
-  "description": "CLI tool to create a new Kottster project",
+  "description": "Creates a new Kottster project",
   "main": "index.js",
   "bin": {
     "create-kottster": "./index.js"

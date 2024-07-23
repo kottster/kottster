@@ -1,6 +1,6 @@
 {
   "name": "@kottster/cli",
-  "version": "2.0.0",
+  "version": "2.0.2",
   "description": "CLI for Kottster",
   "main": "dist/index.js",
   "license": "Apache-2.0",
@@ -15,7 +15,7 @@
     "kottster": "dist/index.js"
   },
   "dependencies": {
-    "@kottster/common": "^1.0.0",
+    "@kottster/common": "^1.0.1",
     "chalk": "^4",
     "commander": "^12.0.0",
     "dotenv": "^16.4.5",

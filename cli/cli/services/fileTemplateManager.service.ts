@@ -14,39 +14,6 @@ export class FileTemplateManager {
       CMD ["npm", "start"]
     `),
 
-    'kottster.config.cjs': this.stripIndent(`
-      const { defineConfig } = require('@kottster/server');
-
-      module.exports = defineConfig({
-        // ESBuild options for generating the client-side bundle
-        // Refer to https://esbuild.github.io/api/#build-api for more options
-        esbuildOptions: {
-          entryPoints: ['src/__generated__/client/pages.generated.js'],
-          outfile: 'dist/static/pages.js',
-          bundle: true,
-          minify: false,
-          format: 'esm',
-          target: 'es2018',
-          external: ['react', 'react-dom', 'react/jsx-runtime', '@kottster/react'],
-          define: {
-            'process.env.NODE_ENV': '"production"'
-          },
-          alias: {
-            'react': 'https://esm.sh/react@18.3.1',
-            'react-dom': 'https://esm.sh/react-dom@18.3.1',
-            'react/jsx-runtime': 'https://esm.sh/react@18.3.1/jsx-runtime',
-          },
-          treeShaking: true,
-          minifyIdentifiers: false,
-          minifySyntax: false,
-          minifyWhitespace: true,
-          jsxFactory: 'React.createElement',
-          jsxFragment: 'React.Fragment',
-          jsx: 'automatic',
-        },
-      });
-    `),
-
     'src/server/app.js': this.stripIndent(`
       import { getEnvOrThrow } from '@kottster/common';
       import { createApp } from '@kottster/server';
@@ -57,24 +24,10 @@ export class FileTemplateManager {
       });
     `),
 
-    'src/server/context.js': this.stripIndent(`
-      import { createContext } from '@kottster/server';
-
-      export const context = createContext(ctx => {
-        return {
-          ...ctx,
-          // Add your custom context properties here
-        }
-      }, {});
-    `),
-
     'src/server/main.js': this.stripIndent(`
       import { app } from './app.js';
-      import { context } from './context.js';
       import { getEnvOrThrow } from '@kottster/common';
       import procedures from '../__generated__/server/procedures.generated.js';
-
-      app.setContext(context);
 
       app.registerProcedures(procedures);
 

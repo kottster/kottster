@@ -859,10 +859,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@kottster/common@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@kottster/common/-/common-1.0.0.tgz#92c0a51f05abd954f889abd7cf69ba20f6d9d867"
-  integrity sha512-qmgw8u1kPo/zjzAqeNfWCYHVMyC+SHPoHQIWzGqz75ye+o2Bo6JqIypjm49VwqOAcNeexgqtbnQGQADKTFtj0A==
+"@kottster/common@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/@kottster/common/-/common-1.0.1.tgz#d160bcbd51f5826a5d39fab1a6c1b9ce6e264a70"
+  integrity sha512-zuUfzk9dioQTN2lqxylEXp6c/bA9/uoo92d8EijS2xr1OgDVsKtXGsN2TW5l3l9wehAHHx61jmVJ5oZQZvheEQ==
   dependencies:
     esbuild "^0.23.0"
 

@@ -1,4 +1,4 @@
-interface File {
+interface PageStructureFile {
   fileContent: string;
   filePath: string;
   fileName: string; 
@@ -10,16 +10,16 @@ interface File {
   isEntryFile?: boolean;
 }
 
-interface Directory {
+export interface PageStructureDirectory {
   dirPath: string;
   dirName: string;
-  files: File[];
-  dirs: Directory[];
+  files: PageStructureFile[];
+  dirs: PageStructureDirectory[];
 }
 
 export interface PageStructure {
   pageId: string;
-  rootDir: Directory;
+  rootDir: PageStructureDirectory;
 }
 
 export interface Page {

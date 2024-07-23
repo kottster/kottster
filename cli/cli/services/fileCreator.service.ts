@@ -80,7 +80,6 @@ export class FileCreator {
     // Create files
     this.createServerMain()
     this.createServerApp()
-    this.createContext()
 
     this.addServerProcedures()
     this.addClientPages()
@@ -106,9 +105,9 @@ export class FileCreator {
     const mainFilePath = path.join(this.PROJECT_DIR, 'src/server', 'main.js')
     let mainFileContent = fs.readFileSync(mainFilePath, 'utf8')
     mainFileContent = this.addImportsToFile(mainFileContent, [
-      `${type} from './data-sources/${type}'`
+      `${type}DataSource from './data-sources/${type}'`
     ]);
-    mainFileContent = this.addCodeBeforeAppStart(mainFileContent, `app.registerDataSources([\n  ${type},\n]);`);
+    mainFileContent = this.addCodeBeforeAppStart(mainFileContent, `app.registerDataSources([\n  ${type}DataSource,\n]);`);
     this.writeFile(mainFilePath, mainFileContent)
   }
 
@@ -205,7 +204,7 @@ export class FileCreator {
       },
       dependencies: {
         '@kottster/common': process.env.KOTTSTER_COMMON_DEP_VER ?? '^1.0.0',
-        '@kottster/cli': process.env.KOTTSTER_CLI_DEP_VER ?? '^1.0.0',
+        '@kottster/cli': process.env.KOTTSTER_CLI_DEP_VER ?? '^2.0.0',
         '@kottster/server': process.env.KOTTSTER_BACKEND_DEP_VER ?? '^1.0.0',
         '@kottster/react': process.env.KOTTSTER_REACT_DEP_VER ?? '^0.1.0',
         ...(options.dependencies ?? {}),
@@ -255,15 +254,6 @@ export class FileCreator {
     const filePath = path.join(this.PROJECT_DIR, 'src/server', 'app.js')
     const fileContent = FileTemplateManager.getTemplate('src/server/app.js')
     this.writeFile(filePath, fileContent)
-  }
-
-  /**
-   * Create a src/server/context.js file
-   */
-  private createContext (): void {
-    const filePath = path.join(this.PROJECT_DIR, 'src/server', 'context.js')
-    const fileContent = FileTemplateManager.getTemplate('src/server/context.js')
-    this.writeFile(filePath, fileContent);
   }
 
   /**

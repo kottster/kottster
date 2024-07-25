@@ -76,8 +76,10 @@ export class FileCreator {
     ])
     this.createGitIgnore()
     this.createDockerfile()
+    this.createViteConfig()
 
     // Create files
+    this.createClientIndex()
     this.createServerMain()
     this.createServerApp()
 
@@ -118,11 +120,12 @@ export class FileCreator {
     const filenames = fs.readdirSync(path.join(this.PROJECT_DIR, 'src/server/procedures'));
     const procedures = filenames.filter(filename => filename.endsWith('.js')).map(filename => filename.split('.')[0]);
 
+    const comment = `// This file is auto-generated. Do not modify it manually. \n// It automatically exports all the procedures in the src/server/procedures directory.`;
     const procedureImports = procedures.map(procedure => `import ${procedure} from '../../server/procedures/${procedure}.js';`).join('\n');
     const procedureExports = procedures.map(procedure => `${procedure},`).join('\n');
     
     const filePath = path.join(this.PROJECT_DIR, 'src/__generated__/server', 'procedures.generated.js')
-    const fileContent = procedureExports ? `${procedureImports} \n\nexport default {\n${procedureExports}\n}` : 'export default {};\n';
+    const fileContent = procedureExports ? `${comment} \n\n${procedureImports} \n\nexport default {\n${procedureExports}\n}` : `${comment} \n\nexport default {};\n`;
     
     this.createDir('src/__generated__/server');
     this.writeFile(filePath, fileContent)
@@ -133,11 +136,13 @@ export class FileCreator {
    */
   public addClientPages (): void {
     const pages = fs.readdirSync(path.join(this.PROJECT_DIR, 'src/client/pages'));
+    
+    const comment = `// This file is auto-generated. Do not modify it manually. \n// It automatically exports all the pages in the src/client/pages directory.`;
     const pageImports = pages.map(page => `import ${page} from '../../client/pages/${page}/index.jsx';`).join('\n');
-    const pageExports = pages.map(page => `${page},`).join('\n');
+    const pageExports = pages.map(page => `  ${page},`).join('\n');
     
     const filePath = path.join(this.PROJECT_DIR, 'src/__generated__/client', 'pages.generated.js')
-    const fileContent = pageExports ? `${pageImports} \n\nexport default {\n${pageExports}\n}` : 'export default {};\n';
+    const fileContent = pageExports ? `${comment} \n\n${pageImports} \n\nexport default {\n${pageExports}\n}` : `${comment} \n\nexport default {};\n`;
 
     this.createDir('src/__generated__/client');
     this.writeFile(filePath, fileContent)
@@ -194,22 +199,30 @@ export class FileCreator {
       type: 'module',
       version: options.version || '1.0.0',
       scripts: {
-        'start:prod': 'kottster start src/server/main.js --production',
-        'start:dev': 'kottster start src/server/main.js',
+        'start:prod': 'kottster start src/server/main.js',
+        'start:dev': 'kottster start src/server/main.js --development',
         'dev:add-data-source': 'kottster add-data-source',
-        postinstall: 'npm install @kottster/cli@^1.0.0 -g'
+        postinstall: 'npm install @kottster/cli@^1.x -g'
       },
       engines: {
-        node: '>=16.0.0'
+        node: '>=18.0.0'
       },
       dependencies: {
-        '@kottster/common': process.env.KOTTSTER_COMMON_DEP_VER ?? '^1.0.0',
-        '@kottster/cli': process.env.KOTTSTER_CLI_DEP_VER ?? '^2.0.0',
-        '@kottster/server': process.env.KOTTSTER_BACKEND_DEP_VER ?? '^1.0.0',
-        '@kottster/react': process.env.KOTTSTER_REACT_DEP_VER ?? '^0.1.0',
+        '@kottster/common': process.env.KOTTSTER_COMMON_DEP_VER ?? '^1.x',
+        '@kottster/cli': process.env.KOTTSTER_CLI_DEP_VER ?? '^2.x',
+        '@kottster/server': process.env.KOTTSTER_BACKEND_DEP_VER ?? '^1.x',
+        '@kottster/react': process.env.KOTTSTER_REACT_DEP_VER ?? '^0.x',
+        'react': '^18.x',
+        'react-dom': '^18.x',
+        'antd': '^5.x',
+        '@ant-design/icons': '^5.x',
         ...(options.dependencies ?? {}),
       },
-      devDependencies: (options.devDependencies != null) || {}
+      devDependencies: {
+        'vite': '^5.x',
+        '@vitejs/plugin-react': '^4.x',
+        ...(options.devDependencies ?? {}),
+      }
     }
     const packageJsonContent = JSON.stringify(packageJson, null, 2)
 
@@ -248,6 +261,15 @@ export class FileCreator {
   }
 
   /**
+   * Create a vite.config.js file
+   */
+  private createViteConfig (): void {
+    const filePath = path.join(this.PROJECT_DIR, 'vite.config.js')
+    const fileContent = FileTemplateManager.getTemplate('vite.config.js')
+    this.writeFile(filePath, fileContent)
+  }
+
+  /**
    * Create a src/server/app.js file
    */
   private createServerApp (): void {
@@ -266,6 +288,15 @@ export class FileCreator {
     };
     const filePath = path.join(this.PROJECT_DIR, 'src/__generated__', 'schema.json')
     const fileContent = JSON.stringify(appSchema, null, 2);
+    this.writeFile(filePath, fileContent);
+  }
+
+  /**
+   * Create a src/client/index.jsx file
+   */
+  private createClientIndex (): void {
+    const filePath = path.join(this.PROJECT_DIR, 'src/client', 'index.jsx')
+    const fileContent = FileTemplateManager.getTemplate('src/client/index.jsx');
     this.writeFile(filePath, fileContent);
   }
 

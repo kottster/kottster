@@ -1,11 +1,11 @@
 import { API } from '../services/api.service';
 import { FileCreator } from '../services/fileCreator.service';
-import { ESBuild } from '../services/esbuild.service';
 import { Nodemon } from '../services/nodemon.service';
 import { getEnvOrThrow } from '@kottster/common';
+import { Vite } from '../services/vite.service';
 
 interface Options { 
-  production?: boolean;
+  development?: boolean;
 }
 
 /**
@@ -13,7 +13,7 @@ interface Options {
  */
 export async function startProject (script: string, options: Options): Promise<void> {
   const projectDir = process.cwd();
-  const NODE_ENV = options.production ? 'production' : 'development';
+  const NODE_ENV = options.development ? 'development' : 'production';
   
   // Read config
   const appId = getEnvOrThrow('APP_ID');
@@ -28,11 +28,11 @@ export async function startProject (script: string, options: Options): Promise<v
   fileCreator.addServerProcedures();
 
   // Run esbuild
-  const esbuild = new ESBuild(NODE_ENV);
-  await esbuild.run();
+  const vite = new Vite(NODE_ENV);
+  await vite.run();
   
   // Run nodemon
-  const nodemon = new Nodemon(fileCreator, esbuild);
+  const nodemon = new Nodemon(fileCreator, vite);
   nodemon.runWatcher(script, {
     ...process.env,
     JWT_SECRET: jwtSecret,

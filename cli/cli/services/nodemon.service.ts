@@ -1,38 +1,38 @@
 import nodemon from 'nodemon';
 import { FileCreator } from './fileCreator.service';
-import { ESBuild } from './esbuild.service';
+import { Vite } from './vite.service';
 
 export class Nodemon {
   constructor (
     private readonly fileCreator: FileCreator,
-    private readonly esbuild: ESBuild
+    private readonly vite: Vite
   ) {}
   
   public runWatcher(script: string, env: Record<string, string>) {
     nodemon({
       script,
       watch: [
-        'src/client/pages',
+        'src/client',
         'src/server',
   
         // The schema.json is watched cause we need to restart the server when it changes
         'src/__generated__/schema.json',
       ],
-      ignore: ['src/**/*.generated.js'],
-      ext: 'js,jsx,json',
+      ignore: ['src/**/*.generated.js', 'src/**/*.generated.ts'],
+      ext: '*',
       execMap: {
         js: 'node --no-warnings --experimental-specifier-resolution=node',
       },
       env,
     })
-      .on('restart', (files) => {
+      .on('restart', async (files) => {
         // Check if any client or server files have changed
-        const isClientFileChanged = files?.some((file: string) => file.includes('src/client/pages'));
+        const isClientFileChanged = files?.some((file: string) => file.includes('src/client'));
         const isServerFileChanged = files?.some((file: string) => file.includes('src/server'));
   
         if (isClientFileChanged) {
           this.fileCreator.addClientPages();
-          this.esbuild.run();
+          await this.vite.run();
         }
         
         if (isServerFileChanged) {

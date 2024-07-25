@@ -13,7 +13,7 @@ export const program = new Command()
 program
   .command('start <script>')
   .description('Start a Kottster server')
-  .option('--production', 'Run the server in production mode')
+  .option('--development', 'Run the server in development mode')
   .action(startProject);
 
 // Command to create a new project

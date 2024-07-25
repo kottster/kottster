@@ -133,6 +133,53 @@ export class FileTemplateManager {
       export default dataSource;
     `),
 
+    'src/client/index.jsx': this.stripIndent(`
+      import React from 'react';
+      import ReactDOM from 'react-dom/client';
+      import { App } from '@kottster/react';
+      import '@kottster/react/dist/style.css';
+      import pages from '../__generated__/client/pages.generated.js';
+
+      const root = ReactDOM.createRoot(document.getElementById('root'));
+      root.render(
+        <React.StrictMode>
+          <App pages={pages} />
+        </React.StrictMode>
+      );
+    `),
+
+    'vite.config.js': this.stripIndent(`
+      import { defineConfig } from 'vite';
+      import react from '@vitejs/plugin-react';
+
+      export default defineConfig({
+        plugins: [react()],
+        build: {
+          outDir: 'dist',
+          rollupOptions: {
+            input: 'src/client/index.jsx',
+            output: {
+              dir: 'dist/static',
+              entryFileNames: 'bundle.js',
+              assetFileNames: (assetInfo) => {
+                if (assetInfo.name.endsWith('.css')) {
+                  return 'style.css';
+                }
+                return '[name].[ext]';
+              },
+              format: 'iife',
+              name: 'KottsterApp'
+            }
+          },
+          cssCodeSplit: false,
+          assetsInlineLimit: 0,
+        },
+        define: {
+          'process.env.NODE_ENV': JSON.stringify('production'),
+        },
+      });
+    `),
+
   };
 
   /**

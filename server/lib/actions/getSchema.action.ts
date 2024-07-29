@@ -5,8 +5,8 @@ import { FullAppSchema, PublicDataSource } from "@kottster/common";
 interface Result extends FullAppSchema {};
 
 /**
- * Get the schema of the app.
- * Includes all pages with components and procedures.
+ * Get the app schema.
+ * @description Returns combined schema.json and additional data.
  */
 export class GetSchema extends Action {
   public async execute(): Promise<Result> {

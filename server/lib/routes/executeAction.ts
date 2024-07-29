@@ -2,6 +2,9 @@ import { Request, Response } from 'express';
 import { ActionService } from '../services/action.service';
 import { KottsterApp } from '../core/app';
 
+/**
+ * Execute a specific action
+ */
 export const executeAction = (app: KottsterApp) => async (req: Request, res: Response) => {
   const { action } = req.params as { action: string; };
   

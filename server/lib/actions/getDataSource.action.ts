@@ -1,20 +1,21 @@
 import { DataSource } from "@kottster/common";
 import { Action } from "../models/action.model";
-import { DatabaseSchema } from "../models/databaseSchema.model";
-import { DataSourceManager } from "../services/dataSourceManager.service";
+import { RelationalDatabaseSchema } from "../models/databaseSchema.model";
+import { DataSourceAdapter } from "../models/dataSourceAdapter.model";
 
 interface Data {
   contextPropName: DataSource['contextPropName'];
+  databaseSchema?: string;
 }
 
 interface Result {
-  databaseSchema: DatabaseSchema;
+  relationalDatabaseSchema: RelationalDatabaseSchema;
 }
 
 /**
- * Get the data needed for code generation.
+ * Get the data source info
  */
-export class GetDataForCodeGeneration extends Action {
+export class GetDataSource extends Action {
   public async execute({ contextPropName }: Data): Promise<Result> {
     const dataSources = this.app.getDataSources();
     const dataSource = dataSources.find((ds) => ds.contextPropName === contextPropName);
@@ -22,11 +23,11 @@ export class GetDataForCodeGeneration extends Action {
       throw new Error(`Data source with contextPropName ${contextPropName} not found`);
     }
 
-    const dataSourceClient = DataSourceManager.getClient(dataSource);
-    const databaseSchema = await dataSourceClient.getDatabaseSchema();
+    const adapter = dataSource.adapter as DataSourceAdapter;
+    const databaseSchema = await adapter.getDatabaseSchema();
     
     return {
-      databaseSchema
+      relationalDatabaseSchema: databaseSchema
     };
   }
 }

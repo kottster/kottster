@@ -163,7 +163,7 @@ describe('app integration test', () => {
 
   it('getting data for code generation', async () => {
     const res = await request(server)
-      .get('/action/getDataForCodeGeneration')
+      .get('/action/getDataSource')
       .set('Authorization', `Bearer ${jwtTokenWithBuilderRole}`)
       .query({
         actionData: JSON.stringify({

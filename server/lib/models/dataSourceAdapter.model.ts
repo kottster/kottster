@@ -1,28 +1,36 @@
 import { Knex } from "knex";
-import { attachPaginate } from 'knex-paginate';
-import { DatabaseSchema } from "./databaseSchema.model";
-import { DataSourceClientType } from "@kottster/common";
+import { RelationalDatabaseSchema } from "./databaseSchema.model";
 
 /**
- * The base class for all data source clients
+ * The base class for all data source adapters
  * @abstract
  */
-export abstract class DataSourceClient {
-  abstract type: DataSourceClientType;
+export abstract class DataSourceAdapter {
+  // An array of available database schemas
+  protected databaseSchemas: string[];
 
-  constructor(protected client: Knex) {
-    try {
-      attachPaginate();
-    } catch (e) {
-      console.error('Error attaching paginate to knex', e);
-    }
+  constructor(protected client: Knex) {}
+
+  /**
+   * Get the database schemas
+   */
+  setDatabaseSchemas(databaseSchemas: string[]): void {
+    this.databaseSchemas = databaseSchemas
+  }
+
+  /**
+   * Get the client
+   * @returns The client
+   */
+  getClient(): Knex {
+    return this.client;
   }
 
   /**
    * Get the database schema
    * @returns The database schema
    */
-  abstract getDatabaseSchema(): Promise<DatabaseSchema>;
+  abstract getDatabaseSchema(): Promise<RelationalDatabaseSchema>;
 
   /**
    * Connect to the database

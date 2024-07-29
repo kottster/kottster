@@ -1,6 +1,10 @@
 import { Request, Response } from 'express';
 import { KottsterApp } from '../core/app';
+import { ProcedureFunction } from '@kottster/common';
 
+/**
+ * Execute a procedure (RPC)
+ */
 export const executeProcedure = (app: KottsterApp) => async (req: Request, res: Response) => {
   const { procedureName } = req.params as { procedureName: string };
   const args = req.query;
@@ -14,8 +18,8 @@ export const executeProcedure = (app: KottsterApp) => async (req: Request, res: 
       return;
     }
 
-    const ctx = app.createContext();
-    const procedureFunction = procedure.function as Function;
+    const ctx = app.createContext(req);
+    const procedureFunction = procedure.function as ProcedureFunction;
     const result = await procedureFunction({ ctx, args });
     
     res.json(result);

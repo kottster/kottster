@@ -1,13 +1,9 @@
-import { DataSourceClientType } from "@kottster/common";
-import { DatabaseSchema } from "../../models/databaseSchema.model";
-import { DataSourceClient } from "../../models/dataSourceClient.model";
+import { RelationalDatabaseSchema, RelationalDatabaseSchemaColumn } from "../../models/databaseSchema.model";
+import { DataSourceAdapter } from "../../models/DataSourceAdapter.model";
 
-export class KnexPg extends DataSourceClient {
-  type = DataSourceClientType.knex_pg;
-
-  async getDatabaseSchema(): Promise<DatabaseSchema> {
-    // TODO
-    const schemaName = 'public'; // this.connectionOptions?.searchPath?.[0];
+export class KnexPg extends DataSourceAdapter {
+  async getDatabaseSchema(): Promise<RelationalDatabaseSchema> {
+    const schemaName = this.databaseSchemas[0] || 'public';
 
     // Query to get all tables and their columns with enum values
     const tablesQueryResult = await this.client!.raw(`
@@ -32,7 +28,7 @@ export class KnexPg extends DataSourceClient {
     const tablesData = tablesQueryResult.rows;
 
     // Building the schema object
-    const schema: DatabaseSchema = {
+    const schema: RelationalDatabaseSchema = {
       name: schemaName,
       tables: [],
     };
@@ -56,7 +52,7 @@ export class KnexPg extends DataSourceClient {
         type: row.data_type,
         nullable: row.nullable,
         enumValues: row.enum_values,
-      });
+      } as RelationalDatabaseSchemaColumn);
     }
 
     return schema;

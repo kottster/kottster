@@ -1,4 +1,4 @@
-import { CodeWriter } from "../../../lib/services/codeWriter.service";
+import { FileWriter } from "../../../lib/services/fileWriter.service";
 import fs from 'fs';
 import mock from 'mock-fs';
 import { getSampleProceduresFileContent, getSampleMetricFileProcedure, getSampleAdapterFileContent, getSampleAutoImportFileContent } from "../../utils/samples";
@@ -9,7 +9,7 @@ import { Stage } from "../../../lib/models/stage.model";
 
 const writeFileSyncSpy = jest.spyOn(fs, 'writeFileSync');
 
-describe('services/codeWriter', () => {
+describe('services/fileWriter', () => {
   beforeEach(() => {
     mock({
       [`${PROJECT_DIR}/src/dev`]: {},
@@ -38,8 +38,8 @@ describe('services/codeWriter', () => {
       },
     });
     
-    const codeWriter = new CodeWriter();
-    await codeWriter.writeAdapterToFile(adapter);
+    const fileWriter = new FileWriter();
+    await fileWriter.writeAdapterToFile(adapter);
 
     const calledWithArgs = writeFileSyncSpy.mock.calls[0];
     expect(calledWithArgs[1]).toMatchSnapshot();
@@ -48,8 +48,8 @@ describe('services/codeWriter', () => {
   it(`should create file with procedures`, async () => {
     const filePath = `${PROJECT_DIR}/src/__generated__/dev/procedures/page_p1_metric_m1.js`;
     
-    const codeWriter = new CodeWriter();
-    await codeWriter.writeProceduresToFile(Stage.development, [
+    const fileWriter = new FileWriter();
+    await fileWriter.writeProceduresToFile(Stage.development, [
       getSampleMetricFileProcedure()
     ]);
 
@@ -58,8 +58,8 @@ describe('services/codeWriter', () => {
   });
 
   it(`should generate autoimports`, async () => {
-    const codeWriter = new CodeWriter();
-    await codeWriter.generateAutoImports();
+    const fileWriter = new FileWriter();
+    await fileWriter.generateAutoImports();
 
     const calledWithArgs = writeFileSyncSpy.mock.calls[3];
     expect(calledWithArgs[1]).toMatchSnapshot();

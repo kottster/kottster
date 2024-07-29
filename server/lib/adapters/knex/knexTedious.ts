@@ -1,13 +1,9 @@
-import { DataSourceClientType } from "@kottster/common";
-import { DatabaseSchema } from "../../models/databaseSchema.model";
-import { DataSourceClient } from "../../models/dataSourceClient.model";
+import { RelationalDatabaseSchema, RelationalDatabaseSchemaColumn } from "../../models/databaseSchema.model";
+import { DataSourceAdapter } from "../../models/DataSourceAdapter.model";
 
-export class KnexTedious extends DataSourceClient {
-  type = DataSourceClientType.knex_tedious;
-
-  async getDatabaseSchema(): Promise<DatabaseSchema> {
-    // TODO
-    const schemaName = 'dbo'; // this.connectionOptions?.searchPath?.[0];
+export class KnexTedious extends DataSourceAdapter {
+  async getDatabaseSchema(): Promise<RelationalDatabaseSchema> {
+    const schemaName = this.databaseSchemas[0] || 'dbo';
 
     // Query to get all tables and their columns
     const tablesQueryResult = await this.client!.raw(`
@@ -26,7 +22,7 @@ export class KnexTedious extends DataSourceClient {
     const tablesData = tablesQueryResult;
 
     // Building the schema object
-    const schema: DatabaseSchema = {
+    const schema: RelationalDatabaseSchema = {
       name: schemaName,
       tables: [],
     };
@@ -49,7 +45,7 @@ export class KnexTedious extends DataSourceClient {
         name: row.column_name,
         type: row.data_type,
         nullable: !!row.nullable,
-      });
+      } as RelationalDatabaseSchemaColumn);
     }
     return schema;
   }

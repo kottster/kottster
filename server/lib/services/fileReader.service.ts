@@ -1,15 +1,16 @@
 import fs from "fs";
 import { PROJECT_DIR } from "../constants/projectDir";
 import path from "path";
-import { AppSchema, PageStructure, ProcedureStructure } from "@kottster/common";
+import { AppSchema, PageFileStructure, ProcedureFileStructure, File } from "@kottster/common";
 
 /**
- * Service to read files
+ * Service for reading files
  */
 export class FileReader {
 
   /**
    * Read the schema.json file
+   * @returns The app schema
    */
   public readSchemaJson(): AppSchema {
     const filePath = `${PROJECT_DIR}/src/__generated__/schema.json`;
@@ -23,6 +24,7 @@ export class FileReader {
 
   /**
    * Get existing page directories
+   * @returns The page directories
    */
   public getPagesDirectories(): string[] {
     const dir = `${PROJECT_DIR}/src/client/pages`;
@@ -33,65 +35,102 @@ export class FileReader {
     return this.getDirectorySubdirectories(dir);
   }
 
-  // TODO: Implement getPageStructure properly
   /**
    * Get page structure
+   * @param pageId The page ID
+   * @returns The page structure or null if the page does not exist
    */
-  public getPageStructure(pageId: string): PageStructure {
+  public getPageFileStructure(pageId: string): PageFileStructure | null {
     const dir = `${PROJECT_DIR}/src/client/pages/${pageId}`;
+    const entryFilePath = `${dir}/index.jsx`;
+
     if (!fs.existsSync(dir)) {
-      return {
-        pageId,
-        rootDir: {
-          dirName: pageId,
-          dirPath: `src/client/pages/${pageId}`,
-          files: [],
-          dirs: []
-        }
-      };
+      return null;
     }
 
-    const files = this.getDirectoryFiles(dir);
+    // Get all files in the directory, except the entry file
+    const dirFilePaths = this.getAllFilePathsInDirectory(dir).filter((filePath) => filePath !== entryFilePath);
 
-    const pageStructure: PageStructure = {
+    const entryFile: File = this.getFileByPath(entryFilePath);
+    const files = dirFilePaths.map((filePath) => this.getFileByPath(filePath));
+
+    const pageStructure: PageFileStructure = {
       pageId,
-      rootDir: {
-        dirName: pageId,
-        dirPath: `src/client/pages/${pageId}`,
-        files: files.map((file) => ({
-          fileName: file,
-          filePath: `src/client/pages/${pageId}/${file}`,
-          fileContent: fs.readFileSync(`${dir}/${file}`, 'utf8'),
-          absoluteFilePath: `${dir}/${file}`,
-          isEntryFile: true
-        })),
-        dirs: []
-      }
+      dirPath: `src/client/pages/${pageId}`,
+      entryFile,
+      files
     };
 
     return pageStructure;
   }
 
   /**
-   * Get procedure structures
+   * Get all file paths in a directory
+   * @param dirPath The directory path
+   * @returns The file paths
    */
-  public getProcedureStructures(): ProcedureStructure[] {
-    const dir = `${PROJECT_DIR}/src/server/procedures`;
-    const files = this.getDirectoryFiles(dir);
-    
-    return files.map((file) => {
-      const filePath = `src/server/procedures/${file}`;
-      
-      return {
-        procedureName: file.split('.')[0],
-        file: {
-          fileName: file,
-          filePath,
-          fileContent: fs.readFileSync(`${PROJECT_DIR}/${filePath}`, 'utf8'),
-          absoluteFilePath: `${dir}/${file}`,
+  private getAllFilePathsInDirectory(dirPath: string): string[] {
+    const files: string[] = [];
+  
+    function traverseDir(currentPath: string) {
+      const entries = fs.readdirSync(currentPath, { withFileTypes: true });
+  
+      for (const entry of entries) {
+        const fullPath = path.join(currentPath, entry.name);
+        
+        if (entry.isDirectory()) {
+          traverseDir(fullPath);
+        } else if (entry.isFile()) {
+          files.push(fullPath);
         }
       }
+    }
+  
+    traverseDir(dirPath);
+    return files;
+  }
+
+  /**
+   * Get file by path
+   * @param absoluteFilePath The absolute file path
+   * @returns The file object
+   */
+  private getFileByPath(absoluteFilePath: string): File {
+    // Get the relative file path
+    const filePath = path.relative(PROJECT_DIR, absoluteFilePath);
+    
+    return {
+      fileName: path.basename(filePath),
+      filePath,
+      fileContent: fs.readFileSync(filePath, 'utf8'),
+    };
+  }
+
+  /**
+   * Get procedure structures
+   */
+  public getProcedureFileStructures(): ProcedureFileStructure[] {
+    const dir = `${PROJECT_DIR}/src/server/procedures`;
+    const files = this.getDirectoryFiles(dir);
+    const filePaths = files.map((file) => `${dir}/${file}`);
+    
+    return filePaths.map((filePath) => {
+      const file = this.getFileByPath(filePath);
+
+      return {
+        procedureName: this.getProcedureNameFromFileName(file.fileName),
+        entryFile: file
+      } as ProcedureFileStructure;
     });
+  }
+
+  /**
+   * Get procedure structure
+   * @param procedureName The procedure name
+   * @returns The procedure structure or null if the procedure does not exist
+   */
+  private getProcedureNameFromFileName(fileName: string): string {
+    return fileName.split('.')[0];
   }
 
   /**

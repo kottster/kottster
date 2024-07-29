@@ -23,5 +23,8 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false
   },
-  "include": ["./lib/**/*"]
+  "include": [
+    "./lib/**/*",
+    "./types/**/*"
+  ]
 }

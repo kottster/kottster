@@ -4,12 +4,10 @@ import { Server } from 'http';
 import jwt from 'jsonwebtoken';
 import express, { Request, Response, NextFunction } from 'express';
 import chalk from 'chalk';
-import { Role } from '../models/role.model';
-import { AppContext, ExtendAppContextFunction } from '../models/appContext.model';
+import { ExtendAppContextFunction } from '../models/appContext.model';
 import { PROJECT_DIR } from '../constants/projectDir';
-import { DataSource, getEnvOrThrow, RegisteredProcedure, Stage } from '@kottster/common';
+import { AppContext, DataSource, getEnvOrThrow, JWTTokenPayload, ProcedureFunction, RegisteredProcedure, Role, Stage, User } from '@kottster/common';
 import { FileReader } from '../services/fileReader.service';
-import { DataSourceManager } from '../services/dataSourceManager.service';
 
 export interface KottsterAppOptions {
   appId: string;
@@ -38,8 +36,8 @@ export class KottsterApp {
     this.stage = options.stage;
 
     this.loadDataFromSchema();
-    this.setupMiddleware();
-    this.setupRoutes();
+    this.setupExpressMiddleware();
+    this.setupExpressRoutes();
   }
 
   /**
@@ -62,12 +60,18 @@ export class KottsterApp {
    * Create a context for a request
    * @param req The Express request object
    */
-  public createContext(): AppContext {
-    const ctx: AppContext = {};
+  public createContext(req: Request): AppContext {
+    const ctx: AppContext = {
+      user: {
+        id: req.user.id,
+        email: req.user.email,
+      },
+      stage: this.stage
+    };
 
     // Add the data sources to the context
     this.dataSources.forEach((dataSource) => {
-      ctx[dataSource.contextPropName] = dataSource.client;
+      ctx[dataSource.contextPropName] = dataSource.adapter.getClient();
     });
 
     return this.extendContext ? this.extendContext(ctx) : ctx;
@@ -91,7 +95,7 @@ export class KottsterApp {
    * Register procedures
    * @param procedures The procedures to register
    */
-  public registerProcedures(procedures: Record<string, RegisteredProcedure['function']>): void {
+  public registerProcedures(procedures: Record<string, ProcedureFunction>): void {
     Object.entries(procedures).forEach(([procedureName, procedureFunction]) => {
       // Add the procedure
       this.procedures.push({
@@ -108,7 +112,7 @@ export class KottsterApp {
    */
   public registerProcedure(
     procedureName: string,
-    procedureFunction: RegisteredProcedure['function']
+    procedureFunction: ProcedureFunction
   ): void {
     this.procedures.push({
       procedureName,
@@ -116,7 +120,11 @@ export class KottsterApp {
     });
   }
 
-  private getAuthMiddleware = (requiredRole?: Role) => {
+  /**
+   * Get the Express middleware for authenticating requests
+   * @param requiredRole The required role for the request
+   */
+  private getAuthExpressMiddleware = (requiredRole?: Role) => {
     return (req: Request, res: Response, next: NextFunction) => {
       const token = req.headers.authorization?.split(' ')[1];
   
@@ -129,22 +137,32 @@ export class KottsterApp {
       }
   
       try {
-        const decodedToken = jwt.verify(token, this.jwtSecret) as { appId: string; role: Role };
+        const decodedToken = jwt.verify(token, this.jwtSecret) as JWTTokenPayload;
         if (String(decodedToken.appId) !== String(this.appId)) {
           return res.status(401).json({ error: 'Invalid token' });
         }
         if (requiredRole && decodedToken.role !== requiredRole) {
           return res.status(403).json({ error: 'Insufficient permissions' });
         }
+
+        // Set the user on the request object
+        req.user = {
+          id: decodedToken.id,
+          email: decodedToken.email
+        } as User;
   
         next();
       } catch (error) {
-        console.debug('Error verifying token', token, error);
+        console.log('Error verifying token', token, error);
         return res.status(401).json({ error: 'Invalid token' });
       }
     };
   }
 
+  /**
+   * Load the app schema from the schema.json file
+   * @returns The app schema
+   */
   private loadDataFromSchema(): void {
     const fileReader = new FileReader();
     const appSchema = fileReader.readSchemaJson();
@@ -152,18 +170,24 @@ export class KottsterApp {
     this.version = appSchema.version;
   }
 
-  private setupMiddleware(): void {
+  /**
+   * Setup the Express middleware
+   */
+  private setupExpressMiddleware(): void {
     this.expressApp.use(cors());
     this.expressApp.use('/static', express.static(`${PROJECT_DIR}/dist/static`));
     this.expressApp.use(express.json());
     this.expressApp.use(express.urlencoded({ extended: true }));
   }
 
-  private setupRoutes(): void {
+  /**
+   * Setup the Express routes
+   */
+  private setupExpressRoutes(): void {
     this.expressApp.get('/', routes.healthcheck(this));
     this.expressApp.get('/start-time', routes.getServerStartTime());
-    this.expressApp.get('/action/:action', this.getAuthMiddleware(Role.DEVELOPER), routes.executeAction(this));
-    this.expressApp.get('/rpc/:procedureName', this.getAuthMiddleware(), routes.executeProcedure(this));
+    this.expressApp.get('/action/:action', this.getAuthExpressMiddleware(Role.DEVELOPER), routes.executeAction(this));
+    this.expressApp.get('/rpc/:procedureName', this.getAuthExpressMiddleware(), routes.executeProcedure(this));
   }
 
   /**
@@ -171,11 +195,10 @@ export class KottsterApp {
    */
   public connectToDataSources(): void {
     this.dataSources.forEach((dataSource) => {
-      const client = DataSourceManager.getClient(dataSource);
-      client.connect();
+      dataSource.adapter.connect();
 
       // Ping the database to check if the connection is successful
-      client.pingDatabase();
+      dataSource.adapter.pingDatabase();
     });
   }
 

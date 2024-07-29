@@ -11,7 +11,6 @@ export function stringifyObject(obj: any, indent: string = ''): string {
       }
       return value;
     };
-
     const lines = JSON.stringify(obj, replacer, 2).split('\n');
     const indentedLines = lines.map((line, index) => {
       if (index === 0) {

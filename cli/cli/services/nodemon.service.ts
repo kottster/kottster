@@ -2,6 +2,9 @@ import nodemon from 'nodemon';
 import { FileCreator } from './fileCreator.service';
 import { Vite } from './vite.service';
 
+/**
+ * Service to run nodemon
+ */
 export class Nodemon {
   constructor (
     private readonly fileCreator: FileCreator,

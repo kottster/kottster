@@ -1,54 +1,55 @@
 import path from 'path'
 import fs from 'fs'
-import * as esbuild from 'esbuild';
-import { build, InlineConfig, loadConfigFromFile, resolveConfig } from 'vite';
+import { build, loadConfigFromFile } from 'vite';
 
 /**
- * Service for running Vite build
+ * Service to run vite build
  * Docs: https://vitejs.dev/config/
  */
 export class Vite {
-  // Relative path to the entry point
-  private entryPoint: string;
-
-  // Relative path to the output file
-  private outfile: string;
-
   constructor(
     private readonly NODE_ENV: string
-  ) {
-    this.entryPoint = 'src/client/index.jsx';
-    this.outfile = 'dist/static/bundle.js';
-  }
+  ) {}
 
   /**
    * Run Vite build
    */
   async run(): Promise<void> {
-    if (!fs.existsSync(path.resolve(this.entryPoint))) {
-      console.log(`The file ${this.entryPoint} does not exist. Skipping Vite build.`);
-      return;
-    }
+    this.removeDistFolder();
 
     try {
       // Resolve the config file
       const configFile = path.resolve('./vite.config.js');
-      
+      const buildMode = this.NODE_ENV === 'development' ? 'development' : 'production';
+
       // Load the Vite config
       const loadedConfig = await loadConfigFromFile({
         command: 'build',
-        mode: this.NODE_ENV === 'development' ? 'development' : 'production',
+        mode: buildMode,
       }, configFile);
       if (!loadedConfig) {
         throw new Error('Failed to load Vite config file');
       }
 
+      // Rewrite the config mode
+      loadedConfig.config.mode = buildMode;
+
       // Run the build
-      const result = await build(loadedConfig.config);
+      await build(loadedConfig.config);
       
       console.log('Vite build completed successfully.');
     } catch(e) {
       console.error('Vite build error:', e);
+    }
+  }
+
+  /**
+   * Remove the dist folder
+   */
+  private removeDistFolder() {
+    const distPath = path.resolve('dist');
+    if (fs.existsSync(distPath)) {
+      fs.rmdirSync(distPath, { recursive: true });
     }
   }
 }

@@ -1,5 +1,5 @@
 /**
- * Service for managing file templates
+ * Service for storing file templates
  */
 export class FileTemplateManager {
   static templates = {
@@ -35,73 +35,82 @@ export class FileTemplateManager {
     `),
 
     'src/server/data-sources/postgres/index.js': this.stripIndent(`
-      import { createDataSource } from '@kottster/server';
+      import { createDataSource, KnexPgAdapter } from '@kottster/server';
       import knex from 'knex';
 
       const dataSource = createDataSource({
         type: 'postgres',
         contextPropName: 'knex',
-        
-        clientType: 'knex_pg',
-        client: knex({
+        databaseSchemas: ['public'],
+        init: () => {
           // Replace the following with your connection options
           // Read more at https://knexjs.org/guide/#configuration-options
-          client: 'pg',
-          connection: 'postgres://user:password@localhost:5432/database',
-          searchPath: ['public'],
-        })
+          const client = knex({
+            client: 'pg',
+            connection: 'postgres://user:password@localhost:5432/database',
+            searchPath: ['public'],
+          });
+
+          return new KnexPgAdapter(client);
+        }
       });
 
       export default dataSource;
     `),
 
     'src/server/data-sources/mysql/index.js': this.stripIndent(`
-      import { createDataSource } from '@kottster/server';
+      import { createDataSource, KnexMysql2Adapter } from '@kottster/server';
       import knex from 'knex';
 
       const dataSource = createDataSource({
         type: 'postgres',
         contextPropName: 'knex',
-        
-        clientType: 'knex_mysql2',
-        client: knex({
-          // Replace the following with your connection options
-          // Read more at https://knexjs.org/guide/#configuration-options
-          client: 'mysql2',
-          connection: {
-            host: '127.0.0.1',
-            port: 3306,
-            user: 'your_database_user',
-            password: 'your_database_password',
-            database: 'myapp_test',
-          },
-        })
+        databaseSchemas: ['public'],
+        init: () => {
+          const client = knex({
+            // Replace the following with your connection options
+            // Read more at https://knexjs.org/guide/#configuration-options
+            client: 'mysql2',
+            connection: {
+              host: '127.0.0.1',
+              port: 3306,
+              user: 'your_database_user',
+              password: 'your_database_password',
+              database: 'myapp_test',
+            },
+          });
+
+          return new KnexMysql2Adapter(client);
+        },
       });
 
       export default dataSource;
     `),
 
     'src/server/data-sources/mariadb/index.js': this.stripIndent(`
-      import { createDataSource } from '@kottster/server';
+      import { createDataSource, KnexMysql2Adapter } from '@kottster/server';
       import knex from 'knex';
 
       const dataSource = createDataSource({
         type: 'postgres',
         contextPropName: 'knex',
-        
-        clientType: 'knex_mysql2',
-        client: knex({
-          // Replace the following with your connection options
-          // Read more at https://knexjs.org/guide/#configuration-options
-          client: 'mysql2',
-          connection: {
-            host: '127.0.0.1',
-            port: 3306,
-            user: 'your_database_user',
-            password: 'your_database_password',
-            database: 'myapp_test',
-          },
-        })
+        databaseSchemas: ['public'],
+        init: () => {
+          const client = knex({
+            // Replace the following with your connection options
+            // Read more at https://knexjs.org/guide/#configuration-options
+            client: 'mysql2',
+            connection: {
+              host: '127.0.0.1',
+              port: 3306,
+              user: 'your_database_user',
+              password: 'your_database_password',
+              database: 'myapp_test',
+            },
+          });
+
+          return new KnexMysql2Adapter(client);
+        },
       });
 
       export default dataSource;
@@ -114,8 +123,7 @@ export class FileTemplateManager {
       const dataSource = createDataSource({
         type: 'postgres',
         contextPropName: 'knex',
-        
-        clientType: 'knex_tedious',
+        databaseSchemas: ['dbo'],
         client: knex({
           // Replace the following with your connection options
           // Read more at https://knexjs.org/guide/#configuration-options
@@ -136,14 +144,17 @@ export class FileTemplateManager {
     'src/client/index.jsx': this.stripIndent(`
       import React from 'react';
       import ReactDOM from 'react-dom/client';
-      import { App } from '@kottster/react';
+      import { ConfigProvider } from 'antd';
+      import { App, appTheme } from '@kottster/react';
       import '@kottster/react/dist/style.css';
+      
       import pages from '../__generated__/client/pages.generated.js';
 
-      const root = ReactDOM.createRoot(document.getElementById('root'));
-      root.render(
+      ReactDOM.createRoot(document.getElementById('root')).render(
         <React.StrictMode>
-          <App pages={pages} />
+          <ConfigProvider theme={appTheme}>
+            <App pages={pages} />
+          </ConfigProvider>
         </React.StrictMode>
       );
     `),

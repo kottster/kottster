@@ -6,7 +6,6 @@ import PackageInstaller from '../services/packageInstaller.service'
 interface Options { 
   appId: string;
   secretKey: string;
-  database: string;
   skipInstall?: boolean;
 }
 
@@ -16,17 +15,15 @@ interface Options {
 export async function newProject (projectName: string, options: Options): Promise<void> {
   const appId = options.appId?.trim()
   const secretKey = options.secretKey?.trim()
-  const database = options.database?.trim()
   const projectDir = projectName === '.' ? process.cwd() : path.join(process.cwd(), projectName);
 
   try {
     // Create project files
-    const fileCreator = new FileCreator(appId, projectDir)
+    const fileCreator = new FileCreator(projectDir)
     fileCreator.createProject({
       projectName,
       appId,
       secretKey,
-      database,
     })
 
     if (options.skipInstall) {

@@ -6,12 +6,12 @@ type PackageManager = 'npm' | 'yarn'
 type Packages = Record<string, string>
 
 /**
- * Service to installing packages for a new project.
+ * Service for installing packages.
 */
 class PackageInstaller {
   constructor (
     private readonly PACKAGE_MANAGER: PackageManager,
-    private readonly PROJECT_DIR: string
+    private readonly PROJECT_DIR: string = process.cwd()
   ) {}
 
   /**

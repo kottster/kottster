@@ -1,14 +1,13 @@
 import path from 'path'
 import fs from 'fs'
-import { AppSchema, DataSourceType } from '@kottster/common'
+import { AppSchema, DataSourceType, transformToCamelCaseVarName } from '@kottster/common'
 import { FileTemplateManager } from './fileTemplateManager.service'
-import { DataSourceClientManager } from './dataSourceClientManager.service'
+import dataSourcesTypeData from '../constants/dataSourceTypeData'
 
 interface CreateProjectOptions {
   projectName: string
   appId: string
   secretKey: string
-  database: string
 }
 
 interface PackageJsonOptions {
@@ -29,9 +28,10 @@ type EnvOptions = {
  */
 export class FileCreator {
   constructor (
-    private readonly APP_ID: string,
-    private readonly PROJECT_DIR: string
+    private readonly PROJECT_DIR: string = process.cwd()
   ) {}
+
+  readonly AUTO_GENERATED_COMMENT = '// This file is auto-generated. Do not modify it manually.';
 
   /**
    * Create a new project files.
@@ -93,61 +93,83 @@ export class FileCreator {
    * @param dataSourceType The type of the data source.
    */
   public addDataSource (dataSourceType: DataSourceType): void {
-    const { fileTemplateName, type } = DataSourceClientManager.get(dataSourceType);
-    
+    const dataSourceTypeData = dataSourcesTypeData[dataSourceType];
+    const { fileTemplateName } = dataSourceTypeData;
+
     // Create directory
-    this.createDir(`src/server/data-sources/${type}`)
+    this.createDir(`src/server/data-sources/${dataSourceType}`)
 
     // Create file
-    const filePath = path.join(this.PROJECT_DIR, `src/server/data-sources/${type}`, `index.js`)
+    const filePath = path.join(this.PROJECT_DIR, `src/server/data-sources/${dataSourceType}`, `index.js`)
     const fileContent = FileTemplateManager.getTemplate(fileTemplateName);
     this.writeFile(filePath, fileContent)
 
     // Update src/server/main.js
     const mainFilePath = path.join(this.PROJECT_DIR, 'src/server', 'main.js')
     let mainFileContent = fs.readFileSync(mainFilePath, 'utf8')
-    mainFileContent = this.addImportsToFile(mainFileContent, [
-      `${type}DataSource from './data-sources/${type}'`
+    mainFileContent = this.addImportsToFileContent(mainFileContent, [
+      `${dataSourceType}DataSource from './data-sources/${dataSourceType}'`
     ]);
-    mainFileContent = this.addCodeBeforeAppStart(mainFileContent, `app.registerDataSources([\n  ${type}DataSource,\n]);`);
+    mainFileContent = this.addCodeBeforeAppStart(mainFileContent, `app.registerDataSources([\n  ${dataSourceType}DataSource,\n]);`);
     this.writeFile(mainFilePath, mainFileContent)
+  }
+
+  /**
+   * Get the content of a file that imports/exports the given variables.
+   * @param exports The variables to export.
+   */
+  public getExportFileContent (exports: { varName: string; importFrom: string; }[]) {
+    const imports = exports.map(({ varName, importFrom }) => `import ${varName} from '${importFrom}';`);
+    const exportsContent = exports.map(({ varName }) => `  ${varName},`).join('\n');
+    return `${imports.join('\n')}\n\nexport default {\n${exportsContent}\n}`;
   }
 
   /**
    * Add files that exports all the procedures in the src/server/procedures directory
    */
   public addServerProcedures (): void {
-    const filenames = fs.readdirSync(path.join(this.PROJECT_DIR, 'src/server/procedures'));
-    const procedures = filenames.filter(filename => filename.endsWith('.js')).map(filename => filename.split('.')[0]);
-
-    const comment = `// This file is auto-generated. Do not modify it manually. \n// It automatically exports all the procedures in the src/server/procedures directory.`;
-    const procedureImports = procedures.map(procedure => `import ${procedure} from '../../server/procedures/${procedure}.js';`).join('\n');
-    const procedureExports = procedures.map(procedure => `${procedure},`).join('\n');
+    const filePath = path.join(this.PROJECT_DIR, 'src/__generated__/server', 'procedures.generated.js');
+    const procedureFilenames = fs.readdirSync(path.join(this.PROJECT_DIR, 'src/server/procedures'));
+    const procedures = procedureFilenames.filter(filename => filename.endsWith('.js')).map(filename => filename.split('.')[0]);
+    const proceduresVarNames = procedures.map(procedure => transformToCamelCaseVarName(procedure));    
     
-    const filePath = path.join(this.PROJECT_DIR, 'src/__generated__/server', 'procedures.generated.js')
-    const fileContent = procedureExports ? `${comment} \n\n${procedureImports} \n\nexport default {\n${procedureExports}\n}` : `${comment} \n\nexport default {};\n`;
+    const comment = `${this.AUTO_GENERATED_COMMENT} \n// It automatically exports all the procedures in the src/server/procedures directory.`;
+    const exports = procedures.map((procedure, i) => ({
+      varName: proceduresVarNames[i],
+      importFrom: `../../server/procedures/${procedure}.js`
+    }));
+    const fileContent = `${comment}\n\n${this.getExportFileContent(exports)}`;
     
     this.createDir('src/__generated__/server');
-    this.writeFile(filePath, fileContent)
+    this.writeFile(filePath, fileContent);
   }
 
   /**
-   * Add files that exports all the procedures in the src/server/procedures directory
+   * Add files that exports all the pages in the src/client/pages directory
    */
   public addClientPages (): void {
+    const filePath = path.join(this.PROJECT_DIR, 'src/__generated__/client', 'pages.generated.js');
     const pages = fs.readdirSync(path.join(this.PROJECT_DIR, 'src/client/pages'));
+    const pagesVarNames = pages.map(page => transformToCamelCaseVarName(page));
     
-    const comment = `// This file is auto-generated. Do not modify it manually. \n// It automatically exports all the pages in the src/client/pages directory.`;
-    const pageImports = pages.map(page => `import ${page} from '../../client/pages/${page}/index.jsx';`).join('\n');
-    const pageExports = pages.map(page => `  ${page},`).join('\n');
-    
-    const filePath = path.join(this.PROJECT_DIR, 'src/__generated__/client', 'pages.generated.js')
-    const fileContent = pageExports ? `${comment} \n\n${pageImports} \n\nexport default {\n${pageExports}\n}` : `${comment} \n\nexport default {};\n`;
+    const comment = `${this.AUTO_GENERATED_COMMENT} \n// It automatically exports all the pages in the src/client/pages directory.`;
+    const exports = pages.map((page, i) => ({
+      varName: pagesVarNames[i],
+      importFrom: `../../client/pages/${page}/index.jsx`
+    }));
+    const fileContent = `${comment}\n\n${this.getExportFileContent(exports)}`;
 
     this.createDir('src/__generated__/client');
-    this.writeFile(filePath, fileContent)
+    this.writeFile(filePath, fileContent);
   }
 
+  /**
+   * Add a code snippet before the app.start function in the given file content.
+   * @description Can only be used for the src/server/main.js file content.
+   * @param fileContent The file content.
+   * @param codeToAdd The code snippet to add.
+   * @returns The updated file content.
+   */
   private addCodeBeforeAppStart(fileContent: string, codeToAdd: string): string {
     const appStartPattern = /app\.start\s*\(/;
     const match = fileContent.match(appStartPattern);
@@ -161,13 +183,19 @@ export class FileCreator {
     const updatedContent = 
       fileContent.slice(0, insertPosition) + 
       codeToAdd + 
-      '\n\n' + // Add two newlines after the inserted code
+      '\n\n' + 
       fileContent.slice(insertPosition);
   
     return updatedContent;
   }
 
-  private addImportsToFile(fileContent: string, imports: string[]): string {
+  /**
+   * Add import statements to the given file content.
+   * @param fileContent The file content.
+   * @param imports The import statements to add.
+   * @returns The updated file content.
+   */
+  private addImportsToFileContent(fileContent: string, imports: string[]): string {
     // Find the last import statement in the file
     const lastImportIndex = fileContent.lastIndexOf('import');
     const lastImportLineEnd = fileContent.indexOf('\n', lastImportIndex);
@@ -182,7 +210,7 @@ export class FileCreator {
     const updatedContent = 
       fileContent.slice(0, insertPosition) + 
       newImports + 
-      '\n' + // Add newline after the new imports
+      '\n' +
       fileContent.slice(insertPosition);
     
     return updatedContent;
@@ -190,6 +218,7 @@ export class FileCreator {
 
   /**
    * Create a package.json file
+   * @param options The package.json content
    */
   private createPackageJson (options: PackageJsonOptions) {
     const packageJsonPath = path.join(this.PROJECT_DIR, 'package.json')
@@ -231,6 +260,7 @@ export class FileCreator {
 
   /**
    * Create a .env file
+   * @param options The .env variables
    */
   private createEnv (options: EnvOptions): void {
     const envPath = path.join(this.PROJECT_DIR, '.env')

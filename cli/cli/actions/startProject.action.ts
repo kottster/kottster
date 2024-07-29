@@ -12,7 +12,6 @@ interface Options {
  * Start the project in the current directory.
  */
 export async function startProject (script: string, options: Options): Promise<void> {
-  const projectDir = process.cwd();
   const NODE_ENV = options.development ? 'development' : 'production';
   
   // Read config
@@ -23,7 +22,7 @@ export async function startProject (script: string, options: Options): Promise<v
   const jwtSecret = API.getJWTSecret(appId, secretKey);
 
   // Generate files
-  const fileCreator = new FileCreator(appId, projectDir);
+  const fileCreator = new FileCreator();
   fileCreator.addClientPages();
   fileCreator.addServerProcedures();
 

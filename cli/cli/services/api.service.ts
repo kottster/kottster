@@ -7,7 +7,7 @@ export class API {
   static readonly API_BASE_URL = process.env.KOTTSTER_API_BASE_URL ?? 'https://api.kottster.app';
 
   /**
-   * Generate a new JWT secret for the given app ID and secret key.
+   * Get a new JWT secret for the given app ID and secret key.
    * @description The previous JWT secret will be invalidated.
    * @param appId The app ID
    * @param secretKey The API secret key

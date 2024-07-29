@@ -1,25 +1,18 @@
-interface PageStructureFile {
-  fileContent: string;
-  filePath: string;
-  fileName: string; 
-  
-  // Only when return from server
-  absoluteFilePath?: string;
-  
-  // Whether this file is the entry file of the page (e.g. index.jsx)
-  isEntryFile?: boolean;
-}
+import { File } from './file.model'
 
-export interface PageStructureDirectory {
-  dirPath: string;
-  dirName: string;
-  files: PageStructureFile[];
-  dirs: PageStructureDirectory[];
-}
-
-export interface PageStructure {
+export interface PageFileStructure {
   pageId: string;
-  rootDir: PageStructureDirectory;
+
+  // Root directory of the page
+  // Example: src/client/pages/page1
+  dirPath: string;
+
+  // Entry file of the page
+  // Example: src/client/pages/page1/index.jsx
+  entryFile: File;
+  
+  // Files in the page directory, does not include entry file
+  files: File[];
 }
 
 export interface Page {

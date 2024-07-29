@@ -8,7 +8,8 @@
     "clean": "rimraf ./dist",
     "build": "npm run clean && tsc",
     "lint": "npx eslint ./lib",
-    "prepare": "husky"
+    "prepare": "husky",
+    "update-locks": "yarn install && synp --source-file yarn.lock"
   },
   "dependencies": {
     "esbuild": "^0.23.0"
@@ -20,6 +21,7 @@
     "eslint": "^9.7.0",
     "husky": "^9.1.1",
     "rimraf": "^5.0.5",
+    "synp": "^1.9.13",
     "typescript": "^5.5.3",
     "typescript-eslint": "^7.16.1"
   }

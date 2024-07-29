@@ -3,11 +3,11 @@ export enum DataSourceType {
   mysql = 'mysql',
   mariadb = 'mariadb',
   mssql = 'mssql',
-  oracle = 'oracle',
-  sqlite = 'sqlite',
+  // oracle = 'oracle',
+  // sqlite = 'sqlite',
 }
 
-export enum DataSourceClientType {
+export enum DataSourceAdapterType {
   knex_pg = 'knex_pg', // PostgreSQL
   knex_mysql2 = 'knex_mysql2', // MySQL, MariaDB
   knex_tedious = 'knex_tedious', // MSSQL
@@ -23,10 +23,11 @@ export interface DataSourceTypeInfo {
 export interface DataSource {
   type: DataSourceType;
   contextPropName: string;
+  adapter: any;
 
-  clientType: DataSourceClientType;
-  client: unknown;
+  // Only for database data sources
+  databaseSchemas?: string[];
 }
 
 // Available in the public API
-export interface PublicDataSource extends Omit<DataSource, 'client' | 'clientType'> {}
+export interface PublicDataSource extends Omit<DataSource, 'adapter'> {}

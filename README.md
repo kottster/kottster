@@ -2,18 +2,14 @@
 
 Simple low-code platform for building robust admin dashboards fast ⚡
 
+![NPM Downloads](https://img.shields.io/npm/dm/%40kottster%2Fcli)
 [![@kottster/server.svg](https://img.shields.io/npm/v/@kottster/server.svg)](https://www.npmjs.com/package/@kottster/server)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+![GitHub last commit](https://img.shields.io/github/last-commit/kottster/kottster)
 
 [Website](https://kottster.app) • [Sign Up](https://web.kottster.app/signup) • [Docs](https://kottster.gitbook.io/docs) • [Pricing](https://kottster.app/pricing) • [Get a demo](https://kottster.app/request-demo)
 
 <!-- <img alt="Kottster App" src="https://raw.githubusercontent.com/nepflow/integration-widget/main/web/assets/intro-v3.png" style="max-width: 800px; width: 100%; margin: 12px 0;" /> -->
-
-## Installation
-
-1. **Sign up** on [Kottster](https://kottster.app).
-2. **Build an app**.
-5. **Deploy the app** to production.
 
 ## Learning Resources
 
@@ -25,7 +21,7 @@ Simple low-code platform for building robust admin dashboards fast ⚡
 ## Need Help?
 
 - [Contact us](https://kottster.app/contact-us)
-- [team@kottster.app](mailto:team@kottster.app)
+- [team@kottster.app](mailto:team@kottster.io)
 
 ## License
 

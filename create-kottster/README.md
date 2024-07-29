@@ -7,5 +7,12 @@
 You can use it directly with `npx`:
 
 ```sh
+# Create a new project
 npx create-kottster my-app -id <appId> -sk <secretKey>
+
+# Open the project
+cd my-app
+
+# Start the project
+npm run start:dev
 ```

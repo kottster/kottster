@@ -13,4 +13,10 @@ export interface FullAppSchema extends AppSchema {
   id: string;
   dataSources: PublicDataSource[];
   procedures: Procedure[];
+  usingTsc: boolean;
+  
+  sandbox: {
+    // Only available in development mode
+    developmentServerUrl?: string;
+  };
 }

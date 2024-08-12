@@ -25,16 +25,4 @@ export const dataSourceTypes: DataSourceTypeInfo[] = [
     icon: '/icons/mssql.svg',
     isActive: true,
   },
-  // {
-  //   type: DataSourceType.oracle,
-  //   name: 'Oracle',
-  //   icon: '/icons/oracle.svg',
-  //   isActive: false,
-  // },
-  // {
-  //   type: DataSourceType.sqlite,
-  //   name: 'SQLite',
-  //   icon: '/icons/sqlite.svg',
-  //   isActive: false,
-  // },
 ];

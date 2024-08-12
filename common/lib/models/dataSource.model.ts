@@ -3,8 +3,6 @@ export enum DataSourceType {
   mysql = 'mysql',
   mariadb = 'mariadb',
   mssql = 'mssql',
-  // oracle = 'oracle',
-  // sqlite = 'sqlite',
 }
 
 export enum DataSourceAdapterType {
@@ -30,4 +28,6 @@ export interface DataSource {
 }
 
 // Available in the public API
-export interface PublicDataSource extends Omit<DataSource, 'adapter'> {}
+export interface PublicDataSource extends Omit<DataSource, 'adapter'> {
+  adapterType: DataSourceAdapterType;
+}

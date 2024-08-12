@@ -1,14 +1,12 @@
 import nodemon from 'nodemon';
-import { FileCreator } from './fileCreator.service';
-import { Vite } from './vite.service';
+import { AutoImport } from '@kottster/common';
 
 /**
  * Service to run nodemon
  */
 export class Nodemon {
   constructor (
-    private readonly fileCreator: FileCreator,
-    private readonly vite: Vite
+    private readonly autoImport: AutoImport
   ) {}
   
   public runWatcher(script: string, env: Record<string, string>) {
@@ -34,12 +32,11 @@ export class Nodemon {
         const isServerFileChanged = files?.some((file: string) => file.includes('src/server'));
   
         if (isClientFileChanged) {
-          this.fileCreator.addClientPages();
-          await this.vite.run();
+          this.autoImport.createClientPagesFile();
         }
         
         if (isServerFileChanged) {
-          this.fileCreator.addServerProcedures();
+          this.autoImport.createServerProceduresFile();
         }
       })
       .on('crash', () => process.exit())

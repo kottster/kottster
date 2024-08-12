@@ -1,8 +1,8 @@
 import { API } from '../services/api.service';
-import { FileCreator } from '../services/fileCreator.service';
 import { Nodemon } from '../services/nodemon.service';
-import { getEnvOrThrow } from '@kottster/common';
+import { AutoImport, checkTsUsage, getEnvOrThrow } from '@kottster/common';
 import { Vite } from '../services/vite.service';
+import { spawnSync } from 'child_process';
 
 interface Options { 
   development?: boolean;
@@ -13,7 +13,8 @@ interface Options {
  */
 export async function startProject (script: string, options: Options): Promise<void> {
   const NODE_ENV = options.development ? 'development' : 'production';
-  
+  const usingTsc = checkTsUsage();
+
   // Read config
   const appId = getEnvOrThrow('APP_ID');
   const secretKey = getEnvOrThrow('SECRET_KEY');
@@ -22,19 +23,37 @@ export async function startProject (script: string, options: Options): Promise<v
   const jwtSecret = API.getJWTSecret(appId, secretKey);
 
   // Generate files
-  const fileCreator = new FileCreator();
-  fileCreator.addClientPages();
-  fileCreator.addServerProcedures();
+  const autoImport = new AutoImport({ usingTsc });
+  autoImport.createClientPagesFile();
+  autoImport.createServerProceduresFile();
 
-  // Run esbuild
+  // Run Vite
   const vite = new Vite(NODE_ENV);
-  await vite.run();
-  
-  // Run nodemon
-  const nodemon = new Nodemon(fileCreator, vite);
-  nodemon.runWatcher(script, {
+
+  // Environment variables
+  const env = {
     ...process.env,
     JWT_SECRET: jwtSecret,
-    NODE_ENV
-  }); 
+    NODE_ENV,
+  };
+
+  if (NODE_ENV === 'production') {
+    spawnSync('node', [
+      '--no-warnings',
+      '--experimental-specifier-resolution=node',
+      script
+    ], { 
+      stdio: 'inherit',
+      env
+    });
+  } else {
+    const viteDevServerUrl = await vite.runDevServer();
+    
+    // Run nodemon
+    const nodemon = new Nodemon(autoImport);
+    nodemon.runWatcher(script, {
+      ...env,
+      VITE_DEV_SERVER_URL: viteDevServerUrl.toString()
+    }); 
+  };
 }

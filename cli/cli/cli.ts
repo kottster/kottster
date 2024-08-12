@@ -23,6 +23,7 @@ program
   .requiredOption('-id, --appId <appId>', 'The ID of the app')
   .requiredOption('-sk, --secretKey <secretKey>', 'The secret key of the app')
   .option('--skipInstall', 'Skip installing dependencies')
+  .option('--typescript', 'Use TypeScript')
   .action(newProject)
 
 // Command to add a new data source

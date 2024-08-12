@@ -1,6 +1,5 @@
 import path from 'path'
-import fs from 'fs'
-import { build, loadConfigFromFile } from 'vite';
+import { build, createServer, loadConfigFromFile } from 'vite';
 
 /**
  * Service to run vite build
@@ -15,8 +14,6 @@ export class Vite {
    * Run Vite build
    */
   async run(): Promise<void> {
-    this.removeDistFolder();
-
     try {
       // Resolve the config file
       const configFile = path.resolve('./vite.config.js');
@@ -44,12 +41,44 @@ export class Vite {
   }
 
   /**
-   * Remove the dist folder
+   * Run Vite dev server
+   * @returns The server URL
    */
-  private removeDistFolder() {
-    const distPath = path.resolve('dist');
-    if (fs.existsSync(distPath)) {
-      fs.rmdirSync(distPath, { recursive: true });
+  async runDevServer(): Promise<string> {
+    try {
+      // Resolve the config file
+      const configFile = path.resolve('./vite.config.js');
+      const serverMode = 'development';
+  
+      // Load the Vite config
+      const loadedConfig = await loadConfigFromFile({
+        command: 'serve',
+        mode: serverMode,
+      }, configFile);
+      if (!loadedConfig) {
+        throw new Error('Failed to load Vite config file');
+      }
+  
+      // Rewrite the config mode
+      loadedConfig.config.mode = serverMode;
+  
+      // Create the Vite server
+      const server = await createServer(loadedConfig.config);
+  
+      // Start the server
+      await server.listen();
+
+      const port = server.config.server.port;
+
+      if (!port) {
+        throw new Error('Vite dev server port not found');
+      }
+
+      console.log(`Vite dev server is running on port ${port}`);
+
+      return `http://localhost:${port}`;
+    } catch(e) {
+      throw new Error('Vite dev server error: ' + e);
     }
   }
 }

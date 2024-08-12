@@ -1,8 +1,13 @@
 import path from 'path'
 import fs from 'fs'
-import { AppSchema, DataSourceType, transformToCamelCaseVarName } from '@kottster/common'
+import { AppSchema, AutoImport, DataSourceType } from '@kottster/common'
 import { FileTemplateManager } from './fileTemplateManager.service'
 import dataSourcesTypeData from '../constants/dataSourceTypeData'
+
+interface FileCreatorOptions {
+  projectDir?: string
+  usingTsc?: boolean
+}
 
 interface CreateProjectOptions {
   projectName: string
@@ -12,6 +17,7 @@ interface CreateProjectOptions {
 
 interface PackageJsonOptions {
   name: string
+  type?: 'module'
   version?: string
   dependencies?: Record<string, string>
   devDependencies?: Record<string, string>
@@ -27,20 +33,37 @@ type EnvOptions = {
  * Service for creating files in the project.
  */
 export class FileCreator {
-  constructor (
-    private readonly PROJECT_DIR: string = process.cwd()
-  ) {}
+  private readonly projectDir: string;
+  private readonly usingTsc: boolean;
+  private readonly fileTemplateManager: FileTemplateManager;
 
-  readonly AUTO_GENERATED_COMMENT = '// This file is auto-generated. Do not modify it manually.';
+  constructor (options?: FileCreatorOptions) {
+    this.projectDir = options?.projectDir ?? process.cwd();
+    this.usingTsc = options?.usingTsc ?? false;
+    this.fileTemplateManager = new FileTemplateManager(this.usingTsc);
+  }
+
+  get jsExt () {
+    return this.usingTsc ? 'ts' : 'js';
+  }
+  
+  get jsxExt () {
+    return this.usingTsc ? 'tsx' : 'jsx';
+  }
 
   /**
    * Create a new project files.
    * @param options The new project options.
    */
   public createProject (options: CreateProjectOptions): void {
+    const autoImport = new AutoImport({
+      projectDir: this.projectDir,
+      usingTsc: this.usingTsc,
+    });
+
     // Check if project directory already exists
-    if (fs.existsSync(this.PROJECT_DIR) && options.projectName !== '.') {
-      throw new Error(`Project directory already exists: ${this.PROJECT_DIR}`)
+    if (fs.existsSync(this.projectDir) && options.projectName !== '.') {
+      throw new Error(`Project directory already exists: ${this.projectDir}`)
     };
 
     // Create directories
@@ -55,7 +78,8 @@ export class FileCreator {
     // Create root files
     this.createPackageJson({ 
       name: options.projectName,
-      dependencies: {}
+      dependencies: {},
+      devDependencies: this.usingTsc ? this.getTypescriptDependencies() : {}
     })
     this.createEnv([
       {
@@ -77,15 +101,32 @@ export class FileCreator {
     this.createGitIgnore()
     this.createDockerfile()
     this.createViteConfig()
+    if (this.usingTsc) {
+      this.createTsConfig()
+    };
 
     // Create files
-    this.createClientIndex()
+    this.createClientIndexHtml()
+    this.createClientMain()
     this.createServerMain()
     this.createServerApp()
-
-    this.addServerProcedures()
-    this.addClientPages()
+    
+    // Create auto-generated files
     this.createSchema()
+    autoImport.createServerProceduresFile()
+    autoImport.createClientPagesFile()
+  }
+
+  /**
+   * Get the additional dependencies for a TypeScript project.
+   * @returns The TypeScript dependencies.
+   */
+  private getTypescriptDependencies(): Record<string, string> {
+    return {
+      'typescript': '^5.x',
+      '@types/node': '^18.x',
+      '@types/react': '^18.x',
+    };
   }
 
   /**
@@ -100,67 +141,18 @@ export class FileCreator {
     this.createDir(`src/server/data-sources/${dataSourceType}`)
 
     // Create file
-    const filePath = path.join(this.PROJECT_DIR, `src/server/data-sources/${dataSourceType}`, `index.js`)
-    const fileContent = FileTemplateManager.getTemplate(fileTemplateName);
+    const filePath = path.join(this.projectDir, `src/server/data-sources/${dataSourceType}`, `index.${this.jsExt}`)
+    const fileContent = this.fileTemplateManager.getTemplate(fileTemplateName);
     this.writeFile(filePath, fileContent)
 
     // Update src/server/main.js
-    const mainFilePath = path.join(this.PROJECT_DIR, 'src/server', 'main.js')
+    const mainFilePath = path.join(this.projectDir, 'src/server', `main.${this.jsExt}`)
     let mainFileContent = fs.readFileSync(mainFilePath, 'utf8')
     mainFileContent = this.addImportsToFileContent(mainFileContent, [
       `${dataSourceType}DataSource from './data-sources/${dataSourceType}'`
     ]);
     mainFileContent = this.addCodeBeforeAppStart(mainFileContent, `app.registerDataSources([\n  ${dataSourceType}DataSource,\n]);`);
     this.writeFile(mainFilePath, mainFileContent)
-  }
-
-  /**
-   * Get the content of a file that imports/exports the given variables.
-   * @param exports The variables to export.
-   */
-  public getExportFileContent (exports: { varName: string; importFrom: string; }[]) {
-    const imports = exports.map(({ varName, importFrom }) => `import ${varName} from '${importFrom}';`);
-    const exportsContent = exports.map(({ varName }) => `  ${varName},`).join('\n');
-    return `${imports.join('\n')}\n\nexport default {\n${exportsContent}\n}`;
-  }
-
-  /**
-   * Add files that exports all the procedures in the src/server/procedures directory
-   */
-  public addServerProcedures (): void {
-    const filePath = path.join(this.PROJECT_DIR, 'src/__generated__/server', 'procedures.generated.js');
-    const procedureFilenames = fs.readdirSync(path.join(this.PROJECT_DIR, 'src/server/procedures'));
-    const procedures = procedureFilenames.filter(filename => filename.endsWith('.js')).map(filename => filename.split('.')[0]);
-    const proceduresVarNames = procedures.map(procedure => transformToCamelCaseVarName(procedure));    
-    
-    const comment = `${this.AUTO_GENERATED_COMMENT} \n// It automatically exports all the procedures in the src/server/procedures directory.`;
-    const exports = procedures.map((procedure, i) => ({
-      varName: proceduresVarNames[i],
-      importFrom: `../../server/procedures/${procedure}.js`
-    }));
-    const fileContent = `${comment}\n\n${this.getExportFileContent(exports)}`;
-    
-    this.createDir('src/__generated__/server');
-    this.writeFile(filePath, fileContent);
-  }
-
-  /**
-   * Add files that exports all the pages in the src/client/pages directory
-   */
-  public addClientPages (): void {
-    const filePath = path.join(this.PROJECT_DIR, 'src/__generated__/client', 'pages.generated.js');
-    const pages = fs.readdirSync(path.join(this.PROJECT_DIR, 'src/client/pages'));
-    const pagesVarNames = pages.map(page => transformToCamelCaseVarName(page));
-    
-    const comment = `${this.AUTO_GENERATED_COMMENT} \n// It automatically exports all the pages in the src/client/pages directory.`;
-    const exports = pages.map((page, i) => ({
-      varName: pagesVarNames[i],
-      importFrom: `../../client/pages/${page}/index.jsx`
-    }));
-    const fileContent = `${comment}\n\n${this.getExportFileContent(exports)}`;
-
-    this.createDir('src/__generated__/client');
-    this.writeFile(filePath, fileContent);
   }
 
   /**
@@ -221,15 +213,16 @@ export class FileCreator {
    * @param options The package.json content
    */
   private createPackageJson (options: PackageJsonOptions) {
-    const packageJsonPath = path.join(this.PROJECT_DIR, 'package.json')
+    const packageJsonPath = path.join(this.projectDir, 'package.json')
 
     const packageJson = {
       name: options.name,
-      type: 'module',
+      type: this.usingTsc ? undefined : 'module',
       version: options.version || '1.0.0',
       scripts: {
-        'start:prod': 'kottster start src/server/main.js',
-        'start:dev': 'kottster start src/server/main.js --development',
+        'build': this.usingTsc ? 'tsc && vite build' : 'vite build',
+        'start:prod': `kottster start ${this.usingTsc ? 'dist/server/main.js' : 'src/server/main.js'}`,
+        'start:dev': `kottster start ${this.usingTsc ? `src/server/main.ts` : `src/server/main.js`} --development`,
         'dev:add-data-source': 'kottster add-data-source',
         postinstall: 'npm install @kottster/cli@^1.x -g'
       },
@@ -263,7 +256,7 @@ export class FileCreator {
    * @param options The .env variables
    */
   private createEnv (options: EnvOptions): void {
-    const envPath = path.join(this.PROJECT_DIR, '.env')
+    const envPath = path.join(this.projectDir, '.env')
     const envContent = options.map(({ key, comment, value }) => {
       return `${comment ? `# ${comment}\n` : ''}${key}=${value}`
     }).join('\n\n') + '\n';
@@ -275,7 +268,7 @@ export class FileCreator {
    * Create a .gitignore file
    */
   private createGitIgnore (): void {
-    const gitIgnorePath = path.join(this.PROJECT_DIR, '.gitignore')
+    const gitIgnorePath = path.join(this.projectDir, '.gitignore')
     const gitIgnoreContent = ['node_modules', 'nbuild', 'npm-debug.log', '.DS_Store', 'dist'].join('\n')
 
     this.writeFile(gitIgnorePath, gitIgnoreContent)
@@ -285,8 +278,8 @@ export class FileCreator {
    * Create a Dockerfile
    */
   private createDockerfile (): void {
-    const filePath = path.join(this.PROJECT_DIR, 'Dockerfile')
-    const fileContent = FileTemplateManager.getTemplate('Dockerfile')
+    const filePath = path.join(this.projectDir, 'Dockerfile')
+    const fileContent = this.fileTemplateManager.getTemplate('Dockerfile')
     this.writeFile(filePath, fileContent)
   }
 
@@ -294,8 +287,17 @@ export class FileCreator {
    * Create a vite.config.js file
    */
   private createViteConfig (): void {
-    const filePath = path.join(this.PROJECT_DIR, 'vite.config.js')
-    const fileContent = FileTemplateManager.getTemplate('vite.config.js')
+    const filePath = path.join(this.projectDir, 'vite.config.js')
+    const fileContent = this.fileTemplateManager.getTemplate('vite.config.js')
+    this.writeFile(filePath, fileContent)
+  }
+
+  /**
+   * Create a tsconfig.json file
+   */
+  private createTsConfig (): void {
+    const filePath = path.join(this.projectDir, 'tsconfig.json')
+    const fileContent = this.fileTemplateManager.getTemplate('tsconfig.json')
     this.writeFile(filePath, fileContent)
   }
 
@@ -303,8 +305,8 @@ export class FileCreator {
    * Create a src/server/app.js file
    */
   private createServerApp (): void {
-    const filePath = path.join(this.PROJECT_DIR, 'src/server', 'app.js')
-    const fileContent = FileTemplateManager.getTemplate('src/server/app.js')
+    const filePath = path.join(this.projectDir, 'src/server', `app.${this.jsExt}`)
+    const fileContent = this.fileTemplateManager.getTemplate('src/server/app.js')
     this.writeFile(filePath, fileContent)
   }
 
@@ -316,17 +318,26 @@ export class FileCreator {
       version: 0,
       pages: [],
     };
-    const filePath = path.join(this.PROJECT_DIR, 'src/__generated__', 'schema.json')
+    const filePath = path.join(this.projectDir, 'src/__generated__', 'schema.json')
     const fileContent = JSON.stringify(appSchema, null, 2);
     this.writeFile(filePath, fileContent);
   }
 
   /**
-   * Create a src/client/index.jsx file
+   * Create a src/client/main.jsx file
    */
-  private createClientIndex (): void {
-    const filePath = path.join(this.PROJECT_DIR, 'src/client', 'index.jsx')
-    const fileContent = FileTemplateManager.getTemplate('src/client/index.jsx');
+  private createClientMain (): void {
+    const filePath = path.join(this.projectDir, 'src/client', `main.${this.jsxExt}`)
+    const fileContent = this.fileTemplateManager.getTemplate('src/client/main.jsx');
+    this.writeFile(filePath, fileContent);
+  }
+
+  /**
+   * Create a src/client/index.html file
+   */
+  private createClientIndexHtml (): void {
+    const filePath = path.join(this.projectDir, 'src/client', 'index.html')
+    const fileContent = this.fileTemplateManager.getTemplate('src/client/index.html');
     this.writeFile(filePath, fileContent);
   }
 
@@ -334,8 +345,8 @@ export class FileCreator {
    * Create a src/server/main.js file
    */
   private createServerMain (): void {
-    const filePath = path.join(this.PROJECT_DIR, 'src/server', 'main.js')
-    const fileContent = FileTemplateManager.getTemplate('src/server/main.js');
+    const filePath = path.join(this.projectDir, 'src/server', `main.${this.jsExt}`)
+    const fileContent = this.fileTemplateManager.getTemplate('src/server/main.js');
     this.writeFile(filePath, fileContent);
   }
 
@@ -344,15 +355,15 @@ export class FileCreator {
    */
   private createDir (dirName?: string): void {
     // Skip if directory already exists
-    if (dirName && fs.existsSync(path.join(this.PROJECT_DIR, dirName))) {
+    if (dirName && fs.existsSync(path.join(this.projectDir, dirName))) {
       return;
     }
     
     try {
       if (!dirName) {
-        fs.mkdirSync(this.PROJECT_DIR, { recursive: true })
+        fs.mkdirSync(this.projectDir, { recursive: true })
       } else {
-        const dirPath = path.join(this.PROJECT_DIR, dirName)
+        const dirPath = path.join(this.projectDir, dirName)
         fs.mkdirSync(dirPath, { recursive: true })
       }
     } catch (error) {

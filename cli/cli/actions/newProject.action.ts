@@ -7,6 +7,7 @@ interface Options {
   appId: string;
   secretKey: string;
   skipInstall?: boolean;
+  typescript?: boolean;
 }
 
 /**
@@ -19,11 +20,14 @@ export async function newProject (projectName: string, options: Options): Promis
 
   try {
     // Create project files
-    const fileCreator = new FileCreator(projectDir)
+    const fileCreator = new FileCreator({
+      projectDir,
+      usingTsc: !!options.typescript
+    })
     fileCreator.createProject({
       projectName,
       appId,
-      secretKey,
+      secretKey
     })
 
     if (options.skipInstall) {

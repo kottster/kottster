@@ -1,9 +1,15 @@
+import { stripIndent } from "@kottster/common";
+
 /**
  * Service for storing file templates
  */
 export class FileTemplateManager {
+  constructor(
+    private readonly usingTsc: boolean
+  ) {}
+
   static templates = {
-    'Dockerfile': this.stripIndent(`
+    'Dockerfile': stripIndent(`
       FROM node:18
       WORKDIR /usr/src/app
       COPY package*.json ./
@@ -11,10 +17,40 @@ export class FileTemplateManager {
       COPY . .
       RUN npm install @kottster/cli@^1.0.0 -g
       EXPOSE 5480
-      CMD ["npm", "start"]
+      CMD ["npm", "start:prod"]
     `),
 
-    'src/server/app.js': this.stripIndent(`
+    'tsconfig.json': stripIndent(`
+      {
+        "compilerOptions": {
+          "lib": ["es2023"],
+          "module": "commonjs",
+          "target": "es2022",
+          "moduleResolution": "node",
+          "strict": true,
+          "esModuleInterop": true,
+          "declaration": true,
+          "removeComments": true,
+          "emitDecoratorMetadata": true,
+          "experimentalDecorators": true,
+          "allowSyntheticDefaultImports": true,
+          "sourceMap": true,
+          "outDir": "./dist",
+          "rootDir": "./src",
+          "incremental": false,
+          "skipLibCheck": true,
+          "strictNullChecks": false,
+          "noImplicitAny": false,
+          "strictBindCallApply": false,
+          "forceConsistentCasingInFileNames": false,
+          "noFallthroughCasesInSwitch": false
+        },
+        "include": ["src/server/**/*"],
+        "exclude": ["node_modules", "**/*.spec.ts", "src/client"]
+      }
+    `),
+
+    'src/server/app.js': stripIndent(`
       import { getEnvOrThrow } from '@kottster/common';
       import { createApp } from '@kottster/server';
 
@@ -24,22 +60,22 @@ export class FileTemplateManager {
       });
     `),
 
-    'src/server/main.js': this.stripIndent(`
-      import { app } from './app.js';
+    'src/server/main.js': () => stripIndent(`
+      import { app } from './app';
       import { getEnvOrThrow } from '@kottster/common';
-      import procedures from '../__generated__/server/procedures.generated.js';
+      import procedures from '../__generated__/server/procedures.generated';
 
       app.registerProcedures(procedures);
 
       app.start(getEnvOrThrow('PORT') ?? 5480);
     `),
 
-    'src/server/data-sources/postgres/index.js': this.stripIndent(`
+    'src/server/data-sources/postgres/index.js': (usingTsc: boolean) => stripIndent(`
       import { createDataSource, KnexPgAdapter } from '@kottster/server';
       import knex from 'knex';
-
+      ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
       const dataSource = createDataSource({
-        type: 'postgres',
+        type: ${usingTsc ? `DataSourceType.postgres` : `'postgres'`},
         contextPropName: 'knex',
         databaseSchemas: ['public'],
         init: () => {
@@ -58,12 +94,12 @@ export class FileTemplateManager {
       export default dataSource;
     `),
 
-    'src/server/data-sources/mysql/index.js': this.stripIndent(`
+    'src/server/data-sources/mysql/index.js': (usingTsc: boolean) => stripIndent(`
       import { createDataSource, KnexMysql2Adapter } from '@kottster/server';
       import knex from 'knex';
-
+      ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
       const dataSource = createDataSource({
-        type: 'postgres',
+        type: ${usingTsc ? `DataSourceType.mysql` : `'mysql'`},
         contextPropName: 'knex',
         databaseSchemas: ['public'],
         init: () => {
@@ -87,12 +123,12 @@ export class FileTemplateManager {
       export default dataSource;
     `),
 
-    'src/server/data-sources/mariadb/index.js': this.stripIndent(`
+    'src/server/data-sources/mariadb/index.js': (usingTsc: boolean) => stripIndent(`
       import { createDataSource, KnexMysql2Adapter } from '@kottster/server';
       import knex from 'knex';
-
+      ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
       const dataSource = createDataSource({
-        type: 'postgres',
+        type: ${usingTsc ? `DataSourceType.mariadb` : `'mariadb'`},
         contextPropName: 'knex',
         databaseSchemas: ['public'],
         init: () => {
@@ -116,12 +152,12 @@ export class FileTemplateManager {
       export default dataSource;
     `),
 
-    'src/server/data-sources/mssql/index.js': this.stripIndent(`
+    'src/server/data-sources/mssql/index.js': (usingTsc: boolean) => stripIndent(`
       import { createDataSource } from '@kottster/server';
       import knex from 'knex';
-
+      ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
       const dataSource = createDataSource({
-        type: 'postgres',
+        type: ${usingTsc ? `DataSourceType.mssql` : `'mssql'`},
         contextPropName: 'knex',
         databaseSchemas: ['dbo'],
         client: knex({
@@ -141,14 +177,14 @@ export class FileTemplateManager {
       export default dataSource;
     `),
 
-    'src/client/index.jsx': this.stripIndent(`
+    'src/client/main.jsx': stripIndent(`
       import React from 'react';
       import ReactDOM from 'react-dom/client';
       import { ConfigProvider } from 'antd';
       import { App, appTheme } from '@kottster/react';
       import '@kottster/react/dist/style.css';
       
-      import pages from '../__generated__/client/pages.generated.js';
+      import pages from '../__generated__/client/pages.generated';
 
       ReactDOM.createRoot(document.getElementById('root')).render(
         <React.StrictMode>
@@ -159,35 +195,46 @@ export class FileTemplateManager {
       );
     `),
 
-    'vite.config.js': this.stripIndent(`
-      import { defineConfig } from 'vite';
-      import react from '@vitejs/plugin-react';
+    'src/client/index.html': (usingTsc: boolean) => stripIndent(`
+      <!doctype html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+          <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+
+          <title>Kottster App</title>
+        </head>
+        <body>
+          <div id="root"></div>
+          <script type="module" src="/${usingTsc ? 'main.tsx' : 'main.jsx'}"></script>
+        </body>
+      </html>
+
+    `),
+
+    'vite.config.js': stripIndent(`
+      import { defineConfig } from 'vite'
+      import react from '@vitejs/plugin-react'
+      import path from 'path'
 
       export default defineConfig({
         plugins: [react()],
-        build: {
-          outDir: 'dist',
-          rollupOptions: {
-            input: 'src/client/index.jsx',
-            output: {
-              dir: 'dist/static',
-              entryFileNames: 'bundle.js',
-              assetFileNames: (assetInfo) => {
-                if (assetInfo.name.endsWith('.css')) {
-                  return 'style.css';
-                }
-                return '[name].[ext]';
-              },
-              format: 'iife',
-              name: 'KottsterApp'
-            }
+        root: path.resolve(__dirname, 'src/client'),
+        base: '/static/',
+        server: {
+          watch: {
+            usePolling: true,
+            include: ['src/client/**'],
           },
-          cssCodeSplit: false,
-          assetsInlineLimit: 0,
         },
-        define: {
-          'process.env.NODE_ENV': JSON.stringify('production'),
-        },
+        build: {
+          outDir: '../../dist/static',
+          emptyOutDir: false,
+        }
       });
     `),
 
@@ -198,16 +245,13 @@ export class FileTemplateManager {
    * @param name Template name
    * @returns The file content
    */
-  static getTemplate(name: keyof typeof this.templates): string {
-    return this.templates[name];
-  };
+  public getTemplate(name: keyof typeof FileTemplateManager.templates): string {
+    const template = FileTemplateManager.templates[name];
+    
+    if (typeof template === 'function') {
+      return template(this.usingTsc);
+    }
 
-  private static stripIndent(str: string): string {
-    const match = str.match(/^[ \t]*(?=\S)/gm);
-    if (!match) return str;
-
-    const indent = Math.min(...match.map(x => x.length));
-    const re = new RegExp(`^[ \\t]{${indent}}`, 'gm');
-    return str.replace(re, '').trim();
+    return template;
   };
 }

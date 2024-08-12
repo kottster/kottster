@@ -12,10 +12,17 @@ program
   .requiredOption('-id, --appId <appId>', 'The ID of the app')
   .requiredOption('-sk, --secretKey <secretKey>', 'The secret key of the app')
   .option('--skipInstall', 'Skip installing dependencies')
+  .option('--typescript', 'Use TypeScript')
   .action((projectName, options) => {
-    const { appId, secretKey, skipInstall, database } = options;
+    const { appId, secretKey, skipInstall, typescript } = options;
 
-    kottsterCLI.parse(['new', projectName, '-id', appId, '-sk', secretKey, skipInstall ? '--skip-install' : ''], { from: 'user' });
+    kottsterCLI.parse([
+      'new', projectName, 
+      '-id', appId, 
+      '-sk', secretKey, 
+      skipInstall ? '--skip-install' : '', 
+      typescript ? '--typescript' : ''
+    ], { from: 'user' });
   });
 
 program.parse(process.argv);

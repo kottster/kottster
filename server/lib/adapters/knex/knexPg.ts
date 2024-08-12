@@ -1,7 +1,10 @@
+import { DataSourceAdapterType } from "@kottster/common";
 import { RelationalDatabaseSchema, RelationalDatabaseSchemaColumn } from "../../models/databaseSchema.model";
 import { DataSourceAdapter } from "../../models/DataSourceAdapter.model";
 
 export class KnexPg extends DataSourceAdapter {
+  type = DataSourceAdapterType.knex_pg;
+  
   async getDatabaseSchema(): Promise<RelationalDatabaseSchema> {
     const schemaName = this.databaseSchemas[0] || 'public';
 

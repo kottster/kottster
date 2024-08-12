@@ -1,11 +1,14 @@
 import { Knex } from "knex";
 import { RelationalDatabaseSchema } from "./databaseSchema.model";
+import { DataSourceAdapterType } from "@kottster/common";
 
 /**
  * The base class for all data source adapters
  * @abstract
  */
 export abstract class DataSourceAdapter {
+  abstract type: DataSourceAdapterType;
+
   // An array of available database schemas
   protected databaseSchemas: string[];
 

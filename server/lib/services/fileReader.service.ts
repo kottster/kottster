@@ -42,7 +42,7 @@ export class FileReader {
    */
   public getPageFileStructure(pageId: string): PageFileStructure | null {
     const dir = `${PROJECT_DIR}/src/client/pages/${pageId}`;
-    const entryFilePath = `${dir}/index.jsx`;
+    const entryFilePath = fs.existsSync(`${dir}/index.tsx`) ? `${dir}/index.tsx` : `${dir}/index.jsx`;
 
     if (!fs.existsSync(dir)) {
       return null;

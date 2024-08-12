@@ -7,7 +7,11 @@ import { ProcedureFunction } from '@kottster/common';
  */
 export const executeProcedure = (app: KottsterApp) => async (req: Request, res: Response) => {
   const { procedureName } = req.params as { procedureName: string };
-  const args = req.query;
+  const stringifiedArgsObject = req.query.args as string;
+  const args = stringifiedArgsObject ? JSON.parse(stringifiedArgsObject) : {};
+
+  console.debug('stringifiedArgsObject', stringifiedArgsObject);
+  console.debug('args', args);
 
   try {
     const procedures = app.getProcedures();

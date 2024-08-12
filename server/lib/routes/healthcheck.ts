@@ -10,6 +10,7 @@ export const healthcheck = (app: KottsterApp) => async (req: Request, res: Respo
   
   res.json({
     appId: app.appId,
+    usingTypescript: app.usingTsc,
     procedures: procedures.map(p => p.procedureName),
     dataSources: dataSources.map(ds => ds.contextPropName),
   });

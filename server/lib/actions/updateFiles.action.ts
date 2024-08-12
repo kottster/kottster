@@ -3,8 +3,14 @@ import { FileWriter } from "../services/fileWriter.service";
 import { PageFileStructure, ProcedureFileStructure } from "@kottster/common";
 
 interface Data {
-  pages?: PageFileStructure[];
-  procedures?: ProcedureFileStructure[];
+  page?: {
+    createOrUpdate?: PageFileStructure;
+    delete?: PageFileStructure;
+  };
+  procedures?: {
+    createOrUpdate?: ProcedureFileStructure[];
+    delete?: ProcedureFileStructure[];
+  };
 }
 
 /**
@@ -12,19 +18,25 @@ interface Data {
  */
 export class UpdateFiles extends Action {
   public async execute(data: Data) {
-    const { pages, procedures } = data;
+    const { page, procedures } = data;
 
-    const fileWriter = new FileWriter();
+    const fileWriter = new FileWriter({ usingTsc: this.app.usingTsc });
     
-    if (pages) {
-      pages.forEach((page) => {
-        fileWriter.writePageToFile(page);
-      });
+    if (page?.createOrUpdate) {
+      fileWriter.writePageToFile(page.createOrUpdate);
     };
 
-    if (procedures) {
-      fileWriter.writeProceduresToFile(procedures);
+    if (page?.delete) {
+      fileWriter.deletePageDirectory(page.delete);
+    }
+
+    if (procedures?.createOrUpdate) {
+      fileWriter.writeProceduresToFile(procedures.createOrUpdate);
     };
+
+    if (procedures?.delete) {
+      fileWriter.deleteProcedureFiles(procedures.delete);
+    }
 
     return {};
   }

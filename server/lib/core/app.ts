@@ -6,13 +6,14 @@ import express, { Request, Response, NextFunction } from 'express';
 import chalk from 'chalk';
 import { ExtendAppContextFunction } from '../models/appContext.model';
 import { PROJECT_DIR } from '../constants/projectDir';
-import { AppContext, DataSource, getEnvOrThrow, JWTTokenPayload, ProcedureFunction, RegisteredProcedure, Role, Stage, User } from '@kottster/common';
+import { AppContext, checkTsUsage, DataSource, getEnvOrThrow, JWTTokenPayload, ProcedureFunction, RegisteredProcedure, Role, Stage, User } from '@kottster/common';
 import { FileReader } from '../services/fileReader.service';
+import http from 'http';
+import WebSocket, {  } from 'ws';
 
 export interface KottsterAppOptions {
   appId: string;
   secretKey: string;
-  stage: Stage;
 }
 
 /**
@@ -21,9 +22,14 @@ export interface KottsterAppOptions {
 export class KottsterApp {
   public version: number;
   public readonly appId: string;
-  public readonly stage: Stage;
+  public readonly usingTsc: boolean;
+
+  private readonly secretKey: string;
+  public readonly stage: Stage = (process.env.NODE_ENV || 'production') as Stage;
 
   private readonly expressApp = express();
+  private server: http.Server;
+  private wss: WebSocket.Server;
   private readonly jwtSecret = getEnvOrThrow('JWT_SECRET');
   
   private procedures: RegisteredProcedure[] = [];
@@ -33,7 +39,8 @@ export class KottsterApp {
 
   constructor(options: KottsterAppOptions) {
     this.appId = options.appId;
-    this.stage = options.stage;
+    this.secretKey = options.secretKey;
+    this.usingTsc = checkTsUsage(PROJECT_DIR);
 
     this.loadDataFromSchema();
     this.setupExpressMiddleware();
@@ -174,6 +181,7 @@ export class KottsterApp {
    * Setup the Express middleware
    */
   private setupExpressMiddleware(): void {
+    this.expressApp.use(express.urlencoded({ extended: true, limit: '100kb' }));
     this.expressApp.use(cors());
     this.expressApp.use('/static', express.static(`${PROJECT_DIR}/dist/static`));
     this.expressApp.use(express.json());
@@ -185,7 +193,6 @@ export class KottsterApp {
    */
   private setupExpressRoutes(): void {
     this.expressApp.get('/', routes.healthcheck(this));
-    this.expressApp.get('/start-time', routes.getServerStartTime());
     this.expressApp.get('/action/:action', this.getAuthExpressMiddleware(Role.DEVELOPER), routes.executeAction(this));
     this.expressApp.get('/rpc/:procedureName', this.getAuthExpressMiddleware(), routes.executeProcedure(this));
   }
@@ -202,15 +209,40 @@ export class KottsterApp {
     });
   }
 
+  private createServer(): void {
+    this.server = http.createServer({
+      maxHeaderSize: 102400 // 100KB
+    }, this.expressApp);
+  }
+
+  private createWebSocketServer(): void {
+    this.wss = new WebSocket.Server({ server: this.server });
+
+    // When nodemon restarts the server, send a message to the client to reload
+    process.once('SIGUSR2', () => {
+      this.wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send('reload');
+        }
+      });
+      process.kill(process.pid, 'SIGUSR2');
+    });
+  }
+
   /**
    * Start the Express server
    * @returns The server instance
    */
-  public start(port: number): Server {
-    this.connectToDataSources();
+  public start(port: number | string): Server {
+    if (typeof port === 'string') {
+      port = Number(port);
+    }
 
-    return this.expressApp.listen(port, () => {
-      console.log(`Kottster backend is running on port ${port}`);
+    this.connectToDataSources();
+    this.createServer();
+    this.createWebSocketServer();
+
+    return this.server.listen(port, () => {
       console.log(`Stage: ${chalk.green(process.env.NODE_ENV)}`);
       console.log(`Server URL: ${chalk.green(`http://localhost:${port}`)}`);
     });

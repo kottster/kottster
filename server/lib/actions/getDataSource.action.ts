@@ -23,11 +23,15 @@ export class GetDataSource extends Action {
       throw new Error(`Data source with contextPropName ${contextPropName} not found`);
     }
 
-    const adapter = dataSource.adapter as DataSourceAdapter;
-    const databaseSchema = await adapter.getDatabaseSchema();
-    
-    return {
-      relationalDatabaseSchema: databaseSchema
-    };
+    try {
+      const adapter = dataSource.adapter as DataSourceAdapter;
+      const databaseSchema = await adapter.getDatabaseSchema();
+      
+      return {
+        relationalDatabaseSchema: databaseSchema
+      };
+    } catch (error) {
+      throw new Error(`Failed to get database schema: ${error.message}`);
+    }
   }
 }

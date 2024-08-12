@@ -1,4 +1,5 @@
 import { Action } from "../models/action.model";
+import { DataSourceAdapter } from "../models/dataSourceAdapter.model";
 import { FileReader } from "../services/fileReader.service";
 import { FullAppSchema, PublicDataSource } from "@kottster/common";
 
@@ -18,11 +19,16 @@ export class GetSchema extends Action {
     return {
       ...appSchema,
       id: appId,
+      usingTsc: this.app.usingTsc,
       dataSources: dataSources.map(ds => ({ 
         type: ds.type,
         contextPropName: ds.contextPropName,
+        adapterType: (ds.adapter as DataSourceAdapter).type
       } as PublicDataSource)),
-      procedures: this.app.getProcedures()
+      procedures: this.app.getProcedures(),
+      sandbox: {
+        developmentServerUrl: process.env.VITE_DEV_SERVER_URL
+      }
     };
   }
 }

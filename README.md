@@ -7,11 +7,55 @@ Simple low-code platform for building robust admin dashboards fast ⚡
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![GitHub last commit](https://img.shields.io/github/last-commit/kottster/kottster)
 
-[Website](https://kottster.app) • [Sign Up](https://web.kottster.app/signup) • [Docs](https://kottster.gitbook.io/docs) • [Pricing](https://kottster.app/pricing) • [Get a demo](https://kottster.app/request-demo)
+[Website](https://kottster.app) • [Sign Up](https://web.kottster.app/signup) • [Docs](https://kottster.gitbook.io/docs) • [Pricing](https://kottster.app/pricing)
 
-<!-- <img alt="Kottster App" src="https://raw.githubusercontent.com/nepflow/integration-widget/main/web/assets/intro-v3.png" style="max-width: 800px; width: 100%; margin: 12px 0;" /> -->
+## Getting started
 
-## Learning Resources
+#### **1.** [Sign up](https://web.kottster.app/signup) at Kottster.
+
+#### **2.** Create a new app.
+
+#### **3.** Complete the initial setup:
+
+**3.1. Create a new project using the CLI:**
+  
+```bash
+npx create-kottster my-app -id <appId> -sk <secretKey>
+
+# Or if you want to use TypeScript
+npx create-kottster my-app -id <appId> -sk <secretKey> --typescript
+```
+**3.2. Inside your project, run the app locally:**
+
+```bash
+npm run start:dev
+```
+
+**3.3. Connect the app to your database:**
+
+```bash
+# PostgreSQL
+npm run dev:add-data-source postgres
+
+# MySQL
+npm run dev:add-data-source mysql
+
+# MariaDB
+npm run dev:add-data-source mariadb
+
+# Microsoft SQL Server
+npm run dev:add-data-source mssql
+```
+
+After running the command, the new file will be created inside  `src/server/data-sources/` folder. Edit the file to configure the connection to your database, and restart the server.
+
+#### **4.** Start building your app:
+- Use our builder to generate pages and features instantly.
+- Or, create and customize them on your own.
+
+#### **5.** [Deploy your app to production](https://kottster.gitbook.io/docs/get-started/deploying-app-to-production) when it's ready.
+
+## Resources
 
 - [Documentation](https://kottster.gitbook.io/docs)
   - [Quickstart](https://kottster.gitbook.io/docs)

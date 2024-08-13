@@ -233,7 +233,7 @@ export class FileCreator {
         '@kottster/common': process.env.KOTTSTER_COMMON_DEP_VER ?? '^1.x',
         '@kottster/cli': process.env.KOTTSTER_CLI_DEP_VER ?? '^2.x',
         '@kottster/server': process.env.KOTTSTER_BACKEND_DEP_VER ?? '^1.x',
-        '@kottster/react': process.env.KOTTSTER_REACT_DEP_VER ?? '^0.x',
+        '@kottster/react': process.env.KOTTSTER_REACT_DEP_VER ?? '^1.x',
         'react': '^18.x',
         'react-dom': '^18.x',
         'antd': '^5.x',

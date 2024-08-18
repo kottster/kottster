@@ -72,6 +72,7 @@ export class FileCreator {
     this.createDir('src/client')
     this.createDir('src/client/pages')
     this.createDir('src/__generated__/client')
+    this.createDir('src/__generated__/server')
     this.createDir('src/server')
     this.createDir('src/server/procedures')
 
@@ -99,7 +100,6 @@ export class FileCreator {
       },
     ])
     this.createGitIgnore()
-    this.createDockerfile()
     this.createViteConfig()
     if (this.usingTsc) {
       this.createTsConfig()
@@ -108,8 +108,13 @@ export class FileCreator {
     // Create files
     this.createClientIndexHtml()
     this.createClientMain()
+    this.createClientTRPC()
     this.createServerMain()
-    this.createServerApp()
+    this.createServerTRPC()
+    this.createGeneratedServerTRPCRouter()
+    if (this.usingTsc) {
+      this.createGeneratedClientTRPCRouter()
+    }
     
     // Create auto-generated files
     this.createSchema()
@@ -234,10 +239,15 @@ export class FileCreator {
         '@kottster/cli': process.env.KOTTSTER_CLI_DEP_VER ?? '^2.x',
         '@kottster/server': process.env.KOTTSTER_BACKEND_DEP_VER ?? '^1.x',
         '@kottster/react': process.env.KOTTSTER_REACT_DEP_VER ?? '^1.x',
+        '@tanstack/react-query': '^4.x',
+        '@trpc/client': '^10.x',
+        '@trpc/react-query': '^10.x',
+        '@trpc/server': '^10.x',
         'react': '^18.x',
         'react-dom': '^18.x',
         'antd': '^5.x',
         '@ant-design/icons': '^5.x',
+        'zod': '^3.23.8',
         ...(options.dependencies ?? {}),
       },
       devDependencies: {
@@ -275,15 +285,6 @@ export class FileCreator {
   }
 
   /**
-   * Create a Dockerfile
-   */
-  private createDockerfile (): void {
-    const filePath = path.join(this.projectDir, 'Dockerfile')
-    const fileContent = this.fileTemplateManager.getTemplate('Dockerfile')
-    this.writeFile(filePath, fileContent)
-  }
-
-  /**
    * Create a vite.config.js file
    */
   private createViteConfig (): void {
@@ -302,11 +303,29 @@ export class FileCreator {
   }
 
   /**
-   * Create a src/server/app.js file
+   * Create a src/server/trpc.js file
    */
-  private createServerApp (): void {
-    const filePath = path.join(this.projectDir, 'src/server', `app.${this.jsExt}`)
-    const fileContent = this.fileTemplateManager.getTemplate('src/server/app.js')
+  private createServerTRPC (): void {
+    const filePath = path.join(this.projectDir, 'src/server', `trpc.${this.jsExt}`)
+    const fileContent = this.fileTemplateManager.getTemplate('src/server/trpc.js')
+    this.writeFile(filePath, fileContent)
+  }
+
+  /**
+   * Create a src/__generated__/server/trpcRouter.ts file
+   */
+  private createGeneratedServerTRPCRouter (): void {
+    const filePath = path.join(this.projectDir, 'src/__generated__/server', `trpcRouter.${this.jsExt}`)
+    const fileContent = this.fileTemplateManager.getTemplate('src/__generated__/server/trpcRouter.js')
+    this.writeFile(filePath, fileContent)
+  }
+
+  /**
+   * Create a src/__generated__/client/trpcRouter.ts file
+   */
+  private createGeneratedClientTRPCRouter (): void {
+    const filePath = path.join(this.projectDir, 'src/__generated__/client', `trpcRouter.${this.jsExt}`)
+    const fileContent = this.fileTemplateManager.getTemplate('src/__generated__/client/trpcRouter.ts')
     this.writeFile(filePath, fileContent)
   }
 
@@ -323,12 +342,30 @@ export class FileCreator {
     this.writeFile(filePath, fileContent);
   }
 
+  // /**
+  //  * Create a src/__generated__/server/tRPC.generated.js file
+  //  */
+  // private createServerTRPC(): void {
+  //   const filePath = path.join(this.projectDir, 'src/__generated__/server', `tRPC.generated.${this.jsExt}`)
+  //   const fileContent = this.fileTemplateManager.getTemplate('src/__generated__/server/tRPC.generated.js');
+  //   this.writeFile(filePath, fileContent);
+  // }
+
   /**
    * Create a src/client/main.jsx file
    */
   private createClientMain (): void {
     const filePath = path.join(this.projectDir, 'src/client', `main.${this.jsxExt}`)
     const fileContent = this.fileTemplateManager.getTemplate('src/client/main.jsx');
+    this.writeFile(filePath, fileContent);
+  }
+
+  /**
+   * Create a src/client/trpc.js file
+   */
+  private createClientTRPC (): void {
+    const filePath = path.join(this.projectDir, 'src/client', `trpc.${this.jsExt}`)
+    const fileContent = this.fileTemplateManager.getTemplate('src/client/trpc.js');
     this.writeFile(filePath, fileContent);
   }
 

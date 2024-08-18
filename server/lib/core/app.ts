@@ -9,7 +9,8 @@ import { PROJECT_DIR } from '../constants/projectDir';
 import { AppContext, checkTsUsage, DataSource, getEnvOrThrow, JWTTokenPayload, ProcedureFunction, RegisteredProcedure, Role, Stage, User } from '@kottster/common';
 import { FileReader } from '../services/fileReader.service';
 import http from 'http';
-import WebSocket, {  } from 'ws';
+import WebSocket from 'ws';
+import * as trpcExpress from '@trpc/server/adapters/express';
 
 export interface KottsterAppOptions {
   appId: string;
@@ -96,6 +97,17 @@ export class KottsterApp {
    */
   public getDataSources() {
     return this.dataSources;
+  }
+
+  /**
+   * Set the tRPC router
+   * @param router The tRPC router
+   */
+  public setTRPCRouter(router: any) {
+    this.expressApp.use('/trpc', this.getAuthExpressMiddleware(), trpcExpress.createExpressMiddleware({
+      router,
+      createContext: ({ req }) => this.createContext(req)
+    }));
   }
 
   /**

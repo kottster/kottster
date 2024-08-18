@@ -20,10 +20,10 @@ Simple low-code platform for building robust admin dashboards fast ⚡
 **3.1. Create a new project using the CLI:**
   
 ```bash
-npx create-kottster my-app -id <appId> -sk <secretKey>
-
-# Or if you want to use TypeScript
 npx create-kottster my-app -id <appId> -sk <secretKey> --typescript
+
+# Or without TypeScript (not recommended)
+npx create-kottster my-app -id <appId> -sk <secretKey>
 ```
 **3.2. Inside your project, run the app locally:**
 

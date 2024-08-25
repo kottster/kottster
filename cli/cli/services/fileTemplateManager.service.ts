@@ -1,5 +1,7 @@
 import { stripIndent } from "@kottster/common";
 
+type Template = string | ((usingTsc: boolean) => string);
+
 /**
  * Service for storing file templates
  */
@@ -8,7 +10,7 @@ export class FileTemplateManager {
     private readonly usingTsc: boolean
   ) {}
 
-  static templates = {
+  static templates: Record<string, Template> = {
     'tsconfig.json': stripIndent(`
       {
         "compilerOptions": {
@@ -39,16 +41,18 @@ export class FileTemplateManager {
       }
     `),
 
-    'src/server/trpc.js': (usingTsc: boolean) => stripIndent(`
+    'src/server/trpc.js': usingTsc => stripIndent(`
       import { initTRPC } from '@trpc/server';
       ${usingTsc ? "import { AppContext } from '@kottster/common';\n" : ""}
-      export const t = initTRPC.context${usingTsc ? '<AppContext>' : ''}().create();
+      ${usingTsc ? "import { DataSourceContextToClientMap } from './data-sources/registry';\n" : ""}
+      export const t = initTRPC.context${usingTsc ? '<AppContext & DataSourceContextToClientMap>' : ''}().create();
     `),
 
     'src/server/main.js': () => stripIndent(`
       import { getEnvOrThrow } from '@kottster/common';
       import { createApp } from '@kottster/server';
       import { tRPCRouter } from '../__generated__/server/trpcRouter';
+      import { dataSourceRegistry } from './data-sources/registry';
       
       export const app = createApp({
         appId: getEnvOrThrow('APP_ID'),
@@ -56,6 +60,8 @@ export class FileTemplateManager {
       });
 
       app.setTRPCRouter(tRPCRouter);
+
+      app.registerDataSources(dataSourceRegistry);
 
       app.start(getEnvOrThrow('PORT') ?? 5480);
     `),
@@ -67,7 +73,7 @@ export class FileTemplateManager {
       export const tRPCRouter = t.router(procedures);
     `),
 
-    'src/server/data-sources/postgres/index.js': (usingTsc: boolean) => stripIndent(`
+    'src/server/data-sources/postgres/index.js': usingTsc => stripIndent(`
       import { createDataSource, KnexPgAdapter } from '@kottster/server';
       import knex from 'knex';
       ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
@@ -91,7 +97,7 @@ export class FileTemplateManager {
       export default dataSource;
     `),
 
-    'src/server/data-sources/mysql/index.js': (usingTsc: boolean) => stripIndent(`
+    'src/server/data-sources/mysql/index.js': usingTsc => stripIndent(`
       import { createDataSource, KnexMysql2Adapter } from '@kottster/server';
       import knex from 'knex';
       ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
@@ -120,7 +126,7 @@ export class FileTemplateManager {
       export default dataSource;
     `),
 
-    'src/server/data-sources/mariadb/index.js': (usingTsc: boolean) => stripIndent(`
+    'src/server/data-sources/mariadb/index.js': usingTsc => stripIndent(`
       import { createDataSource, KnexMysql2Adapter } from '@kottster/server';
       import knex from 'knex';
       ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
@@ -149,7 +155,7 @@ export class FileTemplateManager {
       export default dataSource;
     `),
 
-    'src/server/data-sources/mssql/index.js': (usingTsc: boolean) => stripIndent(`
+    'src/server/data-sources/mssql/index.js': usingTsc => stripIndent(`
       import { createDataSource, KnexTediousAdapter } from '@kottster/server';
       import knex from 'knex';
       ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
@@ -157,7 +163,7 @@ export class FileTemplateManager {
         type: ${usingTsc ? `DataSourceType.mssql` : `'mssql'`},
         contextPropName: 'knex',
         databaseSchemas: ['dbo'],
-        init: () =>{
+        init: () => {
           const client = knex({
             // Replace the following with your connection options
             // Read more at https://knexjs.org/guide/#configuration-options
@@ -178,7 +184,7 @@ export class FileTemplateManager {
       export default dataSource;
     `),
 
-    'src/client/trpc.js': (usingTsc: boolean) => stripIndent(`
+    'src/client/trpc.js': usingTsc => stripIndent(`
       import { createTRPCClient } from '@kottster/react';
       import { createTRPCReact } from '@trpc/react-query';
       ${usingTsc ? "import { type Router } from '../__generated__/client/trpcRouter';\n" : ""}
@@ -221,7 +227,7 @@ export class FileTemplateManager {
       );
     `),
 
-    'src/client/index.html': (usingTsc: boolean) => stripIndent(`
+    'src/client/index.html': usingTsc => stripIndent(`
       <!doctype html>
       <html lang="en">
         <head>
@@ -251,6 +257,9 @@ export class FileTemplateManager {
         root: path.resolve(__dirname, 'src/client'),
         base: '/static/',
         server: {
+          hmr: {
+            overlay: false
+          },
           watch: {
             usePolling: true,
             include: ['src/client/**'],
@@ -271,6 +280,14 @@ export class FileTemplateManager {
 
       export const router = t.router;
     `),
+
+    'src/server/data-sources/registry.js': usingTsc => stripIndent(`
+      import { DataSourceRegistry } from '@kottster/server';
+
+      export const dataSourceRegistry = new DataSourceRegistry([]);
+
+      ${usingTsc ? `export type DataSourceContextToClientMap = {};` : ''}
+    `)
 
   };
 

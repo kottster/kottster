@@ -1,5 +1,6 @@
 import nodemon from 'nodemon';
 import { AutoImport } from '@kottster/common';
+import path from 'path';
 
 /**
  * Service to run nodemon
@@ -28,8 +29,8 @@ export class Nodemon {
     })
       .on('restart', async (files) => {
         // Check if any client or server files have changed
-        const isClientFileChanged = files?.some((file: string) => file.includes('src/client'));
-        const isServerFileChanged = files?.some((file: string) => file.includes('src/server'));
+        const isClientFileChanged = files?.some((file: string) => path.normalize(file).includes(path.normalize('src/client')));
+        const isServerFileChanged = files?.some((file: string) => path.normalize(file).includes(path.normalize('src/server')));
   
         if (isClientFileChanged) {
           this.autoImport.createClientPagesFile();

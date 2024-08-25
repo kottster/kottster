@@ -3,6 +3,7 @@ import { Nodemon } from '../services/nodemon.service';
 import { AutoImport, checkTsUsage, getEnvOrThrow } from '@kottster/common';
 import { Vite } from '../services/vite.service';
 import { spawnSync } from 'child_process';
+import { DevSyncRunner } from '../services/devSyncRunner.service';
 
 interface Options { 
   development?: boolean;
@@ -27,9 +28,6 @@ export async function startProject (script: string, options: Options): Promise<v
   autoImport.createClientPagesFile();
   autoImport.createServerProceduresFile();
 
-  // Run Vite
-  const vite = new Vite(NODE_ENV);
-
   // Environment variables
   const env = {
     ...process.env,
@@ -47,13 +45,21 @@ export async function startProject (script: string, options: Options): Promise<v
       env
     });
   } else {
+    // Run dev-sync server
+    const dsRunner = new DevSyncRunner(env);
+    const devSyncPort = await dsRunner.run();
+    const devSyncServerUrl = `http://localhost:${devSyncPort}`;
+    
+    // Run Vite
+    const vite = new Vite(NODE_ENV);
     const viteDevServerUrl = await vite.runDevServer();
     
     // Run nodemon
     const nodemon = new Nodemon(autoImport);
     nodemon.runWatcher(script, {
       ...env,
-      VITE_DEV_SERVER_URL: viteDevServerUrl.toString()
+      VITE_DEV_SERVER_URL: viteDevServerUrl,
+      DEV_SYNC_SERVER_URL: devSyncServerUrl,
     }); 
   };
 }

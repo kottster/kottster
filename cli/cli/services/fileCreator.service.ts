@@ -75,6 +75,7 @@ export class FileCreator {
     this.createDir('src/__generated__/server')
     this.createDir('src/server')
     this.createDir('src/server/procedures')
+    this.createDir('src/server/data-sources')
 
     // Create root files
     this.createPackageJson({ 
@@ -111,6 +112,7 @@ export class FileCreator {
     this.createClientTRPC()
     this.createServerMain()
     this.createServerTRPC()
+    this.createDataSourceRegistry()
     this.createGeneratedServerTRPCRouter()
     if (this.usingTsc) {
       this.createGeneratedClientTRPCRouter()
@@ -131,6 +133,7 @@ export class FileCreator {
       'typescript': '^5.x',
       '@types/node': '^18.x',
       '@types/react': '^18.x',
+      'ts-node': '^10.x',
     };
   }
 
@@ -150,67 +153,72 @@ export class FileCreator {
     const fileContent = this.fileTemplateManager.getTemplate(fileTemplateName);
     this.writeFile(filePath, fileContent)
 
-    // Update src/server/main.js
-    const mainFilePath = path.join(this.projectDir, 'src/server', `main.${this.jsExt}`)
-    let mainFileContent = fs.readFileSync(mainFilePath, 'utf8')
-    mainFileContent = this.addImportsToFileContent(mainFileContent, [
-      `${dataSourceType}DataSource from './data-sources/${dataSourceType}'`
-    ]);
-    mainFileContent = this.addCodeBeforeAppStart(mainFileContent, `app.registerDataSources([\n  ${dataSourceType}DataSource,\n]);`);
-    this.writeFile(mainFilePath, mainFileContent)
+    // Update src/server/data-sources/registry.ts
+    const registryFilePath = path.join(this.projectDir, 'src/server/data-sources', `registry.${this.jsExt}`)
+    const registryFileContent = fs.readFileSync(registryFilePath, 'utf8');
+    const updatedRegistryFileContent = this.updateDataSourceRegistryFileContent(
+      registryFileContent, 
+      [
+        `${dataSourceType}DataSource from './${dataSourceType}'`,
+        `{ Knex } from 'knex'`,
+      ],
+      `${dataSourceType}DataSource`,
+      [
+        ['knex', 'Knex']
+      ],
+    );
+    this.writeFile(registryFilePath, updatedRegistryFileContent);
   }
 
-  /**
-   * Add a code snippet before the app.start function in the given file content.
-   * @description Can only be used for the src/server/main.js file content.
-   * @param fileContent The file content.
-   * @param codeToAdd The code snippet to add.
-   * @returns The updated file content.
-   */
-  private addCodeBeforeAppStart(fileContent: string, codeToAdd: string): string {
-    const appStartPattern = /app\.start\s*\(/;
-    const match = fileContent.match(appStartPattern);
-  
-    if (!match) {
-      throw new Error("Couldn't find 'app.start' in the file content");
+  private updateDataSourceRegistryFileContent(
+    fileContent: string,
+    imports: string[],
+    newDataSourceName: string,
+    newDataSourceContextToClientItem: [string, string][]
+  ): string {
+    // Add new imports
+    const importRegex = /import.*?from.*?;/g;
+    const existingImports = [...fileContent.matchAll(importRegex)].map(match => match[0]);
+    const lastImportMatch = existingImports.pop();
+    
+    if (lastImportMatch) {
+      const insertPosition = fileContent.indexOf(lastImportMatch) + lastImportMatch.length;
+      const newImports = imports
+        .filter(imp => !existingImports.some(existing => existing.includes(imp)))
+        .map(imp => `import ${imp};`)
+        .join('\n');
+      
+      if (newImports) {
+        fileContent = fileContent.slice(0, insertPosition) + '\n' + newImports + fileContent.slice(insertPosition);
+      }
     }
   
-    const insertPosition = match.index!;
+    // dataSourceRegistry
+    const dataSourceRegistryRegex = /export const dataSourceRegistry = new DataSourceRegistry\(\[([^\]]*)\]\);/;
+    const dataSourceRegistryMatch = fileContent.match(dataSourceRegistryRegex);
+    if (dataSourceRegistryMatch) {
+      const existingDataSources = dataSourceRegistryMatch[1].trim();
+      const updatedDataSources = existingDataSources
+        ? `${existingDataSources},\n  ${newDataSourceName}`
+        : `\n  ${newDataSourceName}\n`;
+      fileContent = fileContent.replace(dataSourceRegistryRegex, `export const dataSourceRegistry = new DataSourceRegistry([${updatedDataSources}]);`);
+    }
   
-    const updatedContent = 
-      fileContent.slice(0, insertPosition) + 
-      codeToAdd + 
-      '\n\n' + 
-      fileContent.slice(insertPosition);
+    // DataSourceContextToClientMap
+    const dataSourceContextMapRegex = /export type DataSourceContextToClientMap = {([^}]*)};/;
+    const dataSourceContextMapMatch = fileContent.match(dataSourceContextMapRegex);
+    if (dataSourceContextMapMatch) {
+      const existingItems = dataSourceContextMapMatch[1].trim();
+      const newItems = newDataSourceContextToClientItem
+        .map(([key, value]) => `  ${key}: ${value}`)
+        .join(',\n');
+      const updatedItems = existingItems
+        ? `${existingItems},\n${newItems}`
+        : `\n${newItems}\n`;
+      fileContent = fileContent.replace(dataSourceContextMapRegex, `export type DataSourceContextToClientMap = {${updatedItems}};`);
+    }
   
-    return updatedContent;
-  }
-
-  /**
-   * Add import statements to the given file content.
-   * @param fileContent The file content.
-   * @param imports The import statements to add.
-   * @returns The updated file content.
-   */
-  private addImportsToFileContent(fileContent: string, imports: string[]): string {
-    // Find the last import statement in the file
-    const lastImportIndex = fileContent.lastIndexOf('import');
-    const lastImportLineEnd = fileContent.indexOf('\n', lastImportIndex);
-    
-    // If no imports found, insert at the beginning of the file
-    const insertPosition = lastImportIndex !== -1 ? lastImportLineEnd + 1 : 0;
-    
-    // Create the new import statements
-    const newImports = imports.map(imp => `import ${imp};`).join('\n');
-    
-    // Insert the new imports
-    const updatedContent = 
-      fileContent.slice(0, insertPosition) + 
-      newImports + 
-      '\n' +
-      fileContent.slice(insertPosition);
-    
-    return updatedContent;
+    return fileContent;
   }
 
   /**
@@ -248,6 +256,7 @@ export class FileCreator {
         'antd': '^5.x',
         '@ant-design/icons': '^5.x',
         'zod': '^3.23.8',
+        'recharts': '^2.x',
         ...(options.dependencies ?? {}),
       },
       devDependencies: {
@@ -279,9 +288,18 @@ export class FileCreator {
    */
   private createGitIgnore (): void {
     const gitIgnorePath = path.join(this.projectDir, '.gitignore')
-    const gitIgnoreContent = ['node_modules', 'nbuild', 'npm-debug.log', '.DS_Store', 'dist'].join('\n')
+    const gitIgnoreContent = ['node_modules', 'nbuild', 'npm-debug.log', '.DS_Store'].join('\n')
 
     this.writeFile(gitIgnorePath, gitIgnoreContent)
+  }
+
+  /**
+   * Create a src/server/data-sources/registry.ts file
+   */
+  private createDataSourceRegistry (): void {
+    const filePath = path.join(this.projectDir, 'src/server/data-sources', `registry.${this.jsExt}`)
+    const fileContent = this.fileTemplateManager.getTemplate('src/server/data-sources/registry.js')
+    this.writeFile(filePath, fileContent)
   }
 
   /**

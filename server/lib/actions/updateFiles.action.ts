@@ -1,4 +1,4 @@
-import { Action } from "../models/action.model";
+import { DSAction } from "../models/action.model";
 import { FileWriter } from "../services/fileWriter.service";
 import { PageFileStructure, ProcedureFileStructure } from "@kottster/common";
 
@@ -16,11 +16,11 @@ interface Data {
 /**
  * Update files for pages and procedures
  */
-export class UpdateFiles extends Action {
+export class UpdateFiles extends DSAction {
   public async execute(data: Data) {
     const { page, procedures } = data;
 
-    const fileWriter = new FileWriter({ usingTsc: this.app.usingTsc });
+    const fileWriter = new FileWriter({ usingTsc: this.ds.usingTsc });
     
     if (page?.createOrUpdate) {
       fileWriter.writePageToFile(page.createOrUpdate);

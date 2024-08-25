@@ -11,6 +11,7 @@ import { FileReader } from '../services/fileReader.service';
 import http from 'http';
 import WebSocket from 'ws';
 import * as trpcExpress from '@trpc/server/adapters/express';
+import { DataSourceRegistry } from './dataSourceRegistry';
 
 export interface KottsterAppOptions {
   appId: string;
@@ -50,10 +51,10 @@ export class KottsterApp {
 
   /**
    * Register data sources
-   * @param dataSources The data sources to register
+   * @param registry The data source registry
    */
-  public registerDataSources(dataSources: DataSource[]) {
-    this.dataSources = dataSources;
+  public registerDataSources(registry: DataSourceRegistry<{}>) {
+    this.dataSources = Object.values(registry.dataSources);
   }
 
   /**
@@ -156,7 +157,8 @@ export class KottsterApp {
       }
   
       try {
-        const decodedToken = jwt.verify(token, this.jwtSecret) as JWTTokenPayload;
+        const decodedToken = (this.stage === 'development' ? jwt.decode(token) : jwt.verify(token, this.jwtSecret)) as JWTTokenPayload;
+        
         if (String(decodedToken.appId) !== String(this.appId)) {
           return res.status(401).json({ error: 'Invalid token' });
         }
@@ -205,8 +207,7 @@ export class KottsterApp {
    */
   private setupExpressRoutes(): void {
     this.expressApp.get('/', routes.healthcheck(this));
-    this.expressApp.get('/action/:action', this.getAuthExpressMiddleware(Role.DEVELOPER), routes.executeAction(this));
-    this.expressApp.get('/rpc/:procedureName', this.getAuthExpressMiddleware(), routes.executeProcedure(this));
+    this.expressApp.get('/action/:action', this.getAuthExpressMiddleware(), routes.executeAction(this));
   }
 
   /**

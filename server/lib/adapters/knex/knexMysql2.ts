@@ -1,9 +1,14 @@
 import { DataSourceAdapterType } from "@kottster/common";
 import { RelationalDatabaseSchema, RelationalDatabaseSchemaColumn } from "../../models/databaseSchema.model";
 import { DataSourceAdapter } from "../../models/dataSourceAdapter.model";
+import { Knex } from "knex";
 
 export class KnexMysql2 extends DataSourceAdapter {
   type = DataSourceAdapterType.knex_mysql2;
+
+  constructor(protected client: Knex) {
+    super(client);
+  }
 
   async getDatabaseSchema(): Promise<RelationalDatabaseSchema> {
     const schemaName = this.databaseSchemas[0] || 'public';

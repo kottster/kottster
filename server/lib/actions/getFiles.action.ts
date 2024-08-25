@@ -1,4 +1,4 @@
-import { Action } from "../models/action.model";
+import { DSAction } from "../models/action.model";
 import { FileReader } from "../services/fileReader.service";
 import { PageFileStructure, ProcedureFileStructure } from "@kottster/common";
 
@@ -15,7 +15,7 @@ interface Result {
 /**
  * Get the file structure of pages and procedures
  */
-export class GetFiles extends Action {
+export class GetFiles extends DSAction {
   public async execute(data: Data): Promise<Result> {
     const { pageId, includeProcedures } = data;
 

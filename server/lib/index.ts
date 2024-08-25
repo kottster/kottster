@@ -1,5 +1,7 @@
 // Core
 export { KottsterApp, KottsterAppOptions } from './core/app';
+export { DevSync } from './core/devSync';
+export { DataSourceRegistry } from './core/dataSourceRegistry';
 
 // Factories
 export { createApp } from './factories/createApp';

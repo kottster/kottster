@@ -1,9 +1,14 @@
 import { DataSourceAdapterType } from "@kottster/common";
 import { RelationalDatabaseSchema, RelationalDatabaseSchemaColumn } from "../../models/databaseSchema.model";
 import { DataSourceAdapter } from "../../models/DataSourceAdapter.model";
+import { Knex } from "knex";
 
 export class KnexTedious extends DataSourceAdapter {
   type = DataSourceAdapterType.knex_tedious;
+
+  constructor(protected client: Knex) {
+    super(client);
+  }
   
   async getDatabaseSchema(): Promise<RelationalDatabaseSchema> {
     const schemaName = this.databaseSchemas[0] || 'dbo';

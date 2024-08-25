@@ -9,6 +9,20 @@ import { AppSchema, PageFileStructure, ProcedureFileStructure, File } from "@kot
 export class FileReader {
 
   /**
+   * Read the package.json file
+   * @returns The package.json content
+   */
+  public readPackageJson(): unknown {
+    const filePath = `${PROJECT_DIR}/package.json`;
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`File not found: ${filePath}`);
+    }
+
+    const content = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(content);
+  }
+
+  /**
    * Read the schema.json file
    * @returns The app schema
    */

@@ -1,4 +1,4 @@
-import { Action } from "../models/action.model";
+import { DSAction } from "../models/action.model";
 import { FileWriter } from "../services/fileWriter.service";
 
 interface Data {
@@ -8,9 +8,9 @@ interface Data {
 /**
  * Create a new page
  */
-export class CreatePage extends Action {
+export class CreatePage extends DSAction {
   public async execute(data: Data) {
-    const fileWriter = new FileWriter({ usingTsc: this.app.usingTsc });
+    const fileWriter = new FileWriter({ usingTsc: this.ds.usingTsc });
     const { pageId } = data;
 
     fileWriter.createNewEmptyPage(pageId);

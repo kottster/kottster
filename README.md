@@ -9,6 +9,8 @@ Simple low-code platform for building robust admin dashboards fast ⚡
 
 [Website](https://kottster.app) • [Sign Up](https://web.kottster.app/signup) • [Docs](https://kottster.gitbook.io/docs) • [Pricing](https://kottster.app/pricing)
 
+[video.webm](https://github.com/user-attachments/assets/90f975b1-9278-4f02-bbc4-2704dbaa184b)
+
 ## Getting started
 
 #### **1.** [Sign up](https://web.kottster.app/signup) at Kottster.

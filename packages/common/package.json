@@ -1,0 +1,27 @@
+{
+  "name": "@kottster/common",
+  "description": "Common types and utilities for Kottster",
+  "version": "1.3.2",
+  "main": "dist/index.js",
+  "license": "Apache-2.0",
+  "scripts": {
+    "clean": "rimraf ./dist",
+    "build": "npm run clean && tsc",
+    "lint": "npx eslint ./lib",
+    "prepare": "husky",
+    "prepare-npm-package": "rimraf package-lock.json && npm run update-locks && npm run lint --fix && npm run build",
+    "update-locks": "yarn install && synp --source-file yarn.lock"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@eslint/js": "^9.7.0",
+    "@types/eslint__js": "^8.42.3",
+    "@types/node": "^20.14.11",
+    "eslint": "^9.7.0",
+    "husky": "^9.1.1",
+    "rimraf": "^5.0.5",
+    "synp": "^1.9.13",
+    "typescript": "^5.5.3",
+    "typescript-eslint": "^7.16.1"
+  }
+}

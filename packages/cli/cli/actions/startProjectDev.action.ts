@@ -1,5 +1,5 @@
 import { AutoImport } from '@kottster/common';
-import { spawnSync } from 'child_process';
+import { execSync } from 'child_process';
 import { DevSyncRunner } from '../services/devSyncRunner.service';
 import { FileWatcher } from '../services/fileWatcher.service';
 
@@ -19,33 +19,19 @@ export async function startProjectDev (): Promise<void> {
 
   // Run dev-sync server
   const dsRunner = new DevSyncRunner(env);
-  const [devSyncPort, dsProcess] = await dsRunner.run();
+  const [devSyncPort,] = await dsRunner.run();
   const devSyncServerUrl = `http://localhost:${devSyncPort}`;
 
   // Run nodemon
   const fileWatcher = new FileWatcher(env);
-  const fwProcess = await fileWatcher.run();
+  await fileWatcher.run();
 
-  // Shutdown processes
-  async function shutdown() {
-    dsProcess.kill();
-    fwProcess.kill();
-  
-    process.exit(0);
-  }
-
-  process.on('SIGINT', shutdown);
-  process.on('SIGTERM', shutdown);
-
-  // Run dev server
-  spawnSync('npx', [
-    'next',
-    'dev'
-  ], { 
+  // Run Next.js server
+  execSync('npx next dev', { 
     stdio: 'inherit',
     env: {
-      ...env,
+      ...process.env,
       DEV_SYNC_SERVER_URL: devSyncServerUrl,
-    }
+    },
   });
 }

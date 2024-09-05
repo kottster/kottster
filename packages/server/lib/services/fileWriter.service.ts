@@ -66,19 +66,20 @@ export class FileWriter {
   public writePageToFile({ dirPath, entryFile, files }: PageFileStructure): void {
     const dir = `${PROJECT_DIR}/${dirPath}`;
     
-    if (fs.existsSync(dir)) {
-      this.deleteFilesInDirectory(dir);
-    } else {
+    // Create the directory
+    if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
+    } else {
+      this.deleteFilesInDirectory(dir);
     }
 
-    // Write the entry file
-    this.writeFile(`${PROJECT_DIR}/${entryFile.filePath}`, entryFile.fileContent);
-    
     // Write the other files
     files.forEach(file => {
       this.writeFile(`${PROJECT_DIR}/${file.filePath}`, file.fileContent);
     });
+
+    // Write the entry file
+    this.writeFile(`${PROJECT_DIR}/${entryFile.filePath}`, entryFile.fileContent);
   }
 
   /**

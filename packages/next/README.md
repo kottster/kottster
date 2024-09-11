@@ -1,1 +1,0 @@
-# @kottster/next

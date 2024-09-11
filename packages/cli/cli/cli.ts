@@ -13,6 +13,7 @@ export const program = new Command()
 program
   .command('dev')
   .description('Start a Next app in development mode')
+  .allowUnknownOption()
   .action(startProjectDev);
 
 // Command to create a new project

@@ -41,7 +41,7 @@ class PackageInstaller {
   private getInstallCommand (packages?: Packages): string {
     switch (this.PACKAGE_MANAGER) {
       case 'npm':
-        return `npm install ${packages ? this.getPackageList(packages) : ''} --no-fund --no-audit`;
+        return `npm install ${packages ? this.getPackageList(packages) : ''} --no-fund --no-audit --maxsockets 50`;
       case 'yarn':
         return `yarn add ${packages ? this.getPackageList(packages) : ''}`;
       default:

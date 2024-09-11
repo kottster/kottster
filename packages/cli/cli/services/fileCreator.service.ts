@@ -63,13 +63,11 @@ export class FileCreator {
 
     // Create directories
     this.createDir()
-    this.createDir('src')
-    this.createDir('src/app')
-    this.createDir('src/app/utils')
-    this.createDir('src/app/pages')
-    this.createDir('src/server')
-    this.createDir('src/server/data-sources')
-    this.createDir('src/server/routers')
+    this.createDir('app')
+    this.createDir('app/routes')
+    this.createDir('app/.server')
+    this.createDir('app/.server/data-sources')
+    this.createDir('app/.server/trpc-routers')
 
     // Create root files
     this.createPackageJson({ 
@@ -80,95 +78,36 @@ export class FileCreator {
     this.createEnv([
       {
         key: 'APP_ID',
-        comment: 'The ID of the Kottster app',
         value: options.appId,
       },
       {
-        key: 'PORT',
-        comment: 'Port to run the server on',
-        value: '5480',
-      },
-      {
         key: 'SECRET_KEY',
-        comment: 'Private key for obtaining a JWT secret during server startup',
         value: options.secretKey,
       },
     ])
     this.createGitIgnore()
     if (this.usingTsc) {
-      this.createTsConfig()
+      this.createFileFromTemplate('tsconfig.json', path.join(this.projectDir, 'tsconfig.json'));
     };
 
     // Create files
-    this.createNextConfig()
-    this.createMiddleware()
-    this.createAppRoute()
-    this.createAppNotFound()
-    this.createAppUtilsTRPC()
-    this.createAppLayout()
-    this.createServerMain()
-    this.createServerTRPC()
-    this.createServerRoutersApp()
-    this.createDataSourceRegistry()
+    this.createFileFromTemplate('tsconfig.json', path.join(this.projectDir, 'tsconfig.json'));
+    this.createFileFromTemplate('vite.config.ts', path.join(this.projectDir, 'vite.config.ts'));
+    this.createFileFromTemplate('app/root.jsx', path.join(this.projectDir, `app/root.${this.jsxExt}`));
+    this.createFileFromTemplate('app/trpc.client.js', path.join(this.projectDir, `app/trpc.client.${this.jsExt}`));
+    this.createFileFromTemplate('app/entry.client.jsx', path.join(this.projectDir, `app/entry.client.${this.jsxExt}`));
+    this.createFileFromTemplate('app/service-route.js', path.join(this.projectDir, `app/service-route.${this.jsExt}`));
+    this.createFileFromTemplate('app/.server/trpc.js', path.join(this.projectDir, `app/.server/trpc.${this.jsExt}`));
+    this.createFileFromTemplate('app/.server/app.js', path.join(this.projectDir, `app/.server/app.${this.jsExt}`));
+    this.createFileFromTemplate('app/.server/data-sources/registry.js', path.join(this.projectDir, `app/.server/data-sources/registry.${this.jsExt}`));
+    this.createFileFromTemplate('app/.server/trpc-routers/app-router.js', path.join(this.projectDir, `app/.server/trpc-routers/app-router.${this.jsExt}`));
+    this.createFileFromTemplate('app/.server/trpc-routers/page-routers.generated.js', path.join(this.projectDir, `app/.server/trpc-routers/page-routers.generated.${this.jsExt}`));
     
     // Create auto-generated files
     this.createSchema()
-    this.createServerGeneratedPageRouters()
   }
 
-  /**
-   * Create a next.config.js file.
-   */
-  private createNextConfig(): void {
-    const filePath = path.join(this.projectDir, 'next.config.mjs')
-    const fileContent = this.fileTemplateManager.getTemplate('next.config.mjs');
-    this.writeFile(filePath, fileContent);
-  }
-
-  /**
-   * Create an app layout file.
-   */
-  private createAppLayout(): void {
-    const filePath = path.join(this.projectDir, 'src/app', `layout.${this.jsxExt}`)
-    const fileContent = this.fileTemplateManager.getTemplate('src/app/layout.jsx');
-    this.writeFile(filePath, fileContent);
-  }
-
-  /**
-   * Create an app client file.
-   */
-  private createAppUtilsTRPC(): void {
-    const filePath = path.join(this.projectDir, 'src/app/utils', `trpc.${this.jsExt}`)
-    const fileContent = this.fileTemplateManager.getTemplate('src/app/utils/trpc.js');
-    this.writeFile(filePath, fileContent);
-  }
-
-  /**
-   * Create an app not found file.
-   */
-  private createAppNotFound(): void {
-    const filePath = path.join(this.projectDir, 'src/app', `not-found.${this.jsxExt}`)
-    const fileContent = this.fileTemplateManager.getTemplate('src/app/not-found.jsx');
-    this.writeFile(filePath, fileContent);
-  }
-
-  /**
-   * Create a middleware file.
-   */
-  private createMiddleware(): void {
-    const filePath = path.join(this.projectDir, 'src', `middleware.${this.jsExt}`)
-    const fileContent = this.fileTemplateManager.getTemplate('src/middleware.js');
-    this.writeFile(filePath, fileContent);
-  }
-
-  /**
-   * Create an app route file.
-   */
-  private createAppRoute(): void {
-    const filePath = path.join(this.projectDir, 'src/app', `route.${this.jsExt}`)
-    const fileContent = this.fileTemplateManager.getTemplate('src/app/route.js');
-    this.writeFile(filePath, fileContent);
-  }
+  
 
   /**
    * Get the additional dependencies for a TypeScript project.
@@ -179,27 +118,29 @@ export class FileCreator {
       'typescript': '^5.x',
       '@types/node': '^18.x',
       '@types/react': '^18.x',
+      '@types/react-dom': "^18.x",
     };
   }
 
   /**
    * Add a data source to the project.
    * @param dataSourceType The type of the data source.
+   * @returns The path to the data source file.
    */
-  public addDataSource (dataSourceType: DataSourceType): void {
+  public addDataSource (dataSourceType: DataSourceType): string {
     const dataSourceTypeData = dataSourcesTypeData[dataSourceType];
     const { fileTemplateName } = dataSourceTypeData;
 
     // Create directory
-    this.createDir(`src/server/data-sources/${dataSourceType}`)
+    this.createDir(`app/.server/data-sources/${dataSourceType}`)
 
     // Create file
-    const filePath = path.join(this.projectDir, `src/server/data-sources/${dataSourceType}`, `index.${this.jsExt}`)
+    const filePath = path.join(this.projectDir, `app/.server/data-sources/${dataSourceType}`, `index.${this.jsExt}`)
     const fileContent = this.fileTemplateManager.getTemplate(fileTemplateName);
     this.writeFile(filePath, fileContent)
 
-    // Update src/server/data-sources/registry.ts
-    const registryFilePath = path.join(this.projectDir, 'src/server/data-sources', `registry.${this.jsExt}`)
+    // Update app/.server/data-sources/registry.ts
+    const registryFilePath = path.join(this.projectDir, 'app/.server/data-sources', `registry.${this.jsExt}`)
     const registryFileContent = fs.readFileSync(registryFilePath, 'utf8');
     const updatedRegistryFileContent = this.updateDataSourceRegistryFileContent(
       registryFileContent, 
@@ -213,6 +154,8 @@ export class FileCreator {
       ],
     );
     this.writeFile(registryFilePath, updatedRegistryFileContent);
+
+    return filePath;
   }
 
   /**
@@ -286,44 +229,66 @@ export class FileCreator {
       KOTTSTER_CLI_DEP_VER,
       KOTTSTER_SERVER_DEP_VER,
       KOTTSTER_REACT_DEP_VER,
-      KOTTSTER_NEXT_DEP_VER,
     } = process.env;
 
     const packageJson = {
       name: options.name,
-      type: this.usingTsc ? undefined : 'module',
       version: options.version || '1.0.0',
+      type: 'module',
       private: true,
+      sideEffects: false,
       scripts: {
-        'dev': 'kottster dev',
+        'dev': 'kottster dev --port 5480',
         'dev:add-data-source': 'kottster add-data-source',
-        'build': 'next build',
-        'start': 'next start',
-        'lint': 'next lint'
+        'build': 'remix vite:build',
+        'start': 'remix-serve ./build/server/index.js',
+        'typecheck': 'tsc'
       },
       dependencies: {
-        'next': '^14.x',
+        'react': '^18.x',
+        'react-dom': '^18.x',
+
+        '@remix-run/node': "^2.x",
+        '@remix-run/react': "^2.x",
+        '@remix-run/serve': "^2.x",
 
         '@kottster/common': KOTTSTER_COMMON_DEP_VER ?? '^1.x',
         '@kottster/cli': KOTTSTER_CLI_DEP_VER ?? '^2.x',
         '@kottster/server': KOTTSTER_SERVER_DEP_VER ?? '^1.x',
-        '@kottster/next': KOTTSTER_NEXT_DEP_VER ?? '^1.x',
         '@kottster/react': KOTTSTER_REACT_DEP_VER ?? '^1.x',
 
-        "antd": "^5.x",
-        '@ant-design/nextjs-registry': '^1.x',
-        '@ant-design/icons': '^5.x',
+        '@mantine/charts': '^7.x',
+        '@mantine/core': '^7.x',
+        '@mantine/dates': '^7.x',
+        '@mantine/form': '^7.x',
+        '@mantine/hooks': '^7.x',
+        '@mantine/modals': '^7.x',
+        '@mantine/notifications': '^7.x',
+        'react-feather': '^2.x',
         'recharts': '^2.x',
-        '@tanstack/react-query': '^4.x',
+
         '@trpc/client': '^10.x',
         '@trpc/react-query': '^10.x',
         '@trpc/server': '^10.x',
+        
+        '@tanstack/react-query': '^4.x',
         'zod': '^3.x',
+        'isbot': '^4.x',
+        "dayjs": "^1.x",
+
         ...(options.dependencies ?? {}),
       },
       devDependencies: {
+        '@remix-run/dev': "^2.x",
+        'vite': "^5.x",
+        'vite-tsconfig-paths': "^4.x",
+        'esbuild': '0.23.1',
+        "@originjs/vite-plugin-commonjs": "^1.x",
         ...(options.devDependencies ?? {}),
-      }
+      },
+      engines: {
+        node: '>=20',
+      },
     }
     const packageJsonContent = JSON.stringify(packageJson, null, 2)
 
@@ -354,68 +319,12 @@ export class FileCreator {
   }
 
   /**
-   * Create a src/server/data-sources/registry.ts file
+   * Create a file from a template
+   * @param templateKey The key of the template
+   * @param filePath The file path
    */
-  private createDataSourceRegistry (): void {
-    const filePath = path.join(this.projectDir, 'src/server/data-sources', `registry.${this.jsExt}`)
-    const fileContent = this.fileTemplateManager.getTemplate('src/server/data-sources/registry.js')
-    this.writeFile(filePath, fileContent)
-  }
-
-  /**
-   * Create a src/server/routers/page-routers.generated.ts file
-   */
-  private createServerGeneratedPageRouters (): void {
-    const filePath = path.join(this.projectDir, 'src/server/routers', `page-routers.generated.${this.jsExt}`)
-    const fileContent = this.fileTemplateManager.getTemplate('src/server/routers/page-routers.generated.js')
-    this.writeFile(filePath, fileContent)
-  }
-
-  /**
-   * Create a tsconfig.json file
-   */
-  private createTsConfig (): void {
-    const filePath = path.join(this.projectDir, 'tsconfig.json')
-    const fileContent = this.fileTemplateManager.getTemplate('tsconfig.json')
-    this.writeFile(filePath, fileContent)
-  }
-
-  /**
-   * Create a src/server/trpc.js file
-   */
-  private createServerTRPC (): void {
-    const filePath = path.join(this.projectDir, 'src/server', `trpc.${this.jsExt}`)
-    const fileContent = this.fileTemplateManager.getTemplate('src/server/trpc.js')
-    this.writeFile(filePath, fileContent)
-  }
-
-  /**
-   * Create a src/server/routers/_app.js file
-   */
-  private createServerRoutersApp (): void {
-    const filePath = path.join(this.projectDir, 'src/server/routers', `_app.${this.jsExt}`)
-    const fileContent = this.fileTemplateManager.getTemplate('src/server/routers/_app.js')
-    this.writeFile(filePath, fileContent)
-  }
-
-  /**
-   * Create a schema.json file
-   */
-  private createSchema(): void {
-    const appSchema: AppSchema = {
-      navItems: [],
-    };
-    const filePath = path.join(this.projectDir, 'schema.json')
-    const fileContent = JSON.stringify(appSchema, null, 2);
-    this.writeFile(filePath, fileContent);
-  }
-
-  /**
-   * Create a src/server/main.js file
-   */
-  private createServerMain (): void {
-    const filePath = path.join(this.projectDir, 'src/server', `main.${this.jsExt}`)
-    const fileContent = this.fileTemplateManager.getTemplate('src/server/main.js');
+  private createFileFromTemplate (templateKey: keyof typeof FileTemplateManager.templates, filePath: string) {
+    const fileContent = this.fileTemplateManager.getTemplate(templateKey);
     this.writeFile(filePath, fileContent);
   }
 
@@ -438,6 +347,18 @@ export class FileCreator {
     } catch (error) {
       console.error(`Error creating ${dirName} directory:`, error)
     }
+  }
+
+  /**
+   * Create a schema.json file
+   */
+  private createSchema(): void {
+    const appSchema: AppSchema = {
+      navItems: [],
+    };
+    const filePath = path.join(this.projectDir, 'schema.json')
+    const fileContent = JSON.stringify(appSchema, null, 2);
+    this.writeFile(filePath, fileContent);
   }
 
   /**

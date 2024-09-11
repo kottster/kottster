@@ -624,8 +624,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@kottster/common@../common":
-  version "1.3.2"
+"@kottster/common@^1.4.0":
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/@kottster/common/-/common-1.4.0.tgz#bdfc802a42421920c559502c9744042f1828cb21"
+  integrity sha512-Wz7zoSr7p9Mr59BYPT7ZODR0ENut1osFVYhkO5Td5hHZlebX0W07UqWXiVKQoCIEBI9xOjKFNlCwBfby3NCqIg==
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"

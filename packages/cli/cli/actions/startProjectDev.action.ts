@@ -26,8 +26,12 @@ export async function startProjectDev (): Promise<void> {
   const fileWatcher = new FileWatcher(env);
   await fileWatcher.run();
 
+  // Replace the "kottster dev" with "remix vite:dev"
+  const args = process.argv.slice(3);
+  const command = ['remix', 'vite:dev', ...args].join(' ');
+
   // Run Next.js server
-  execSync('npx next dev', { 
+  execSync(command, { 
     stdio: 'inherit',
     env: {
       ...process.env,

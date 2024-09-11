@@ -1,7 +1,7 @@
-import chalk from 'chalk'
-import { FileCreator } from '../services/fileCreator.service'
-import PackageInstaller from '../services/packageInstaller.service'
-import { checkTsUsage, DataSourceType } from '@kottster/common';
+import chalk from 'chalk';
+import { FileCreator } from '../services/fileCreator.service';
+import PackageInstaller from '../services/packageInstaller.service';
+import { checkTsUsage, DataSourceType, dataSourceTypes } from '@kottster/common';
 import dataSourcesTypeData from '../constants/dataSourceTypeData';
 
 /**
@@ -12,15 +12,14 @@ export async function addDataSource (dataSourceType: DataSourceType): Promise<vo
   const packageInstaller = new PackageInstaller('npm')
   const fileCreator = new FileCreator({ usingTsc });
   const dataSourceTypeData = dataSourcesTypeData[dataSourceType];
-
-  console.log('Adding data source:', chalk.green(dataSourceType));
+  const dataSourceTypeInfo = dataSourceTypes.find((type) => type.type === dataSourceType);
 
   // Install the required packages
   await packageInstaller.installPackages(dataSourceTypeData.packages);
 
   // Add the data source to the project
-  fileCreator.addDataSource(dataSourceType);
+  const pathToFile = fileCreator.addDataSource(dataSourceType);
   
-  console.log(chalk.green(`Data source ${dataSourceType} added successfully.`));
-  console.log(`Edit the ${chalk.blue(`src/server/data-sources/${dataSourceType}/index.${usingTsc ? 'ts' : 'js'}`)} file to connect to your database.`);
+  console.log(chalk.green(`${dataSourceTypeInfo?.name} data source added successfully.`));
+  console.log(`Update the connection details in the generated file: \n${chalk.blue(pathToFile)}`);
 }

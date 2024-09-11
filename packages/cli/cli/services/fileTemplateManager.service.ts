@@ -1,7 +1,5 @@
 import { stripIndent } from "@kottster/common";
 
-type Template = string | ((usingTsc: boolean) => string);
-
 /**
  * Service for storing file templates
  */
@@ -10,37 +8,87 @@ export class FileTemplateManager {
     private readonly usingTsc: boolean
   ) {}
 
-  static templates: Record<string, Template> = {
+  static templates = {
+    'vite.config.ts': stripIndent(`
+      import { vitePlugin as remix } from "@remix-run/dev";
+      import { defineConfig } from "vite";
+      import tsconfigPaths from "vite-tsconfig-paths";
+      import { viteCommonjs } from '@originjs/vite-plugin-commonjs';
+
+      export default defineConfig({
+        plugins: [
+          remix({
+            future: {
+              v3_fetcherPersist: true,
+              v3_relativeSplatPath: true,
+              v3_throwAbortReason: true,
+            },
+            routes(defineRoutes) {
+              return defineRoutes(route => {
+                route('/-/*', 'service-route.ts');
+              });
+            },
+          }),
+          tsconfigPaths(),
+          viteCommonjs(),
+        ],
+        optimizeDeps: {
+          include: [
+            'react', 
+            'react-dom', 
+            'react-feather', 
+            '@mantine/core', 
+            '@mantine/dates',
+            '@mantine/charts',
+            '@mantine/hooks',
+            '@mantine/modals',
+            '@mantine/notifications',
+            '@tanstack/react-query', 
+            '@trpc/react-query',
+            'dayjs',
+            'recharts',
+          ],
+          exclude: ['@kottster/react'],
+        },
+      });
+    `),
+    
     'tsconfig.json': stripIndent(`
       {
+        "include": [
+          "**/*.ts",
+          "**/*.tsx",
+          "**/.server/**/*.ts",
+          "**/.server/**/*.tsx",
+          "**/.client/**/*.ts",
+          "**/.client/**/*.tsx"
+        ],
         "compilerOptions": {
-          "lib": ["dom", "dom.iterable", "esnext"],
+          "lib": ["DOM", "DOM.Iterable", "ES2022"],
+          "types": ["@remix-run/node", "vite/client"],
+          "isolatedModules": true,
+          "esModuleInterop": true,
+          "jsx": "react-jsx",
+          "module": "ESNext",
+          "moduleResolution": "Bundler",
+          "resolveJsonModule": true,
+          "target": "ES2022",
+          "strict": true,
           "allowJs": true,
           "skipLibCheck": true,
-          "strict": true,
-          "noEmit": true,
-          "esModuleInterop": true,
-          "module": "esnext",
-          "moduleResolution": "bundler",
-          "resolveJsonModule": true,
-          "isolatedModules": true,
-          "jsx": "preserve",
-          "incremental": true,
-          "plugins": [
-            {
-              "name": "next"
-            }
-          ],
+          "forceConsistentCasingInFileNames": true,
+          "baseUrl": ".",
           "paths": {
-            "@/*": ["./src/*"]
-          }
-        },
-        "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-        "exclude": ["node_modules"]
+            "@/*": ["./app/*"]
+          },
+
+          // Vite takes care of building everything, not tsc.
+          "noEmit": true
+        }
       }
     `),
 
-    'src/server/trpc.js': stripIndent(`
+    'app/.server/trpc.js': stripIndent(`
       import { AppContext } from '@kottster/common';
       import { initTRPC } from '@trpc/server';
       import { DataSourceContextToClientMap } from './data-sources/registry';
@@ -48,12 +96,14 @@ export class FileTemplateManager {
       export const t = initTRPC.context<AppContext & DataSourceContextToClientMap>().create();
     `),
 
-    'src/server/routers/page-routers.generated.js': stripIndent(`
+    'app/.server/trpc-routers/page-routers.generated.js': stripIndent(`
+      // This file is auto-generated. Do not modify it manually.
+      // It exports all api.server.(ts|tsx) files in the app/routes directory.
+
       export default {};
     `),
 
-    'src/server/main.js': () => stripIndent(`
-      import 'server-only';
+    'app/.server/app.js': () => stripIndent(`
       import { getEnvOrThrow } from '@kottster/common';
       import { createApp } from '@kottster/server';
       import { dataSourceRegistry } from './data-sources/registry';
@@ -66,7 +116,7 @@ export class FileTemplateManager {
       app.registerDataSources(dataSourceRegistry);
     `),
 
-    'src/server/data-sources/postgres/index.js': usingTsc => stripIndent(`
+    'app/.server/data-sources/postgres/index.js': (usingTsc: boolean) => stripIndent(`
       import { createDataSource, KnexPgAdapter } from '@kottster/server';
       import knex from 'knex';
       ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
@@ -92,7 +142,7 @@ export class FileTemplateManager {
       export default dataSource;
     `),
 
-    'src/server/data-sources/mysql/index.js': usingTsc => stripIndent(`
+    'app/.server/data-sources/mysql/index.js': (usingTsc: boolean) => stripIndent(`
       import { createDataSource, KnexMysql2Adapter } from '@kottster/server';
       import knex from 'knex';
       ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
@@ -123,7 +173,7 @@ export class FileTemplateManager {
       export default dataSource;
     `),
 
-    'src/server/data-sources/mariadb/index.js': usingTsc => stripIndent(`
+    'app/.server/data-sources/mariadb/index.js': (usingTsc: boolean) => stripIndent(`
       import { createDataSource, KnexMysql2Adapter } from '@kottster/server';
       import knex from 'knex';
       ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
@@ -154,7 +204,7 @@ export class FileTemplateManager {
       export default dataSource;
     `),
 
-    'src/server/data-sources/mssql/index.js': usingTsc => stripIndent(`
+    'app/.server/data-sources/mssql/index.js': (usingTsc: boolean) => stripIndent(`
       import { createDataSource, KnexTediousAdapter } from '@kottster/server';
       import knex from 'knex';
       ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
@@ -185,7 +235,7 @@ export class FileTemplateManager {
       export default dataSource;
     `),
 
-    'src/server/data-sources/registry.js': usingTsc => stripIndent(`
+    'app/.server/data-sources/registry.js': (usingTsc: boolean) => stripIndent(`
       import { DataSourceRegistry } from '@kottster/server';
 
       export const dataSourceRegistry = new DataSourceRegistry([]);
@@ -193,137 +243,83 @@ export class FileTemplateManager {
       ${usingTsc ? `export type DataSourceContextToClientMap = {};` : ''}
     `),
 
-    'src/middleware.js': stripIndent(`
-      import { NextRequest } from 'next/server';
-      import { middleware as kottsterAppMiddleware } from '@kottster/next';
-
-      export function middleware(req: NextRequest) {
-        /**
-         * The middleware ensures that all requests to the protected paths are authenticated.
-         * Learn more: https://kottster.gitbook.io/docs
-         */
-        return kottsterAppMiddleware(req, {
-          protectedPaths: ['/trpc', '/kottster-api'],
-        });
-      }
-    `),
-
-    'src/app/route.js': stripIndent(`
-      import 'server-only';
-      import { app } from '@/server/main';
-      import { appRouter } from '../server/routers/_app';
-
-      const handler = app.getRootHandler(appRouter);
-
-      export { handler as GET, handler as POST };
-    `),
-
-    'src/app/not-found.jsx': stripIndent(`
-      'use client';
-
-      import { useAutoReload } from "@kottster/react";
-
-      export default function NotFound() {
-        useAutoReload(500);
-        return null;
-      }
-    `),
-
-    'src/app/utils/trpc.js': stripIndent(`
-      import { createTRPCReact } from '@trpc/react-query';
-      import { type AppRouter } from '@/server/routers/_app';
-
-      export const trpc = createTRPCReact<AppRouter>();
-    `),
-
-    'src/app/layout.jsx': stripIndent(`
-      'use client';
-
-      import { KottsterApp, getAuthorizationHeaders } from "@kottster/react";
-      import { AntdRegistry } from '@ant-design/nextjs-registry';
-      import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-      import { ConfigProvider } from "antd";
-      import { appTheme } from "@kottster/react";
-      import { trpc } from "./utils/trpc";
-      import { httpBatchLink } from "@trpc/client";
-      import { useState } from "react";
-      import '@kottster/react/dist/style.css';
-
-      const QueryProviders = ({ children }: { children: React.ReactNode }) => {
-        const [queryClient] = useState(() => new QueryClient());
-        const [trpcClient] = useState(() =>
-          trpc.createClient({
-            links: [
-              httpBatchLink({ 
-                url: '/trpc', 
-                headers: () => getAuthorizationHeaders(),
-              }),
-            ],
-          }),
-        );
-
-        return (
-          <trpc.Provider client={trpcClient} queryClient={queryClient}>
-            <QueryClientProvider client={queryClient}>
-              {children}
-            </QueryClientProvider>
-          </trpc.Provider>
-        )
-      }
-
-      export default function RootLayout({
-        children,
-      }: Readonly<{
-        children: React.ReactNode;
-      }>) {
-        return (
-          <html lang="en">
-            <body>
-              <AntdRegistry>
-                <ConfigProvider theme={appTheme}>
-                  <KottsterApp.Provider>
-                    <QueryProviders>
-                      {children}
-                    </QueryProviders>
-
-                    <KottsterApp.OverlayManager />
-                  </KottsterApp.Provider>
-                </ConfigProvider>
-              </AntdRegistry>
-            </body>
-          </html>
-        );
-      }
-    `),
-
-    'next.config.mjs': stripIndent(`
-      import { corsHeaders } from '@kottster/next';
-
-      /** @type {import('next').NextConfig} */
-      const nextConfig = {
-        experimental: {
-          serverComponentsExternalPackages: ['knex'],
-        },
-        async headers() {
-          return [
-            {
-              source: '/:path*',
-              headers: Object.entries(corsHeaders).map(([key, value]) => ({ key, value }))
-            }
-          ]
-        }
-      };
-
-      export default nextConfig;
-    `),
-
-    'src/server/routers/_app.js': stripIndent(`
+    'app/.server/trpc-routers/app-router.js': stripIndent(`
       import { t } from '../trpc';
       import pageRoutes from './page-routers.generated';
 
-      export const appRouter = t.router(pageRoutes);
+      export const appRouter = t.router(pageRoutes ?? []);
 
       export type AppRouter = typeof appRouter;
+    `),
+
+    'app/root.jsx': stripIndent(`
+      import { useState } from 'react';
+      import { Outlet } from '@remix-run/react';
+      import { QueryClient } from '@tanstack/react-query';
+      import { KottsterApp, ClientOnly, RootLayout, RootErrorBoundary, getTRPCClientLinks } from '@kottster/react';
+      import { trpc } from './trpc.client';
+      import '@kottster/react/dist/style.css';
+
+      function ClientApp() {
+        const [queryClient] = useState(() => new QueryClient());
+        const [trpcClient] = useState(() => trpc.createClient({ links: getTRPCClientLinks() }));
+        
+        return (
+          <KottsterApp.Provider
+            trpc={trpc}
+            trpcClient={trpcClient}
+            queryClient={queryClient}
+          >
+            <Outlet />
+            <KottsterApp.OverlayManager />
+          </KottsterApp.Provider>
+        )
+      }
+
+      export default function App() {
+        return (
+          <ClientOnly>
+            <ClientApp />
+          </ClientOnly>
+        )
+      }
+
+      export { 
+        RootLayout as Layout,
+        RootErrorBoundary as ErrorBoundary 
+      };
+    `),
+
+    'app/service-route.js': stripIndent(`
+      import { app } from '@/.server/app';
+      import { appRouter } from '@/.server/trpc-routers/app-router';
+      import { LoaderFunctionArgs } from '@remix-run/node';
+
+      export const loader = async (args: LoaderFunctionArgs) => {
+        return app.createServiceRouteLoader(appRouter)(args);
+      }
+    `),
+
+    'app/entry.client.jsx': stripIndent(`
+      import { RemixBrowser } from "@remix-run/react";
+      import { startTransition, StrictMode } from "react";
+      import { hydrateRoot } from "react-dom/client";
+
+      startTransition(() => {
+        hydrateRoot(
+          document,
+          <StrictMode>
+            <RemixBrowser />
+          </StrictMode>
+        );
+      });
+    `),
+
+    'app/trpc.client.js': stripIndent(`
+      import { createTRPCReact } from '@trpc/react-query';
+      import { type AppRouter } from '@/.server/trpc-routers/app-router';
+
+      export const trpc = createTRPCReact<AppRouter>();
     `),
 
   };

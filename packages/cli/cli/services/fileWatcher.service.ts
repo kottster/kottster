@@ -8,7 +8,7 @@ import * as path from 'path';
 export class FileWatcher {
   constructor(
     private readonly env: Record<string, string>,
-    private readonly watchPath: string = path.join('src', 'app', 'pages')
+    private readonly watchPath: string = path.join('app', 'routes')
   ) {}
 
   /**
@@ -47,7 +47,7 @@ export class FileWatcher {
 
       const watcher = fs.watch(watchPath, { recursive: true }, (eventType, filename) => {
         if (filename) {
-          if (filename.endsWith('page-api.ts') || filename.endsWith('page-api.js')) {
+          if (filename.endsWith('api.server.ts') || filename.endsWith('api.server.js')) {
             autoImport.createPageRoutersFile();
           }
         }

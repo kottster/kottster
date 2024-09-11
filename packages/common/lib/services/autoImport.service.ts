@@ -29,23 +29,23 @@ export class AutoImport {
   readonly AUTO_GENERATED_COMMENT = '// This file is auto-generated. Do not modify it manually.';
 
   /**
-   * Generate file that exports all the trpc routers (src/app/pages/../page-api.ts).
+   * Generate file that exports all the trpc routers (app/routes/../api.server.ts).
    */
   public async createPageRoutersFile(): Promise<void> {
-    const filePath = path.join(this.projectDir, 'src/server/routers', `page-routers.generated.${this.jsExt}`);
-    const pagesDir = path.join(this.projectDir, 'src/app/pages');
+    const filePath = path.join(this.projectDir, 'app/.server/trpc-routers', `page-routers.generated.${this.jsExt}`);
+    const pagesDir = path.join(this.projectDir, 'app/routes');
     const routerPaths = await this.findPageApiFiles(pagesDir);
 
     const routers = routerPaths.map(routerPath => {
       const dirName = path.basename(path.dirname(routerPath));
       
       return {
-        filePath: path.relative(path.join(this.projectDir, 'src/server/routers'), routerPath),
+        filePath: path.relative(path.join(this.projectDir, 'app/.server/trpc-routers'), routerPath),
         dirName
       }
     });
     
-    const comment = `${this.AUTO_GENERATED_COMMENT}\n// It automatically exports all the procedures in the src/app/pages directory.`;
+    const comment = `${this.AUTO_GENERATED_COMMENT}\n// It exports all api.server.(ts|tsx) files in the app/routes directory.`;
     const exports = routers.map(({ filePath, dirName }) => ({
       varName: transformToCamelCaseVarName(dirName),
       importFrom: filePath.replace(/\\/g, '/').replace(/\.(ts|js)$/, '')
@@ -56,7 +56,7 @@ export class AutoImport {
   }
 
   /**
-   * Recursively find all page-api.ts and page-api.js files in the given directory.
+   * Recursively find all api.server.ts and api.server.js files in the given directory.
    * @param dir The directory to search in.
    * @returns An array of file paths.
    */
@@ -68,7 +68,7 @@ export class AutoImport {
       const filePath = path.join(dir, file.name);
       if (file.isDirectory()) {
         results.push(...await this.findPageApiFiles(filePath));
-      } else if (file.name === `page-api.${this.jsExt}`) {
+      } else if (file.name === `api.server.${this.jsExt}`) {
         results.push(filePath);
       }
     }

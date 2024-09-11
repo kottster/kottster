@@ -1,7 +1,7 @@
 {
   "name": "@kottster/common",
   "description": "Common types and utilities for Kottster",
-  "version": "1.3.2",
+  "version": "1.4.0",
   "main": "dist/index.js",
   "license": "Apache-2.0",
   "scripts": {
@@ -23,5 +23,13 @@
     "synp": "^1.9.13",
     "typescript": "^5.5.3",
     "typescript-eslint": "^7.16.1"
-  }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kottster/kottster.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kottster/kottster/issues"
+  },
+  "homepage": "https://kottster.app/"
 }

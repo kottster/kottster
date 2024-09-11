@@ -22,7 +22,7 @@ export class FileWriter {
    * @param pageId The page ID
    */
   public removePageDirectory(pageId: string): void {
-    const dir = `${PROJECT_DIR}/src/app/pages/${pageId}`;
+    const dir = `${PROJECT_DIR}/app/routes/${pageId}`;
     if (!fs.existsSync(dir)) {
       return;
     }
@@ -36,8 +36,8 @@ export class FileWriter {
    * @param newPageId The new page ID
    */
   public renamePageDirectory(oldPageId: string, newPageId: string): void {
-    const oldDir = `${PROJECT_DIR}/src/app/pages/${oldPageId}`;
-    const newDir = `${PROJECT_DIR}/src/app/pages/${newPageId}`;
+    const oldDir = `${PROJECT_DIR}/app/routes/${oldPageId}`;
+    const newDir = `${PROJECT_DIR}/app/routes/${newPageId}`;
 
     if (!fs.existsSync(oldDir)) {
       return;
@@ -51,7 +51,7 @@ export class FileWriter {
    * @param pageId The page ID
    */
   public createNewEmptyPage(pageId: string) {
-    if (fs.existsSync(`${PROJECT_DIR}/src/app/pages/${pageId}`)) {
+    if (fs.existsSync(`${PROJECT_DIR}/app/routes/${pageId}`)) {
       return;
     }
 
@@ -80,19 +80,6 @@ export class FileWriter {
 
     // Write the entry file
     this.writeFile(`${PROJECT_DIR}/${entryFile.filePath}`, entryFile.fileContent);
-  }
-
-  /**
-   * Delete the page directory
-   * @param pageId The page ID
-   */
-  deletePageDirectory(page: PageFileStructure): void {
-    const dir = `${PROJECT_DIR}/${page.dirPath}`;
-    if (!fs.existsSync(dir)) {
-      return;
-    }
-
-    fs.rmdirSync(dir, { recursive: true });
   }
 
   /**

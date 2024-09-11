@@ -46,7 +46,7 @@ npm run dev:add-data-source mariadb
 npm run dev:add-data-source mssql
 ```
 
-After running the command, the new file will be created inside  `src/server/data-sources/` folder. Edit the file to configure the connection to your database, and restart the server.
+After running the command, the new file will be created inside  `app/.server/data-sources/` folder. Edit the file to configure the connection to your database, and restart the server.
 
 #### **4.** Start building your app:
 - Use our builder to generate pages and features instantly.

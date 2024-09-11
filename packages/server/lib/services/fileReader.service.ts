@@ -41,7 +41,7 @@ export class FileReader {
    * @returns The page directories
    */
   public getPagesDirectories(): string[] {
-    const dir = `${PROJECT_DIR}/src/app/pages`;
+    const dir = `${PROJECT_DIR}/app/routes`;
     if (!fs.existsSync(dir)) {
       return [];
     }
@@ -55,8 +55,8 @@ export class FileReader {
    * @returns The page structure or null if the page does not exist
    */
   public getPageFileStructure(pageId: string): PageFileStructure | null {
-    const dir = `${PROJECT_DIR}/src/app/pages/${pageId}`;
-    const entryFilePath = fs.existsSync(`${dir}/page.tsx`) ? `${dir}/page.tsx` : `${dir}/page.jsx`;
+    const dir = `${PROJECT_DIR}/app/routes/${pageId}`;
+    const entryFilePath = fs.existsSync(`${dir}/index.tsx`) ? `${dir}/index.tsx` : `${dir}/index.jsx`;
 
     if (!fs.existsSync(dir)) {
       return null;
@@ -70,7 +70,7 @@ export class FileReader {
 
     const pageStructure: PageFileStructure = {
       pageId,
-      dirPath: `src/app/pages/${pageId}`,
+      dirPath: `app/routes/${pageId}`,
       entryFile,
       files
     };

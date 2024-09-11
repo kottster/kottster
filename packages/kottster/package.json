@@ -1,0 +1,16 @@
+{
+  "name": "kottster",
+  "version": "0.0.1",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kottster/kottster.git"
+  },
+  "bugs": {
+    "url": "https://github.com/kottster/kottster/issues"
+  },
+  "homepage": "https://kottster.app/"
+}

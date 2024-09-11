@@ -5,7 +5,6 @@ import { PageFileStructure } from "@kottster/common";
 interface Data {
   page?: {
     createOrUpdate?: PageFileStructure;
-    delete?: PageFileStructure;
   };
 }
 
@@ -21,10 +20,6 @@ export class UpdateFiles extends DSAction {
     if (page?.createOrUpdate) {
       fileWriter.writePageToFile(page.createOrUpdate);
     };
-
-    if (page?.delete) {
-      fileWriter.deletePageDirectory(page.delete);
-    }
 
     return {};
   }

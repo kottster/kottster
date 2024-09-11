@@ -1,11 +1,11 @@
 import { ExtendAppContextFunction } from '../models/appContext.model';
 import { PROJECT_DIR } from '../constants/projectDir';
-import { AppContext, checkTsUsage, DataSource, Stage } from '@kottster/common';
+import { AppContext, checkTsUsage, DataSource, JWTTokenPayload, Stage, User } from '@kottster/common';
 import { DataSourceRegistry } from './dataSourceRegistry';
-import { NextResponse } from 'next/server';
 import { ActionService } from '../services/action.service';
 import { AnyRouter } from '@trpc/server';
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
+import * as jose from 'jose';
 
 export interface KottsterAppOptions {
   appId: string;
@@ -17,6 +17,7 @@ export interface KottsterAppOptions {
  */
 export class KottsterApp {
   public readonly appId: string;
+  private readonly secretKey: string;
   public readonly usingTsc: boolean;
   public readonly stage: Stage = (process.env.NODE_ENV || 'production') as Stage;  
   public dataSources: DataSource[] = [];
@@ -25,6 +26,7 @@ export class KottsterApp {
 
   constructor(options: KottsterAppOptions) {
     this.appId = options.appId;
+    this.secretKey = options.secretKey;
     this.usingTsc = checkTsUsage(PROJECT_DIR);
   }
 
@@ -55,50 +57,131 @@ export class KottsterApp {
   }
 
   /**
-   * Get the root handler for the Next.js app
-   * @param router The tRPC router
-   * @returns The handler
+   * Create a service route loader for the Remix app
+   * @param appRouter The tRPC router
+   * @returns The loader function
    */
-  getRootHandler<TRouter extends AnyRouter>(router: TRouter) {
-    // tRPC handler
-    const trpcHandler = (req: Request) =>
-      fetchRequestHandler({
-        endpoint: '/trpc',
-        req,
-        router,
-        createContext: () => this.createContext(req),
-      });
-
-    const handler = async (request: Request) => {
-      const { searchParams, pathname } = new URL(request.url);
+  public createServiceRouteLoader<TRouter extends AnyRouter>(appRouter: TRouter) {
+    const loader = async ({ request }: { request: Request }) => {
+      const { pathname } = new URL(request.url);
+    
+      // Handle Kottster API requests
+      if (pathname.startsWith('/-/kottster-api')) {
+        return this.handleKottsterApiRequest(request);
+      }
 
       // Handle tRPC requests
-      if (pathname.startsWith('/trpc')) {
-        return trpcHandler(request);
-      }
-
-      // Handle Kottster API requests
-      if (pathname.startsWith('/kottster-api')) {
-        const action = searchParams.get('action');
-        const actionDataRaw = searchParams.get('actionData');
-        const actionData = actionDataRaw ? JSON.parse(actionDataRaw) : {};
-
-        if (!action) {
-          throw new Error('Action not found in request');
+      if (pathname.startsWith('/-/trpc')) {
+        const [isTokenValid, newRequest] = await this.ensureValidToken(request);
+        if (!isTokenValid) {
+          return new Response('Unauthorized', { status: 401 });
         }
-
-        const res = await this.executeAction(action, actionData);
-        return NextResponse.json(res);
+        
+        return fetchRequestHandler({
+          endpoint: '/-/trpc',
+          req: newRequest,
+          router: appRouter,
+          createContext: () => this.createContext(newRequest),
+        });
       }
+    }
 
-      // Return health check response
-      return new NextResponse(`Kottster app is running in ${process.env.NODE_ENV} mode (id=${this.appId})`, {
-        status: 200,
-        headers: { 'Content-Type': 'text/plain' },
-      });
+    return loader;
+  }
+
+  /**
+   * Get the Kottster API loader for Remix app
+   * @returns The loader function
+   * @throws Error if the token is invalid
+   */
+  public async handleKottsterApiRequest(request: Request) {
+    if (request.method === 'OPTIONS') {
+      return this.handleOptionsRequest(request);
+    }
+
+    // Ensure the token is valid
+    const [isTokenValid, newRequest] = await this.ensureValidToken(request);
+    if (!isTokenValid) {
+      return new Response(`Invalid JWT token, please check your app's secret key or reload the page`, { status: 401 });
+    }
+    
+    const { searchParams } = new URL(newRequest.url);
+    const action = searchParams.get('action');
+    const actionDataRaw = searchParams.get('actionData');
+    const actionData = actionDataRaw ? JSON.parse(actionDataRaw) : {};
+
+    if (!action) {
+      throw new Error('Action not found in request');
+    }
+
+    return this.executeAction(action, actionData);
+  }
+
+  /**
+   * Get the data from the token
+   * @param token The JWT token
+   * @returns The data from the token
+   */
+  private async getDataFromToken(token: string) {
+    const { payload } = await jose.jwtVerify(token, new TextEncoder().encode(this.secretKey));
+    const decodedToken = payload as unknown as JWTTokenPayload;
+  
+    // Set the user on the request object
+    const user: User = {
+      id: decodedToken.userId,
+      email: decodedToken.userEmail,
     };
+  
+    return { 
+      appId: decodedToken.appId,
+      user 
+    };
+  }
 
-    return handler;
+  /**
+   * Ensure that the request has a valid token
+   * @param request The request object
+   * @throws Error if the token is invalid
+   */
+  public async ensureValidToken(request: Request): Promise<[boolean, Request]> {
+    const token = request.headers.get('authorization')?.replace('Bearer ', '');
+    if (!token) {
+      throw new Error('Invalid JWT token: token not passed');
+    }
+
+    try {
+      const { user, appId } = await this.getDataFromToken(token);
+  
+      if (String(appId) !== String(this.appId)) {
+        throw new Error('Invalid JWT token: invalid app ID');
+      }
+  
+      // Clone the request and set the user
+      const newRequest = request.clone();
+      newRequest.headers.set('x-user', JSON.stringify(user));
+      
+      return [true, newRequest];
+    } catch (error) {
+      return [false, request];
+    }
+  }
+
+  /**
+   * Handle an OPTIONS request
+   * @param _ The request object
+   * @returns The response
+   */
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  public handleOptionsRequest(_: Request) {
+    return new Response(null, {
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Allow-Origin': process.env.KOTTSTER_CORS_ALLOW_ORIGIN ?? 'https://web.kottster.app',
+        'Access-Control-Allow-Methods': 'GET,DELETE,PATCH,POST,PUT,OPTIONS',
+        'Access-Control-Allow-Headers': '*',
+      },
+    })
   }
 
   /**
@@ -106,8 +189,8 @@ export class KottsterApp {
    * @param req The Next.js request object
    * @throws Error if user is not found or if there's an issue parsing user information
    */
-  public createContext(req: Request): AppContext {
-    let user;
+  public createContext(req: Request): any {
+    let user: User;
     
     // Get the user from the request header that was set by the middleware
     const userHeader = req.headers.get('x-user');

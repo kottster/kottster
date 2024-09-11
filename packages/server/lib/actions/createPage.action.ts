@@ -7,7 +7,7 @@ interface Data {
 }
 
 /**
- * Create a new page
+ * Create a new empty page
  */
 export class CreatePage extends DSAction {
   public async execute(data: Data) {

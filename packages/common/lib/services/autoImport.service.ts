@@ -50,7 +50,7 @@ export class AutoImport {
       varName: transformToCamelCaseVarName(dirName),
       importFrom: filePath.replace(/\\/g, '/').replace(/\.(ts|js)$/, '')
     }));
-    const fileContent = `${comment}\n\n${this.getExportFileContent(exports)}`;
+    const fileContent = `${comment}\n\n${this.getExportFileContent(exports)}\n`;
     
     await this.writeFile(filePath, fileContent);
   }
@@ -83,7 +83,7 @@ export class AutoImport {
   private getExportFileContent (exports: { varName: string; importFrom: string; }[]) {
     const imports = exports.map(({ varName, importFrom }) => `import ${varName} from '${importFrom}';`);
     const exportsContent = exports.map(({ varName }) => `  ${varName},`).join('\n');
-    return `${imports.join('\n')}\n\nexport default {\n${exportsContent}\n}`;
+    return `${imports.join('\n')}\n\nexport default {\n${exportsContent}\n};`;
   }
 
   /**
@@ -91,11 +91,21 @@ export class AutoImport {
    * @param filePath The path of the file to write to.
    * @param content The file content.
    */
-  private async writeFile (filePath: string, content: string): Promise<void> {
+  private async writeFile(filePath: string, content: string) {
+    const tempFilePath = `${filePath}.temp`;
+  
     try {
-      await fs.writeFile(filePath, content);
+      await fs.writeFile(tempFilePath, content, { flag: 'wx' });
+      await fs.rename(tempFilePath, filePath);
     } catch (error) {
+      // Clean up the temporary file
+      try {
+        await fs.unlink(tempFilePath);
+      } catch (unlinkError) {
+        // eslint-disable-next-line no-empty
+      }
       console.error(`Error creating ${filePath} file:`, error);
+      throw error;
     }
   }
 }

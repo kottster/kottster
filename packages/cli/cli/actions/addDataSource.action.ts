@@ -9,7 +9,7 @@ import dataSourcesTypeData from '../constants/dataSourceTypeData';
  */
 export async function addDataSource (dataSourceType: DataSourceType): Promise<void> {
   const usingTsc = checkTsUsage();
-  const packageInstaller = new PackageInstaller('npm')
+  const packageInstaller = new PackageInstaller()
   const fileCreator = new FileCreator({ usingTsc });
   const dataSourceTypeData = dataSourcesTypeData[dataSourceType];
   const dataSourceTypeInfo = dataSourceTypes.find((type) => type.type === dataSourceType);

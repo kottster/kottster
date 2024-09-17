@@ -1,7 +1,7 @@
 import { exec } from 'child_process'
 import { createSpinner } from 'nanospinner';
-
-type PackageManager = 'npm' | 'yarn'
+import { PackageManager } from '../models/packageManager';
+import { detectPackageManager } from '../utils/detectPackageManager';
 
 // A map of package names to versions
 type Packages = Record<string, string>
@@ -11,7 +11,7 @@ type Packages = Record<string, string>
 */
 class PackageInstaller {
   constructor (
-    private readonly PACKAGE_MANAGER: PackageManager,
+    private readonly PACKAGE_MANAGER: PackageManager = detectPackageManager(),
     private readonly PROJECT_DIR: string = process.cwd()
   ) {}
 
@@ -22,16 +22,20 @@ class PackageInstaller {
    */
   public installPackages (packages?: Packages): Promise<void> {
     return new Promise((resolve, reject) => {
-      const spinner = createSpinner(packages ? `Installing packages: ${Object.keys(packages).join(', ')}` : 'Installing packages...').start()
+      const startTime = Date.now();
+      const spinner = createSpinner(packages ? `Installing packages (${this.PACKAGE_MANAGER}): ${Object.keys(packages).join(', ')}` : 'Installing packages...').start()
       const command = this.getInstallCommand(packages)
 
       exec(command, { cwd: this.PROJECT_DIR }, error => {
+        const endTime = Date.now();
+        const elapsedTime = (endTime - startTime) / 1000;
+
         if (error) {
           spinner.error({ text: 'An error occurred during package installation' });
           console.error(error);
           reject(error);
         } else {
-          spinner.success({ text: 'Packages installed successfully' });
+          spinner.success({ text: `Packages installed successfully (${Math.round(elapsedTime)}s)` });
           resolve();
         }
       });
@@ -41,9 +45,11 @@ class PackageInstaller {
   private getInstallCommand (packages?: Packages): string {
     switch (this.PACKAGE_MANAGER) {
       case 'npm':
-        return `npm install ${packages ? this.getPackageList(packages) : ''} --no-fund --no-audit --maxsockets 50`;
+        return packages ? `npm install ${packages ? this.getPackageList(packages) : ''} --save --no-fund --no-audit` : `npm install --no-fund --no-audit`;
       case 'yarn':
-        return `yarn add ${packages ? this.getPackageList(packages) : ''}`;
+        return packages ? `yarn add ${packages ? this.getPackageList(packages) : ''}` : `yarn --silent`;
+      case 'pnpm':
+        return packages ? `pnpm add ${packages ? this.getPackageList(packages) : ''}` : `pnpm install`;
       default:
         throw new Error('Unsupported package manager')
     }

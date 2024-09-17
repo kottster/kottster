@@ -46,7 +46,7 @@ export class FileWatcher {
       const autoImport = new AutoImport({ usingTsc: true });
 
       const watcher = fs.watch(watchPath, { recursive: true }, (eventType, filename) => {
-        if (filename) {
+        if (filename && eventType === 'rename') {
           if (filename.endsWith('api.server.ts') || filename.endsWith('api.server.js')) {
             autoImport.createPageRoutersFile();
           }

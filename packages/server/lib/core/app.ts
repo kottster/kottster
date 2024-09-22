@@ -6,6 +6,7 @@ import { ActionService } from '../services/action.service';
 import { AnyRouter } from '@trpc/server';
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import * as jose from 'jose';
+import { corsHeaders } from '../constants/corsHeaders';
 
 export interface KottsterAppOptions {
   appId: string;
@@ -64,6 +65,11 @@ export class KottsterApp {
   public createServiceRouteLoader<TRouter extends AnyRouter>(appRouter: TRouter) {
     const loader = async ({ request }: { request: Request }) => {
       const { pathname } = new URL(request.url);
+
+      // Handle CORS preflight requests
+      if (request.method === 'OPTIONS') {
+        return new Response(null, { headers: corsHeaders });
+      }
     
       // Handle Kottster API requests
       if (pathname.startsWith('/-/kottster-api')) {
@@ -74,15 +80,16 @@ export class KottsterApp {
       if (pathname.startsWith('/-/trpc')) {
         const [isTokenValid, newRequest] = await this.ensureValidToken(request);
         if (!isTokenValid) {
-          return new Response('Unauthorized', { status: 401 });
+          return new Response('Unauthorized', { status: 401, headers: corsHeaders });
         }
         
-        return fetchRequestHandler({
+        const apiResponse = await fetchRequestHandler({
           endpoint: '/-/trpc',
           req: newRequest,
           router: appRouter,
           createContext: () => this.createContext(newRequest),
         });
+        return this.enrichWithCors(apiResponse);
       }
     }
 
@@ -90,19 +97,31 @@ export class KottsterApp {
   }
 
   /**
+   * Enrich a response with CORS headers
+   * @param response The response to enrich
+   * @returns The enriched response
+   */
+  private enrichWithCors(response: Response): Response {
+    const newHeaders = new Headers(response.headers);
+    Object.entries(corsHeaders).forEach(([key, value]) => {
+      newHeaders.set(key, value);
+    });
+    return new Response(response.body, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: newHeaders
+    });
+  }
+
+  /**
    * Get the Kottster API loader for Remix app
    * @returns The loader function
    * @throws Error if the token is invalid
    */
-  public async handleKottsterApiRequest(request: Request) {
-    if (request.method === 'OPTIONS') {
-      return this.handleOptionsRequest(request);
-    }
-
-    // Ensure the token is valid
+  public async handleKottsterApiRequest(request: Request): Promise<Response> {
     const [isTokenValid, newRequest] = await this.ensureValidToken(request);
     if (!isTokenValid) {
-      return new Response(`Invalid JWT token, please check your app's secret key or reload the page`, { status: 401 });
+      return new Response(`Invalid JWT token, please check your app's secret key or reload the page`, { status: 401, headers: corsHeaders });
     }
     
     const { searchParams } = new URL(newRequest.url);
@@ -111,10 +130,11 @@ export class KottsterApp {
     const actionData = actionDataRaw ? JSON.parse(actionDataRaw) : {};
 
     if (!action) {
-      throw new Error('Action not found in request');
+      return new Response('Action not found in request', { status: 400, headers: corsHeaders });
     }
 
-    return this.executeAction(action, actionData);
+    const response = await this.executeAction(action, actionData);
+    return new Response(JSON.stringify(response), { headers: corsHeaders });
   }
 
   /**
@@ -164,24 +184,6 @@ export class KottsterApp {
     } catch (error) {
       return [false, request];
     }
-  }
-
-  /**
-   * Handle an OPTIONS request
-   * @param _ The request object
-   * @returns The response
-   */
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  public handleOptionsRequest(_: Request) {
-    return new Response(null, {
-      status: 200,
-      headers: {
-        'Access-Control-Allow-Credentials': 'true',
-        'Access-Control-Allow-Origin': process.env.KOTTSTER_CORS_ALLOW_ORIGIN ?? 'https://web.kottster.app',
-        'Access-Control-Allow-Methods': 'GET,DELETE,PATCH,POST,PUT,OPTIONS',
-        'Access-Control-Allow-Headers': '*',
-      },
-    })
   }
 
   /**

@@ -117,6 +117,8 @@ export class DevSync {
 
     return this.server.listen(port, () => {
       console.log(`Dev-sync is running on port ${port}`);
+
+      console.log(`Starting the server in development mode...`);
     });
   }
 }

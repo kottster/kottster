@@ -10,9 +10,9 @@ export class FileTemplateManager {
 
   static templates = {
     'vite.config.ts': stripIndent(`
-      import { vitePlugin as remix } from "@remix-run/dev";
-      import { defineConfig } from "vite";
-      import tsconfigPaths from "vite-tsconfig-paths";
+      import { vitePlugin as remix } from '@remix-run/dev';
+      import { defineConfig } from 'vite';
+      import tsconfigPaths from 'vite-tsconfig-paths';
       import { viteCommonjs } from '@originjs/vite-plugin-commonjs';
 
       export default defineConfig({
@@ -24,7 +24,7 @@ export class FileTemplateManager {
               v3_throwAbortReason: true,
             },
             routes(defineRoutes) {
-              return defineRoutes(route => {
+              return defineRoutes((route) => {
                 route('/-/*', 'service-route.ts');
               });
             },
@@ -36,11 +36,16 @@ export class FileTemplateManager {
         ],
         optimizeDeps: {
           include: [
-            'react', 
-            'react-dom', 
-            'antd',
-            '@ant-design/icons',
-            '@tanstack/react-query', 
+            'react',
+            'react-dom',
+            'react-feather',
+            '@mantine/core',
+            '@mantine/dates',
+            '@mantine/charts',
+            '@mantine/hooks',
+            '@mantine/modals',
+            '@mantine/notifications',
+            '@tanstack/react-query',
             '@trpc/react-query',
             'dayjs',
             'recharts',
@@ -284,7 +289,7 @@ export class FileTemplateManager {
       export { 
         RootLayout as Layout,
         RootErrorBoundary as ErrorBoundary 
-      };
+      }
     `),
 
     'app/service-route.js': stripIndent(`
@@ -298,9 +303,9 @@ export class FileTemplateManager {
     `),
 
     'app/entry.client.jsx': stripIndent(`
-      import { RemixBrowser } from "@remix-run/react";
-      import { startTransition, StrictMode } from "react";
-      import { hydrateRoot } from "react-dom/client";
+      import { RemixBrowser } from '@remix-run/react';
+      import { startTransition, StrictMode } from 'react';
+      import { hydrateRoot } from 'react-dom/client';
 
       startTransition(() => {
         hydrateRoot(

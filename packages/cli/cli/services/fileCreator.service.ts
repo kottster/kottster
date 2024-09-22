@@ -257,8 +257,14 @@ export class FileCreator {
         '@kottster/server': KOTTSTER_SERVER_DEP_VER ?? '^1.x',
         '@kottster/react': KOTTSTER_REACT_DEP_VER ?? '^1.x',
 
-        'antd': '^5.x',
-        '@ant-design/icons': '^5.x',
+        '@mantine/charts': '^7.x',
+        '@mantine/core': '^7.x',
+        '@mantine/dates': '^7.x',
+        '@mantine/form': '^7.x',
+        '@mantine/hooks': '^7.x',
+        '@mantine/modals': '^7.x',
+        '@mantine/notifications': '^7.x',
+        'react-feather': '^2.x',
         'recharts': '^2.x',
 
         '@trpc/client': '^10.x',

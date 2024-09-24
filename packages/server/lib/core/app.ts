@@ -88,6 +88,10 @@ export class KottsterApp {
           req: newRequest,
           router: appRouter,
           createContext: () => this.createContext(newRequest),
+          onError: (opts) => {
+            const { error } = opts;
+            console.error('TRPC error:', error);
+          }
         });
         return this.enrichWithCors(apiResponse);
       }

@@ -1,6 +1,6 @@
 {
   "name": "@kottster/server",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Simple low-code builder for building robust admin dashboards fast",
   "keywords": [
     "admin",

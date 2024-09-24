@@ -44,6 +44,7 @@ export class FileTemplateManager {
             '@mantine/charts',
             '@mantine/hooks',
             '@mantine/modals',
+            '@mantine/form',
             '@mantine/notifications',
             '@tanstack/react-query',
             '@trpc/react-query',
@@ -116,6 +117,7 @@ export class FileTemplateManager {
       });
 
       app.registerDataSources(dataSourceRegistry);
+
     `),
 
     'app/.server/data-sources/postgres/index.js': (usingTsc: boolean) => stripIndent(`
@@ -259,23 +261,21 @@ export class FileTemplateManager {
       import { Outlet } from '@remix-run/react';
       import { QueryClient } from '@tanstack/react-query';
       import { KottsterApp, ClientOnly, RootLayout, RootErrorBoundary, getTRPCClientLinks } from '@kottster/react';
+      import { Notifications } from '@mantine/notifications';
       import { trpc } from './trpc.client';
       import '@kottster/react/dist/style.css';
 
       function ClientApp() {
         const [queryClient] = useState(() => new QueryClient());
         const [trpcClient] = useState(() => trpc.createClient({ links: getTRPCClientLinks() }));
-        
+
         return (
-          <KottsterApp.Provider
-            trpc={trpc}
-            trpcClient={trpcClient}
-            queryClient={queryClient}
-          >
+          <KottsterApp.Provider trpc={trpc} trpcClient={trpcClient} queryClient={queryClient}>
             <Outlet />
             <KottsterApp.OverlayManager />
+            <Notifications />
           </KottsterApp.Provider>
-        )
+        );
       }
 
       export default function App() {
@@ -283,23 +283,24 @@ export class FileTemplateManager {
           <ClientOnly>
             <ClientApp />
           </ClientOnly>
-        )
+        );
       }
 
-      export { 
-        RootLayout as Layout,
-        RootErrorBoundary as ErrorBoundary 
-      }
+      export { RootLayout as Layout, RootErrorBoundary as ErrorBoundary };
     `),
 
     'app/service-route.js': stripIndent(`
       import { app } from '@/.server/app';
       import { appRouter } from '@/.server/trpc-routers/app-router';
-      import { LoaderFunctionArgs } from '@remix-run/node';
+      import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
 
       export const loader = async (args: LoaderFunctionArgs) => {
         return app.createServiceRouteLoader(appRouter)(args);
-      }
+      };
+
+      export const action = async (args: ActionFunctionArgs) => {
+        return app.createServiceRouteLoader(appRouter)(args);
+      };
     `),
 
     'app/entry.client.jsx': stripIndent(`

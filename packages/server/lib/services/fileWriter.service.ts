@@ -83,12 +83,12 @@ export class FileWriter {
   }
 
   /**
-   * Write the schema to the schema.json file
+   * Write the schema to the app-schema.json file
    * @param schema The schema to write
    */
   public writeSchemaJsonFile(schema: AppSchema): void {
-    const content = JSON.stringify(schema, null, 4);
-    const filePath = `${PROJECT_DIR}/schema.json`;
+    const content = JSON.stringify(schema, null, 2);
+    const filePath = `${PROJECT_DIR}/app-schema.json`;
 
     this.writeFile(filePath, content);
   }

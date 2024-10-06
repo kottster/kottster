@@ -42,7 +42,7 @@ export class DevSyncRunner {
     return stripIndent(`
       import { DevSync } from '@kottster/server';
       import { getEnvOrThrow } from '@kottster/common';
-      const devSync = new DevSync({ appId: getEnvOrThrow('APP_ID') });
+      const devSync = new DevSync();
       devSync.start(getEnvOrThrow('PORT') ?? 5481);
     `);
   }

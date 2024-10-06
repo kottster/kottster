@@ -6,7 +6,7 @@ interface Data extends FullAppSchema {}
 
 /**
  * Update the app schema
- * @description Updates the schema.json file and creates/removes pages as needed.
+ * @description Updates the app-schema.json file and creates/removes pages as needed.
  */
 export class UpdateSchema extends DSAction {
   public async execute(data: Data) {

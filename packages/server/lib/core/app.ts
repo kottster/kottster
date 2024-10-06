@@ -1,6 +1,6 @@
 import { ExtendAppContextFunction } from '../models/appContext.model';
 import { PROJECT_DIR } from '../constants/projectDir';
-import { AppContext, checkTsUsage, DataSource, JWTTokenPayload, Stage, User } from '@kottster/common';
+import { AppContext, AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User } from '@kottster/common';
 import { DataSourceRegistry } from './dataSourceRegistry';
 import { ActionService } from '../services/action.service';
 import { AnyRouter } from '@trpc/server';
@@ -10,7 +10,8 @@ import { corsHeaders } from '../constants/corsHeaders';
 
 export interface KottsterAppOptions {
   appId: string;
-  secretKey: string;
+  secretKey?: string;
+  schema: AppSchema;
 }
 
 /**
@@ -22,13 +23,19 @@ export class KottsterApp {
   public readonly usingTsc: boolean;
   public readonly stage: Stage = (process.env.NODE_ENV || 'production') as Stage;  
   public dataSources: DataSource[] = [];
+  public schema: AppSchema;
 
   public extendContext: ExtendAppContextFunction;
 
   constructor(options: KottsterAppOptions) {
+    if (!options.secretKey) {
+      throw new Error('Secret key is not defined');
+    }
+    
     this.appId = options.appId;
     this.secretKey = options.secretKey;
     this.usingTsc = checkTsUsage(PROJECT_DIR);
+    this.schema = options.schema;
   }
 
   /**
@@ -72,7 +79,7 @@ export class KottsterApp {
       }
     
       // Handle Kottster API requests
-      if (pathname.startsWith('/-/kottster-api')) {
+      if (pathname.startsWith('/-/kottster-api/v1')) {
         return this.handleKottsterApiRequest(request);
       }
 

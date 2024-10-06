@@ -95,17 +95,14 @@ export class AutoImport {
     const tempFilePath = `${filePath}.temp`;
   
     try {
-      await fs.writeFile(tempFilePath, content, { flag: 'wx' });
+      await fs.writeFile(tempFilePath, content, { flag: 'w' });
       await fs.rename(tempFilePath, filePath);
     } catch (error) {
-      // Clean up the temporary file
       try {
         await fs.unlink(tempFilePath);
-      } catch (unlinkError) {
         // eslint-disable-next-line no-empty
-      }
+      } catch (unlinkError) {}
       console.error(`Error creating ${filePath} file:`, error);
-      throw error;
     }
   }
 }

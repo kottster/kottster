@@ -8,7 +8,7 @@ interface Result extends FullAppSchema {};
 
 /**
  * Get the app schema.
- * @description Returns combined schema.json and additional data.
+ * @description Returns combined app-schema.json and additional data.
  */
 export class GetSchema extends Action {
   private fileReader: FileReader = new FileReader();
@@ -17,7 +17,7 @@ export class GetSchema extends Action {
     const { appId, dataSources } = this.app;
     const isDevelopment = process.env.NODE_ENV === 'development';
     
-    const appSchema = this.fileReader.readSchemaJson();
+    const appSchema = this.app.schema;
     const absoluteDirPath = isDevelopment ? this.getAbsoluteDirPath() : undefined;
     const [dependencies, devDependencies] = isDevelopment ? this.getDependencies() : [];
 

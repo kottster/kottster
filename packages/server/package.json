@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.2.0",
-    "@kottster/common": "^1.4.1",
+    "@kottster/common": "^1.4.2",
     "@trpc/server": "^10.45.2",
     "@types/dotenv": "^8.2.0",
     "@types/jest": "^29.5.12",

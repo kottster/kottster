@@ -106,18 +106,21 @@ export class FileTemplateManager {
       export default {};
     `),
 
-    'app/.server/app.js': () => stripIndent(`
-      import { getEnvOrThrow } from '@kottster/common';
+    'app/.server/app.js': (_usingTsc: boolean, vars: Record<string, string>) => stripIndent(`
       import { createApp } from '@kottster/server';
       import { dataSourceRegistry } from './data-sources/registry';
+      import schema from '../../app-schema.json';
 
       export const app = createApp({
-        appId: getEnvOrThrow('APP_ID'),
-        secretKey: getEnvOrThrow('SECRET_KEY'),
+        schema,
+        appId: '${vars.appId}',
+        secretKey: '${vars.secretKey}',
+
+        // For security, consider moving the secret key to an environment variable:
+        // secretKey: process.env.NODE_ENV === 'development' ? 'dev-secret-key' : process.env.SECRET_KEY,
       });
 
       app.registerDataSources(dataSourceRegistry);
-
     `),
 
     'app/.server/data-sources/postgres/index.js': (usingTsc: boolean) => stripIndent(`
@@ -330,16 +333,17 @@ export class FileTemplateManager {
   /**
    * Get a template
    * @param name Template name
+   * @param vars Variables to replace in the template
    * @returns The file content
    */
-  public getTemplate(name: keyof typeof FileTemplateManager.templates): string {
+  public getTemplate(name: keyof typeof FileTemplateManager.templates, vars: Record<string, string> = {}): string {
     const template = FileTemplateManager.templates[name];
     if (!template) {
       throw new Error(`Template ${name} not found`);
     }
     
     if (typeof template === 'function') {
-      return template(this.usingTsc);
+      return template(this.usingTsc, vars);
     }
 
     return template;

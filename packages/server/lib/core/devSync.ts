@@ -5,10 +5,6 @@ import { checkTsUsage } from '@kottster/common';
 import { PROJECT_DIR } from '../constants/projectDir';
 import { ActionService } from '../services/action.service';
 
-export interface DevSyncOptions {
-  appId: string;
-}
-
 /**
  * The dev sync class 
  * @description Allow Kottster to make changes to the app schema and files
@@ -18,8 +14,7 @@ export class DevSync {
   private readonly server: Server;
   public readonly usingTsc: boolean;
 
-  constructor(options: DevSyncOptions) {
-    this.appId = options.appId;
+  constructor() {
     this.usingTsc = checkTsUsage(PROJECT_DIR);
 
     // Create a server with increased header size limit

@@ -75,16 +75,6 @@ export class FileCreator {
       dependencies: {},
       devDependencies: this.usingTsc ? this.getTypescriptDependencies() : {}
     })
-    this.createEnv([
-      {
-        key: 'APP_ID',
-        value: options.appId,
-      },
-      {
-        key: 'SECRET_KEY',
-        value: options.secretKey,
-      },
-    ])
     this.createGitIgnore()
     if (this.usingTsc) {
       this.createFileFromTemplate('tsconfig.json', path.join(this.projectDir, 'tsconfig.json'));
@@ -98,7 +88,14 @@ export class FileCreator {
     this.createFileFromTemplate('app/entry.client.jsx', path.join(this.projectDir, `app/entry.client.${this.jsxExt}`));
     this.createFileFromTemplate('app/service-route.js', path.join(this.projectDir, `app/service-route.${this.jsExt}`));
     this.createFileFromTemplate('app/.server/trpc.js', path.join(this.projectDir, `app/.server/trpc.${this.jsExt}`));
-    this.createFileFromTemplate('app/.server/app.js', path.join(this.projectDir, `app/.server/app.${this.jsExt}`));
+    this.createFileFromTemplate(
+      'app/.server/app.js', 
+      path.join(this.projectDir, `app/.server/app.${this.jsExt}`),
+      {
+        appId: options.appId,
+        secretKey: options.secretKey,
+      }
+    );
     this.createFileFromTemplate('app/.server/data-sources/registry.js', path.join(this.projectDir, `app/.server/data-sources/registry.${this.jsExt}`));
     this.createFileFromTemplate('app/.server/trpc-routers/app-router.js', path.join(this.projectDir, `app/.server/trpc-routers/app-router.${this.jsExt}`));
     this.createFileFromTemplate('app/.server/trpc-routers/page-routers.generated.js', path.join(this.projectDir, `app/.server/trpc-routers/page-routers.generated.${this.jsExt}`));
@@ -322,9 +319,10 @@ export class FileCreator {
    * Create a file from a template
    * @param templateKey The key of the template
    * @param filePath The file path
+   * @param vars The variables to replace in the template
    */
-  private createFileFromTemplate (templateKey: keyof typeof FileTemplateManager.templates, filePath: string) {
-    const fileContent = this.fileTemplateManager.getTemplate(templateKey);
+  private createFileFromTemplate (templateKey: keyof typeof FileTemplateManager.templates, filePath: string, vars: Record<string, string> = {}): void {
+    const fileContent = this.fileTemplateManager.getTemplate(templateKey, vars);
     this.writeFile(filePath, fileContent);
   }
 
@@ -350,13 +348,13 @@ export class FileCreator {
   }
 
   /**
-   * Create a schema.json file
+   * Create a app-schema.json file
    */
   private createSchema(): void {
     const appSchema: AppSchema = {
       navItems: [],
     };
-    const filePath = path.join(this.projectDir, 'schema.json')
+    const filePath = path.join(this.projectDir, 'app-schema.json')
     const fileContent = JSON.stringify(appSchema, null, 2);
     this.writeFile(filePath, fileContent);
   }

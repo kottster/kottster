@@ -614,10 +614,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@kottster/common@^1.4.1":
-  version "1.4.1"
-  resolved "https://registry.yarnpkg.com/@kottster/common/-/common-1.4.1.tgz#89e0c9968e49c13b264d255a8a37fab55f0d56d0"
-  integrity sha512-kzLhUKCc6B9A5IjN9YvRIQZqOOQCWrf2RhOgt6Jc2mzkgux2eCmXxQpIj3GdmAhyt1/6N/efzjuaWAvifD3y6g==
+"@kottster/common@^1.4.2":
+  version "1.4.2"
+  resolved "https://registry.yarnpkg.com/@kottster/common/-/common-1.4.2.tgz#44d0bb001e0cbde2d524d044572a841ce7c047ff"
+  integrity sha512-Ye6QDwhQpNYHcMcFe8mW9rc7afQ1on9Hhh8XKvTfwmN56BGjQRiGDwRVMFPbs8PNRuWefzE8PUmFpx4E1p/PNQ==
 
 "@next/env@14.2.7":
   version "14.2.7"

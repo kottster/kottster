@@ -23,14 +23,18 @@ export async function newProject (projectName: string, options: Options): Promis
   const secretKey = options.secretKey?.trim()
   const projectDir = projectName === '.' ? process.cwd() : path.join(process.cwd(), projectName);
   const runDevCommand = getRunDevCommand(projectSetupData.packageManager);
-  
-  API.sendNewProjectCommandUsageData(options.appId, 'start');
+  const usageDataOptions = {
+    packageManager: projectSetupData.packageManager,
+    usingTypescript: projectSetupData.useTypeScript,
+  };
+
+  API.sendNewProjectCommandUsageData(options.appId, 'start', usageDataOptions);
 
   try {
     // Create project files
     const fileCreator = new FileCreator({
       projectDir,
-      usingTsc: true
+      usingTsc: true,
     })
     fileCreator.createProject({
       projectName,
@@ -55,9 +59,9 @@ export async function newProject (projectName: string, options: Options): Promis
     console.log(chalk.grey(`   ${runDevCommand}`))
     console.log('\n')
 
-    await API.sendNewProjectCommandUsageData(options.appId, 'finish', startTime);
+    await API.sendNewProjectCommandUsageData(options.appId, 'finish', usageDataOptions, startTime);
   } catch (error) {
     console.error(chalk.red('Error creating project:', error))
-    await API.sendNewProjectCommandUsageData(options.appId, 'error');
+    await API.sendNewProjectCommandUsageData(options.appId, 'error', usageDataOptions);
   }
 }

@@ -1,5 +1,10 @@
 import fetch from 'sync-fetch';
 
+interface NewProjectCommandOptions {
+  packageManager?: string;
+  usingTypescript?: boolean;
+}
+
 /**
  * Service for calling the Kottster API.
  */
@@ -15,6 +20,8 @@ export class API {
    * - Platform (Windows, macOS, Linux)
    * - Node.js version
    * - Command duration (for 'finish' stage)
+   * - Package manager used (npm, yarn, pnpm, etc.)
+   * - Whether TypeScript is used
    * 
    * @param appId - The application ID
    * @param stage - The stage of the command ('start', 'finish', or 'error')
@@ -23,7 +30,8 @@ export class API {
   static async sendNewProjectCommandUsageData(
     appId: string, 
     stage: 'start' | 'finish' | 'error',
-    startTime?: number // Optional, only required for 'finish' stage
+    options?: NewProjectCommandOptions,
+    startTime?: number, // Optional, only required for 'finish' stage,
   ) {
     const dateTime = new Date().toISOString();
     const platform = process.platform;
@@ -48,6 +56,8 @@ export class API {
           platform,
           nodeVersion,
           duration,
+          packageManager: options?.packageManager,
+          usingTypescript: options?.usingTypescript,
         }),
       });
     } catch (error) {

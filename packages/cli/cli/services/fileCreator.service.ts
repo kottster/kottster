@@ -76,10 +76,7 @@ export class FileCreator {
       devDependencies: this.usingTsc ? this.getTypescriptDependencies() : {}
     })
     this.createGitIgnore()
-    if (this.usingTsc) {
-      this.createFileFromTemplate('tsconfig.json', path.join(this.projectDir, 'tsconfig.json'));
-    };
-
+    
     // Create files
     this.createFileFromTemplate('tsconfig.json', path.join(this.projectDir, 'tsconfig.json'));
     this.createFileFromTemplate('vite.config.ts', path.join(this.projectDir, 'vite.config.ts'));

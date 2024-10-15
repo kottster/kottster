@@ -101,7 +101,7 @@ export class FileTemplateManager {
 
     'app/.server/trpc-routers/page-routers.generated.js': stripIndent(`
       // This file is auto-generated. Do not modify it manually.
-      // It exports all api.server.(ts|tsx) files in the app/routes directory.
+      // It exports all api.server.(ts|js) files in the app/routes directory.
 
       export default {};
     `),

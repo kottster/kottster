@@ -18,7 +18,7 @@ program
 
 // Command to create a new project
 program
-  .command('new <project-name>')
+  .command('new [project-name]')
   .description('Create a new project')
   .option('--skipInstall', 'Skip installing dependencies')
   .action(newProject)

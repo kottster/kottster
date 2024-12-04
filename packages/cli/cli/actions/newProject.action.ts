@@ -11,10 +11,13 @@ interface Options {
 }
 
 /**
- * Create a new project with the given name.
+ * Create a new project.
  */
-export async function newProject (projectName: string, options: Options): Promise<void> {
-  const projectSetupData = await collectNewProjectData();
+export async function newProject (projectName: string | undefined, options: Options): Promise<void> {
+  const projectSetupData = await collectNewProjectData(!projectName);
+  if (!projectName) {
+    projectName = projectSetupData.projectName!;
+  };
   
   const startTime = Date.now();
   const projectDir = projectName === '.' ? process.cwd() : path.join(process.cwd(), projectName);

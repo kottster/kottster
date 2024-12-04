@@ -762,10 +762,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@kottster/common@^1.5.0":
-  version "1.5.0"
-  resolved "https://registry.yarnpkg.com/@kottster/common/-/common-1.5.0.tgz#88b2a439f21f67dafca846839c381af172c18742"
-  integrity sha512-eDtRJ9i1Vfhh00CAc2I6DD0ZEbPYM9fMLutCjwm4NGIYK2dI+qXccbgH/xdfMdmNpiRc4LVcRSzPN/vRJepO3Q==
+"@kottster/common@^1.5.1":
+  version "1.5.1"
+  resolved "https://registry.yarnpkg.com/@kottster/common/-/common-1.5.1.tgz#091547572b9d43930d7fc706745def917ccf5f06"
+  integrity sha512-fVy6EHaGPWKamR8S5+9GaPJYYwNC/bEDHM1jgsPoPHotqLFvrSXT9C3bkOX245ZmzLZt6cXHUgQ2MvYgV/2YMg==
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"

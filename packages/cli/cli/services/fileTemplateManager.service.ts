@@ -126,7 +126,6 @@ export class FileTemplateManager {
       const dataSource = createDataSource({
         type: ${usingTsc ? `DataSourceType.mysql` : `'mysql'`},
         name: 'mysql',
-        databaseSchemas: ['public'],
         init: () => {
           const client = knex({
             /**
@@ -157,7 +156,6 @@ export class FileTemplateManager {
       const dataSource = createDataSource({
         type: ${usingTsc ? `DataSourceType.mariadb` : `'mariadb'`},
         name: 'mariadb',
-        databaseSchemas: ['public'],
         init: () => {
           const client = knex({
             /**
@@ -261,16 +259,20 @@ export class FileTemplateManager {
     `),
 
     'app/entry.client.jsx': stripIndent(`
-      import { RemixBrowser } from '@remix-run/react';
       import { startTransition, StrictMode } from 'react';
+      import { RemixBrowser } from '@remix-run/react';
       import { hydrateRoot } from 'react-dom/client';
+      import { handleRecoverableError } from '@kottster/react';
 
       startTransition(() => {
         hydrateRoot(
           document,
           <StrictMode>
             <RemixBrowser />
-          </StrictMode>
+          </StrictMode>,
+          {
+            onRecoverableError: handleRecoverableError
+          }
         );
       });
     `),

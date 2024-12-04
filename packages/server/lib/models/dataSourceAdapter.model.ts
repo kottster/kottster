@@ -1,5 +1,5 @@
 import { Knex } from "knex";
-import { DataSourceAdapterType, FormField, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, TableRPC, TableRPCInputDelete, TableRPCInputInsert, TableRPCInputSelect, TableRPCInputSelectLinkedRecords, TableRPCInputSelectOperator, TableRPCInputUpdate, TableRPCResultSelectDTO, TableRPCResultSelectLinkedRecordsDTO, TableRPCResultSelectRecord, TableRPCResultUpdateDTO, TableRPCSelect, TableRPCSelectLinkedTableOneToOne } from "@kottster/common";
+import { DataSourceAdapterType, FormField, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TableRPC, TableRPCInputDelete, TableRPCInputInsert, TableRPCInputSelect, TableRPCInputSelectLinkedRecords, TableRPCInputSelectOperator, TableRPCInputUpdate, TableRPCResultInsertDTO, TableRPCResultSelectDTO, TableRPCResultSelectLinkedRecordsDTO, TableRPCResultSelectRecord, TableRPCResultUpdateDTO, TableRPCSelect, TableRPCSelectLinkedTableOneToOne } from "@kottster/common";
 
 /**
  * The base class for all data source adapters
@@ -7,8 +7,6 @@ import { DataSourceAdapterType, FormField, JsType, RelationalDatabaseSchema, Rel
  */
 export abstract class DataSourceAdapter {
   abstract type: DataSourceAdapterType;
-
-  // An array of available database schemas
   protected databaseSchemas: string[];
 
   constructor(protected client: Knex) {}
@@ -46,10 +44,30 @@ export abstract class DataSourceAdapter {
   };
 
   /**
+   * Prepare the record value before returning it to the client
+   * @example Convert date to ISO string, pg string-like array to js array, etc.
+   * @returns The transformed value
+   */
+  abstract prepareRecordValue(value: any, columnSchema: RelationalDatabaseSchemaColumn): Promise<any>;
+
+  /**
+   * Prepare the record value before inserting/updating it into the database
+   * @example Remove timezone from date for MySQL, etc.
+   * @returns The transformed value
+   */
+  abstract prepareRecordValueBeforeUpsert(value: any, columnSchema: RelationalDatabaseSchemaColumn): Promise<any>;
+
+  /**
+   * Get the search builder that will apply the search query
+   * @returns The search builder
+   */
+  abstract getSearchBuilder(searchableColumns: string[], searchValue: string): (builder: Knex.QueryBuilder) => void;
+
+  /**
    * Get the table schema
    * @returns The table schema
    */
-  async getTableSchema(tableName: string): Promise<RelationalDatabaseSchema['tables'][number] | null> {
+  async getTableSchema(tableName: string): Promise<RelationalDatabaseSchemaTable | null> {
     const schema = await this.getDatabaseSchema();
     const tableSchema = schema.tables.find(table => table.name === tableName) ?? null;
     
@@ -69,6 +87,7 @@ export abstract class DataSourceAdapter {
    */
   async getTableRecords(tableRPC: TableRPC, input: TableRPCInputSelect): Promise<TableRPCResultSelectDTO> {
     tableRPC.select = tableRPC.select as TableRPCSelect;
+    const { tableSchema } = input;
     
     const query = this.client(tableRPC.table);
     const countQuery = this.client(tableRPC.table);
@@ -79,7 +98,7 @@ export abstract class DataSourceAdapter {
       if (tableRPC.primaryKeyColumn && !columns.includes(tableRPC.primaryKeyColumn)) {
         columns.push(tableRPC.primaryKeyColumn);
       }
-      query.select();
+      query.select(columns);
     } else {
       query.select('*');
     }
@@ -99,25 +118,8 @@ export abstract class DataSourceAdapter {
       const searchValue = input.search.trim();
 
       if (searchableColumns.length > 0) {
-        query.where((builder) => {
-          searchableColumns.forEach((column, index) => {
-            if (index === 0) {
-              builder.where(column, 'ilike', `%${searchValue}%`);
-            } else {
-              builder.orWhere(column, 'ilike', `%${searchValue}%`);
-            }
-          });
-        });
-  
-        countQuery.where((builder) => {
-          searchableColumns.forEach((column, index) => {
-            if (index === 0) {
-              builder.where(column, 'ilike', `%${searchValue}%`);
-            } else {
-              builder.orWhere(column, 'ilike', `%${searchValue}%`);
-            }
-          });
-        });
+        query.where(this.getSearchBuilder(searchableColumns, searchValue));
+        countQuery.where(this.getSearchBuilder(searchableColumns, searchValue));
       }
     }
 
@@ -215,7 +217,6 @@ export abstract class DataSourceAdapter {
           
           linkedRecords.map(linkedRecord => {
             if (linkedRecord[linkedItem.targetTableKeyColumn] === record[column]) {
-              // record['_linked'].push(linkedRecord);
               record['_linked'][linkedItemIndex].push(linkedRecord);
             }
           });
@@ -264,11 +265,35 @@ export abstract class DataSourceAdapter {
       }));
     }
 
+    const preparedRecords = await this.prepareRecords(records, tableSchema);
+
     return {
-      records,
+      records: preparedRecords,
       totalRecords: Number(count),
     };
   };
+
+  private async prepareRecords(records: any[], tableSchema: RelationalDatabaseSchemaTable): Promise<TableRPCResultSelectRecord[]> {
+    const preparedRecords = await Promise.all(records.map(async record => {
+      const preparedRecord: Record<string, any> = {
+        _linked: record._linked,
+      };
+
+      // Process each property of the record except _linked
+      await Promise.all(Object.entries(record).filter(([key]) => key !== '_linked').map(async ([key, value]) => {
+        const columnSchema = tableSchema.columns.find(column => column.name === key);
+        if (!columnSchema) {
+          preparedRecord[key] = value;
+        } else {
+          preparedRecord[key] = await this.prepareRecordValue(value, columnSchema);
+        };
+      }));
+
+      return preparedRecord;
+    }));
+
+    return preparedRecords;
+  }
 
   /**
    * Get the linked table records (Table RPC)
@@ -297,25 +322,8 @@ export abstract class DataSourceAdapter {
       const searchValue = input.search.trim();
 
       if (searchableColumns.length > 0) {
-        query.where((builder) => {
-          searchableColumns.forEach((column, index) => {
-            if (index === 0) {
-              builder.where(column, 'ilike', `%${searchValue}%`);
-            } else {
-              builder.orWhere(column, 'ilike', `%${searchValue}%`);
-            }
-          });
-        });
-  
-        countQuery.where((builder) => {
-          searchableColumns.forEach((column, index) => {
-            if (index === 0) {
-              builder.where(column, 'ilike', `%${searchValue}%`);
-            } else {
-              builder.orWhere(column, 'ilike', `%${searchValue}%`);
-            }
-          });
-        });
+        query.where(this.getSearchBuilder(searchableColumns, searchValue));
+        countQuery.where(this.getSearchBuilder(searchableColumns, searchValue));
       }
     }
 
@@ -326,6 +334,9 @@ export abstract class DataSourceAdapter {
     query
       .limit(pageSize)
       .offset(offset);
+
+    // By default, order by the primary key column
+    query.orderBy(linkedItem.targetTableKeyColumn, 'desc');
 
     // Select specific columns
     if (linkedItem.columns && linkedItem.columns.length > 0) {
@@ -352,7 +363,9 @@ export abstract class DataSourceAdapter {
    * Insert the table records (Table RPC)
    * @returns The table records
    */
-  async insertTableRecord(tableRPC: TableRPC, input: TableRPCInputInsert): Promise<TableRPCResultSelectRecord> {
+  async insertTableRecord(tableRPC: TableRPC, input: TableRPCInputInsert): Promise<TableRPCResultInsertDTO> {
+    const { tableSchema } = input;
+
     if (!tableRPC.insert) {
       throw new Error('Insert operation not permitted on this table');
     }
@@ -364,14 +377,19 @@ export abstract class DataSourceAdapter {
 
     // Pre-process the input values
     if (tableRPC.insert.beforeInsert) {
-      input.values = tableRPC.insert.beforeInsert(input.values);
+      input.values = await tableRPC.insert.beforeInsert(input.values);
+    } else {
+      for (const key in input.values) {
+        const columnSchema = tableSchema.columns.find(column => column.name === key);
+        if (columnSchema) {
+          input.values[key] = await this.prepareRecordValueBeforeUpsert(input.values[key], columnSchema);
+        }
+      }
     }
 
-    const [record] = await this.client(tableRPC.table)
-      .insert(input.values)
-      .returning('*');
+    await this.client(tableRPC.table).insert(input.values);
 
-    return record;
+    return {};
   }
 
   /**
@@ -379,6 +397,8 @@ export abstract class DataSourceAdapter {
    * @returns The table records
    */
   async updateTableRecords(tableRPC: TableRPC, input: TableRPCInputUpdate): Promise<TableRPCResultUpdateDTO> {
+    const { tableSchema } = input;
+
     if (!tableRPC.update) {
       throw new Error('Update operation not permitted on this table');
     }
@@ -390,18 +410,21 @@ export abstract class DataSourceAdapter {
 
     // Pre-process the input values
     if (tableRPC.update.beforeUpdate) {
-      input.values = tableRPC.update.beforeUpdate(input.values);
+      input.values = await tableRPC.update.beforeUpdate(input.values);
+    } else {
+      for (const key in input.values) {
+        const columnSchema = tableSchema.columns.find(column => column.name === key);
+        if (columnSchema) {
+          input.values[key] = await this.prepareRecordValueBeforeUpsert(input.values[key], columnSchema);
+        }
+      }
     }
 
     await this.client(tableRPC.table)
       .whereIn(tableRPC.primaryKeyColumn, input.primaryKeys)
-      .update(input.values)
-      .returning('*');
+      .update(input.values);
 
-    return {
-      // TODO: return updated records?
-      records: []
-    };
+    return {};
   }
 
   /**

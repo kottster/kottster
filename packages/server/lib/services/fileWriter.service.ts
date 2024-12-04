@@ -21,13 +21,21 @@ export class FileWriter {
    * Remove page directory and all its files
    * @param pageId The page ID
    */
-  public removePageDirectory(pageId: string): void {
+  public removePage(pageId: string): void {
     const dir = `${PROJECT_DIR}/app/routes/${pageId}`;
-    if (!fs.existsSync(dir)) {
+    
+    // Check if the directory exists
+    if (fs.existsSync(dir)) {
+      fs.rmdirSync(dir, { recursive: true });
       return;
     }
 
-    fs.rmdirSync(dir, { recursive: true });
+    // Otherwise, check if the file with the same name exists
+    ['jsx', 'tsx', 'js', 'ts'].forEach(ext => {
+      if (fs.existsSync(`${dir}.${ext}`)) {
+        fs.unlinkSync(`${dir}.${ext}`);
+      }
+    });
   }
 
   /**
@@ -35,7 +43,7 @@ export class FileWriter {
    * @param oldPageId The old page ID
    * @param newPageId The new page ID
    */
-  public renamePageDirectory(oldPageId: string, newPageId: string): void {
+  public renamePage(oldPageId: string, newPageId: string): void {
     const currentDir = `${PROJECT_DIR}/app/routes/${oldPageId}`;
     const newDir = `${PROJECT_DIR}/app/routes/${newPageId}`;
 

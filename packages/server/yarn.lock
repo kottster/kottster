@@ -614,11 +614,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@kottster/common@/Users/arthur/Projects/kottster/kottster/packages/common":
-  version "1.5.0"
-
-"@kottster/common@file:../common":
-  version "1.5.0"
+"@kottster/common@^1.5.1":
+  version "1.5.1"
+  resolved "https://registry.yarnpkg.com/@kottster/common/-/common-1.5.1.tgz#091547572b9d43930d7fc706745def917ccf5f06"
+  integrity sha512-fVy6EHaGPWKamR8S5+9GaPJYYwNC/bEDHM1jgsPoPHotqLFvrSXT9C3bkOX245ZmzLZt6cXHUgQ2MvYgV/2YMg==
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
@@ -3148,6 +3147,11 @@ possible-typed-array-names@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/possible-typed-array-names/-/possible-typed-array-names-1.0.0.tgz#89bb63c6fada2c3e90adc4a647beeeb39cc7bf8f"
   integrity sha512-d7Uw+eZoloe0EHDIYoe+bQ5WXnGMOpmiZFTuMWCwpjzzkL2nTjcKiAk4hh8TjnGye2TwWOk3UXucZ+3rbmBa8Q==
+
+postgres-array@^3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/postgres-array/-/postgres-array-3.0.2.tgz#68d6182cb0f7f152a7e60dc6a6889ed74b0a5f98"
+  integrity sha512-6faShkdFugNQCLwucjPcY5ARoW1SlbnrZjmGl0IrrqewpvxvhSLHimCVzqeuULCbG0fQv7Dtk1yDbG3xv7Veog==
 
 prelude-ls@^1.2.1:
   version "1.2.1"

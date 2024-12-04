@@ -17,7 +17,7 @@ export class UpdatePage extends DSAction {
     const fileWriter = new FileWriter({ usingTsc: this.ds.usingTsc });
     
     if (pageId !== page.pageId) {
-      fileWriter.renamePageDirectory(pageId, page.pageId);
+      fileWriter.renamePage(pageId, page.pageId);
     }
 
     return {};

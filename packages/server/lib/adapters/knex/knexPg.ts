@@ -1,6 +1,7 @@
 import { DataSourceAdapterType, FormField, JsType, PostgresBaseType, postgresBaseTypeToArrayReturn, postgresBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn } from "@kottster/common";
 import { DataSourceAdapter } from "../../models/dataSourceAdapter.model";
 import { Knex } from "knex";
+import { parse as parsePostgresArray } from 'postgres-array';
 
 export class KnexPg extends DataSourceAdapter {
   type = DataSourceAdapterType.knex_pg;
@@ -98,6 +99,48 @@ export class KnexPg extends DataSourceAdapter {
         asArray: isArray ?? undefined,
       },
     }
+  }
+
+  async prepareRecordValue(value, columnSchema: RelationalDatabaseSchemaColumn) {
+    // If it's an array, but it's returned as a string, parse it
+    if (columnSchema.isArray && !columnSchema.returnedAsArray && typeof value === 'string') {
+      // TODO: Try to implement it using pg's `setTypeParser` function
+      // https://github.com/brianc/node-pg-types
+      return parsePostgresArray(value);
+    }
+
+    // If it should be an array, but it's not, return an empty array
+    if (columnSchema.isArray && !Array.isArray(value)) {
+      return [];
+    }
+
+    // If it's a date object, return it as an ISO string
+    if (columnSchema.returnedJsType === JsType.date && value instanceof Date) {
+      return value.toISOString();
+    }
+
+    // If it's a buffer, return it as a string
+    if (columnSchema.returnedJsType === JsType.buffer && value instanceof Buffer) {
+      return value.toString();
+    }
+
+    return value;
+  }
+
+  prepareRecordValueBeforeUpsert(value: any): any {
+    return value;
+  }
+
+  getSearchBuilder(searchableColumns: string[], searchValue: string) {
+    return (builder: Knex.QueryBuilder) => {
+      searchableColumns.forEach((column, index) => {
+        if (index === 0) {
+          builder.where(column, 'ilike', `%${searchValue}%`);
+        } else {
+          builder.orWhere(column, 'ilike', `%${searchValue}%`);
+        }
+      });
+    };
   }
   
   async getDatabaseSchema(): Promise<RelationalDatabaseSchema> {

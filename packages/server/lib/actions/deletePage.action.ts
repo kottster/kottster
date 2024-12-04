@@ -13,7 +13,7 @@ export class DeletePage extends DSAction {
     const fileWriter = new FileWriter({ usingTsc: this.ds.usingTsc });
     const { pageId } = data;
 
-    fileWriter.removePageDirectory(pageId);
+    fileWriter.removePage(pageId);
 
     return null;
   }

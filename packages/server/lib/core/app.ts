@@ -207,7 +207,7 @@ export class KottsterApp {
         if (error instanceof Error && error.message === 'Unauthorized') {
           return new Response('Unauthorized', { status: 401 });
         }
-        
+
         console.error('Error executing table RPC:', error);
 
         response = {
@@ -250,7 +250,6 @@ export class KottsterApp {
       } else if (body.action === 'table_selectLinkedRecords') {
         const result = await dataSourceAdapter.getLinkedTableRecords(tableRPC, body.input as TableRPCInputSelectLinkedRecords);
         return result;
-        return [];
       } else if (body.action === 'table_insert') {
         const result = await dataSourceAdapter.insertTableRecord(tableRPC, body.input as TableRPCInputInsert);
         return result;

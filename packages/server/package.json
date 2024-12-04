@@ -1,17 +1,15 @@
 {
   "name": "@kottster/server",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "Simple low-code builder for building robust admin dashboards fast",
   "keywords": [
     "admin",
+    "panel",
     "dashboard",
     "no-code",
     "low-code",
-    "platform",
-    "nodejs",
     "builder",
-    "generate",
-    "ai"
+    "generate"
   ],
   "main": "dist/index.js",
   "license": "Apache-2.0",
@@ -27,11 +25,12 @@
   "dependencies": {
     "chalk": "4",
     "jose": "^5.8.0",
+    "postgres-array": "^3.0.2",
     "randomstring": "^1.3.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.2.0",
-    "@kottster/common": "/Users/arthur/Projects/kottster/kottster/packages/common",
+    "@kottster/common": "^1.5.1",
     "@remix-run/node": "^2.14.0",
     "@trpc/server": "^10.45.2",
     "@types/dotenv": "^8.2.0",

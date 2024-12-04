@@ -2,13 +2,11 @@ import path from 'path'
 import chalk from 'chalk'
 import { FileCreator } from '../services/fileCreator.service'
 import PackageInstaller from '../services/packageInstaller.service'
-import { API } from '../services/api.service';
 import { getRunDevCommand } from '../utils/getRunDevCommand';
 import { collectNewProjectData } from '../utils/collectNewProjectData';
+import { KottsterAPI } from '../services/kottsterApi.service';
 
-interface Options { 
-  appId: string;
-  secretKey: string;
+interface Options {
   skipInstall?: boolean;
 }
 
@@ -19,8 +17,6 @@ export async function newProject (projectName: string, options: Options): Promis
   const projectSetupData = await collectNewProjectData();
   
   const startTime = Date.now();
-  const appId = options.appId?.trim()
-  const secretKey = options.secretKey?.trim()
   const projectDir = projectName === '.' ? process.cwd() : path.join(process.cwd(), projectName);
   const runDevCommand = getRunDevCommand(projectSetupData.packageManager);
   const usageDataOptions = {
@@ -28,7 +24,7 @@ export async function newProject (projectName: string, options: Options): Promis
     usingTypescript: projectSetupData.useTypeScript,
   };
 
-  API.sendNewProjectCommandUsageData(options.appId, 'start', usageDataOptions);
+  KottsterAPI.sendNewProjectCommandUsageData('start', usageDataOptions);
 
   try {
     // Create project files
@@ -38,8 +34,6 @@ export async function newProject (projectName: string, options: Options): Promis
     })
     fileCreator.createProject({
       projectName,
-      appId,
-      secretKey,
     })
 
     if (options.skipInstall || projectSetupData.skipPackageInstallation) {
@@ -59,9 +53,9 @@ export async function newProject (projectName: string, options: Options): Promis
     console.log(chalk.grey(`   ${runDevCommand}`))
     console.log('\n')
 
-    await API.sendNewProjectCommandUsageData(options.appId, 'finish', usageDataOptions, startTime);
+    await KottsterAPI.sendNewProjectCommandUsageData('finish', usageDataOptions, startTime);
   } catch (error) {
     console.error(chalk.red('Error creating project:', error))
-    await API.sendNewProjectCommandUsageData(options.appId, 'error', usageDataOptions);
+    await KottsterAPI.sendNewProjectCommandUsageData('error', usageDataOptions);
   }
 }

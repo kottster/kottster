@@ -1,5 +1,4 @@
-import { DataSourceAdapterType } from "@kottster/common";
-import { RelationalDatabaseSchema, RelationalDatabaseSchemaColumn } from "../../models/databaseSchema.model";
+import { DataSourceAdapterType, FormField, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn } from "@kottster/common";
 import { DataSourceAdapter } from "../../models/dataSourceAdapter.model";
 import { Knex } from "knex";
 
@@ -8,6 +7,10 @@ export class KnexMysql2 extends DataSourceAdapter {
 
   constructor(protected client: Knex) {
     super(client);
+  }
+
+  processColumn(): { isArray: boolean; formField: FormField; returnedJsType: keyof typeof JsType; returnedAsArray: boolean; } {
+    throw new Error("Method not implemented.");
   }
 
   async getDatabaseSchema(): Promise<RelationalDatabaseSchema> {

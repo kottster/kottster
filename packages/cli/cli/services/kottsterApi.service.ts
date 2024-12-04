@@ -1,5 +1,3 @@
-import fetch from 'sync-fetch';
-
 interface NewProjectCommandOptions {
   packageManager?: string;
   usingTypescript?: boolean;
@@ -8,8 +6,10 @@ interface NewProjectCommandOptions {
 /**
  * Service for calling the Kottster API.
  */
-export class API {
-  static readonly API_BASE_URL = process.env.KOTTSTER_API_BASE_URL ?? 'https://api.kottster.app';
+export class KottsterAPI {
+  public static get API_BASE_URL() {
+    return 'https://api.kottster.app';
+  }
 
   /**
    * Send usage data to the server when a new project is created using "@kottster/cli new".
@@ -23,12 +23,10 @@ export class API {
    * - Package manager used (npm, yarn, pnpm, etc.)
    * - Whether TypeScript is used
    * 
-   * @param appId - The application ID
    * @param stage - The stage of the command ('start', 'finish', or 'error')
    * @param startTime - The timestamp when the command started (for 'finish' stage)
    */
   static async sendNewProjectCommandUsageData(
-    appId: string, 
     stage: 'start' | 'finish' | 'error',
     options?: NewProjectCommandOptions,
     startTime?: number, // Optional, only required for 'finish' stage,
@@ -44,7 +42,7 @@ export class API {
     }
 
     try {
-      await fetch(`${this.API_BASE_URL}/apps/${appId}/cli-usage-data`, {
+      await fetch(`${this.API_BASE_URL}/v1/apps/cli-usage-data`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

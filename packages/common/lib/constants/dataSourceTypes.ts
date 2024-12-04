@@ -4,25 +4,19 @@ export const dataSourceTypes: DataSourceTypeInfo[] = [
   {
     type: DataSourceType.postgres,
     name: 'PostgreSQL',
-    icon: '/icons/postgresql.svg',
+    icon: 'https://web.kottster.app/icons/postgresql.svg',
     isActive: true,
   },
   {
     type: DataSourceType.mysql,
     name: 'MySQL',
-    icon: '/icons/mysql.svg',
+    icon: 'https://web.kottster.app/icons/mysql.svg',
     isActive: true,
   },
   {
     type: DataSourceType.mariadb,
     name: 'MariaDB',
-    icon: '/icons/mariadb.svg',
-    isActive: true,
-  },
-  {
-    type: DataSourceType.mssql,
-    name: 'Microsoft SQL',
-    icon: '/icons/mssql.svg',
+    icon: 'https://web.kottster.app/icons/mariadb.svg',
     isActive: true,
   },
 ];

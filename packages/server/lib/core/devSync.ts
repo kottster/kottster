@@ -23,9 +23,6 @@ export class DevSync {
     }, this.handleRequest.bind(this));
   }
 
-  /**
-   * Handle incoming requests
-   */
   private async handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
     // Set CORS headers
     res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -112,7 +109,6 @@ export class DevSync {
 
     return this.server.listen(port, () => {
       console.log(`Dev-sync is running on port ${port}`);
-
       console.log(`Starting the server in development mode...`);
     });
   }

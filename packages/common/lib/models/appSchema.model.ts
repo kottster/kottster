@@ -3,6 +3,11 @@ import { NavItem } from "./navItem.model";
 
 // App schema that will be stored in the file
 export interface AppSchema {
+  id: string;
+  meta: {
+    name: string;
+    icon: string;
+  };
   navItems: NavItem[];
 }
 
@@ -27,3 +32,13 @@ export interface FullAppSchema extends AppSchema {
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
 }
+
+// When the schema is empty, app will use this placeholder
+export const schemaPlaceholder: AppSchema = {
+  id: '', 
+  meta: {
+    name: 'Kottster App',
+    icon: 'https://web.kottster.app/icon.png',
+  },
+  navItems: [],
+};

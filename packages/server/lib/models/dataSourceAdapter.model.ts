@@ -1,6 +1,5 @@
 import { Knex } from "knex";
-import { RelationalDatabaseSchema } from "./databaseSchema.model";
-import { DataSourceAdapterType } from "@kottster/common";
+import { DataSourceAdapterType, FormField, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TableRPC, TableRPCInputDelete, TableRPCInputInsert, TableRPCInputSelect, TableRPCInputSelectLinkedRecords, TableRPCInputSelectOperator, TableRPCInputUpdate, TableRPCResultInsertDTO, TableRPCResultSelectDTO, TableRPCResultSelectLinkedRecordsDTO, TableRPCResultSelectRecord, TableRPCResultUpdateDTO, TableRPCSelect, TableRPCSelectLinkedTableOneToOne } from "@kottster/common";
 
 /**
  * The base class for all data source adapters
@@ -8,8 +7,6 @@ import { DataSourceAdapterType } from "@kottster/common";
  */
 export abstract class DataSourceAdapter {
   abstract type: DataSourceAdapterType;
-
-  // An array of available database schemas
   protected databaseSchemas: string[];
 
   constructor(protected client: Knex) {}
@@ -34,6 +31,422 @@ export abstract class DataSourceAdapter {
    * @returns The database schema
    */
   abstract getDatabaseSchema(): Promise<RelationalDatabaseSchema>;
+
+  /**
+   * Process the column
+   * @returns The processed column
+   */
+  abstract processColumn(column: RelationalDatabaseSchemaColumn): { 
+    isArray: boolean;
+    formField: FormField;
+    returnedJsType: keyof typeof JsType;
+    returnedAsArray: boolean;
+  };
+
+  /**
+   * Prepare the record value before returning it to the client
+   * @example Convert date to ISO string, pg string-like array to js array, etc.
+   * @returns The transformed value
+   */
+  abstract prepareRecordValue(value: any, columnSchema: RelationalDatabaseSchemaColumn): Promise<any>;
+
+  /**
+   * Prepare the record value before inserting/updating it into the database
+   * @example Remove timezone from date for MySQL, etc.
+   * @returns The transformed value
+   */
+  abstract prepareRecordValueBeforeUpsert(value: any, columnSchema: RelationalDatabaseSchemaColumn): Promise<any>;
+
+  /**
+   * Get the search builder that will apply the search query
+   * @returns The search builder
+   */
+  abstract getSearchBuilder(searchableColumns: string[], searchValue: string): (builder: Knex.QueryBuilder) => void;
+
+  /**
+   * Get the table schema
+   * @returns The table schema
+   */
+  async getTableSchema(tableName: string): Promise<RelationalDatabaseSchemaTable | null> {
+    const schema = await this.getDatabaseSchema();
+    const tableSchema = schema.tables.find(table => table.name === tableName) ?? null;
+    
+    if (!tableSchema) {
+      return null;
+    }
+
+    return {
+      ...tableSchema,
+      columns: tableSchema.columns
+    };
+  }
+
+  /**
+   * Get the table records (Table RPC)
+   * @returns The table records
+   */
+  async getTableRecords(tableRPC: TableRPC, input: TableRPCInputSelect): Promise<TableRPCResultSelectDTO> {
+    tableRPC.select = tableRPC.select as TableRPCSelect;
+    const { tableSchema } = input;
+    
+    const query = this.client(tableRPC.table);
+    const countQuery = this.client(tableRPC.table);
+
+    // Select specific columns
+    if (tableRPC.select.columns && tableRPC.select.columns.length > 0) {
+      const columns = tableRPC.select.columns;
+      if (tableRPC.primaryKeyColumn && !columns.includes(tableRPC.primaryKeyColumn)) {
+        columns.push(tableRPC.primaryKeyColumn);
+      }
+      query.select(columns);
+    } else {
+      query.select('*');
+    }
+    countQuery.count({ count: '*' });
+
+    // Apply where conditions
+    if (tableRPC.select.where && tableRPC.select.where.length > 0) {
+      tableRPC.select.where.forEach(condition => {
+        query.where(condition.column, condition.operator, condition.value);
+        countQuery.where(condition.column, condition.operator, condition.value);
+      });
+    }
+
+    // Apply search
+    if (input.search) {
+      const searchableColumns = tableRPC.select.searchableColumns ?? [];
+      const searchValue = input.search.trim();
+
+      if (searchableColumns.length > 0) {
+        query.where(this.getSearchBuilder(searchableColumns, searchValue));
+        countQuery.where(this.getSearchBuilder(searchableColumns, searchValue));
+      }
+    }
+
+    // Apply ordering
+    if (input.sorting) {
+      query.orderBy(input.sorting.column, input.sorting.direction);
+    } else if (tableRPC.select.orderBy && tableRPC.select.orderBy.length > 0) {
+      tableRPC.select.orderBy.forEach(order => {
+        query.orderBy(order.column, order.direction);
+      });
+    } else {
+      // By default, order by the primary key column
+      query.orderBy(tableRPC.primaryKeyColumn, 'desc');
+    }
+
+    // Apply filters
+    if (input.filters) {
+      input.filters.forEach(filter => {
+        const operator: string = {
+          equal: '=',
+          notEqual: '<>',
+        }[filter.operator as keyof typeof TableRPCInputSelectOperator];
+        
+        query.where(filter.column, operator, filter.value);
+        countQuery.where(filter.column, operator, filter.value);
+      })
+    };
+
+    // Apply pagination
+    const offset = (input.page - 1) * tableRPC.select.pageSize;
+    query
+      .limit(tableRPC.select.pageSize)
+      .offset(offset);
+
+    const [records, [{ count }]] = await Promise.all([
+      query,
+      countQuery
+    ]);
+
+    const linkedOneToOne = tableRPC.select.linked?.filter(linkedItem => linkedItem.relation === 'oneToOne') ?? [];
+    const linkedOneToMany = tableRPC.select.linked?.filter(linkedItem => linkedItem.relation === 'oneToMany') ?? [];
+    
+    // Preload linked one-to-one records
+    if (linkedOneToOne.length > 0) {
+      const linkedRecordKeys: Record<string, any[]> = {};
+
+      records.forEach(record => {
+        linkedOneToOne.forEach(linkedItem => {
+          const values = record[linkedItem.foreignKeyColumn];
+          if (!values) {
+            return;
+          }
+
+          if (!linkedRecordKeys[linkedItem.foreignKeyColumn]) {
+            linkedRecordKeys[linkedItem.foreignKeyColumn] = [];
+          }
+          linkedRecordKeys[linkedItem.foreignKeyColumn].push(values);
+        });
+      });
+
+      // Linked table records
+      const linkedTableRecords: Record<string, any[]> = {};
+
+      // Fetch the foreign tables records
+      await Promise.all(Object.entries(linkedRecordKeys).map(async ([column, values]) => {
+        const linkedItem = linkedOneToOne?.find(linked => linked.foreignKeyColumn === column);
+        if (!linkedItem) {
+          return;
+        }
+
+        const foreignRecords = await this
+          .client(linkedItem.targetTable)
+          .select(linkedItem.columns ? [linkedItem.targetTableKeyColumn, ...linkedItem.columns] : [linkedItem.targetTableKeyColumn])
+          .whereIn(linkedItem.targetTableKeyColumn, values);
+
+        linkedTableRecords[linkedItem.targetTable] = foreignRecords;
+      }));
+
+      // Add linked records to the records
+      records.forEach(record => {
+        Object.keys(linkedRecordKeys).forEach((column) => {
+          const linkedItemIndex = linkedOneToOne?.findIndex(linked => linked.foreignKeyColumn === column) ?? -1;
+          const linkedItem = linkedOneToOne?.[linkedItemIndex];
+          if (!linkedItem) {
+            return;
+          }
+          const linkedRecords: any[] = linkedTableRecords[linkedItem.targetTable];
+          
+          if (!record['_linked']) {
+            record['_linked'] = [];
+          }
+          if (!record['_linked'][linkedItemIndex]) {
+            record['_linked'][linkedItemIndex] = [];
+          }
+          
+          linkedRecords.map(linkedRecord => {
+            if (linkedRecord[linkedItem.targetTableKeyColumn] === record[column]) {
+              record['_linked'][linkedItemIndex].push(linkedRecord);
+            }
+          });
+        });
+      });
+    }
+
+    // Preload linked one-to-many records
+    if (linkedOneToMany.length > 0) {
+      await Promise.all(linkedOneToMany.map(async (linkedItem) => {
+        const linkedItemIndex = tableRPC.select.linked?.indexOf(linkedItem) ?? -1;
+        const foreignKeyValues = records.map(record => record[tableRPC.primaryKeyColumn]);
+        
+        // TODO: replace with a single query
+        const foreignRecords: Record<string, any> = {};
+        await Promise.all(
+          foreignKeyValues.map(async keyValue => {
+            const recordForeignRecords = await this.client(linkedItem.targetTable)
+              .select(
+                linkedItem.columns ? [
+                  linkedItem.targetTableKeyColumn, 
+                  ...linkedItem.columns
+                ] : [
+                  linkedItem.targetTableKeyColumn, 
+                ]
+              )
+              .where(linkedItem.targetTableForeignKeyColumn, keyValue)
+              .limit(linkedItem.previewMaxRecords)
+
+              foreignRecords[keyValue] = recordForeignRecords;
+          })
+        );
+
+        // Add linked records to the records
+        records.forEach(record => {
+          if (!record['_linked']) {
+            record['_linked'] = [];
+          }
+          if (!record['_linked'][linkedItemIndex]) {
+            record['_linked'][linkedItemIndex] = [];
+          }
+
+          // Loop through the foreign records and add them to the linked field
+          record['_linked'][linkedItemIndex] = foreignRecords[record[tableRPC.primaryKeyColumn]] ?? [];
+        });
+      }));
+    }
+
+    const preparedRecords = await this.prepareRecords(records, tableSchema);
+
+    return {
+      records: preparedRecords,
+      totalRecords: Number(count),
+    };
+  };
+
+  private async prepareRecords(records: any[], tableSchema: RelationalDatabaseSchemaTable): Promise<TableRPCResultSelectRecord[]> {
+    const preparedRecords = await Promise.all(records.map(async record => {
+      const preparedRecord: Record<string, any> = {
+        _linked: record._linked,
+      };
+
+      // Process each property of the record except _linked
+      await Promise.all(Object.entries(record).filter(([key]) => key !== '_linked').map(async ([key, value]) => {
+        const columnSchema = tableSchema.columns.find(column => column.name === key);
+        if (!columnSchema) {
+          preparedRecord[key] = value;
+        } else {
+          preparedRecord[key] = await this.prepareRecordValue(value, columnSchema);
+        };
+      }));
+
+      return preparedRecord;
+    }));
+
+    return preparedRecords;
+  }
+
+  /**
+   * Get the linked table records (Table RPC)
+   * @returns The table records
+   */
+  async getLinkedTableRecords(tableRPC: TableRPC, input: TableRPCInputSelectLinkedRecords): Promise<TableRPCResultSelectLinkedRecordsDTO> {
+    tableRPC.select = tableRPC.select as TableRPCSelect;
+
+    const linkedItem = tableRPC.select.linked?.[input.linkedItemIndex] as TableRPCSelectLinkedTableOneToOne;
+    if (!linkedItem) {
+      throw new Error('Linked item not found');
+    }
+    
+    const query = this.client(linkedItem.targetTable);
+    const countQuery = this.client(linkedItem.targetTable);
+
+    // If primary key values are provided, filter by them
+    if (input.primaryKeyValues) {
+      query.whereIn(linkedItem.targetTableKeyColumn, input.primaryKeyValues);
+      countQuery.whereIn(linkedItem.targetTableKeyColumn, input.primaryKeyValues);
+    }
+
+    // Apply search
+    if (input.search) {
+      const searchableColumns = linkedItem.searchableColumns ?? [];
+      const searchValue = input.search.trim();
+
+      if (searchableColumns.length > 0) {
+        query.where(this.getSearchBuilder(searchableColumns, searchValue));
+        countQuery.where(this.getSearchBuilder(searchableColumns, searchValue));
+      }
+    }
+
+    // Apply pagination
+    // TODO: move page size to options
+    const pageSize = 30;
+    const offset = (input.page - 1) * pageSize;
+    query
+      .limit(pageSize)
+      .offset(offset);
+
+    // By default, order by the primary key column
+    query.orderBy(linkedItem.targetTableKeyColumn, 'desc');
+
+    // Select specific columns
+    if (linkedItem.columns && linkedItem.columns.length > 0) {
+      const columns = linkedItem.columns?.concat(linkedItem.targetTableKeyColumn) ?? [linkedItem.targetTableKeyColumn];
+      query.select(columns);
+    } else {
+      query.select(linkedItem.targetTableKeyColumn);
+    }
+    countQuery.count({ count: '*' });
+
+    // Execute both queries in parallel
+    const [records, [{ count }]] = await Promise.all([
+      query,
+      countQuery
+    ]);
+
+    return {
+      records,
+      totalRecords: Number(count),
+    };
+  };
+
+  /**
+   * Insert the table records (Table RPC)
+   * @returns The table records
+   */
+  async insertTableRecord(tableRPC: TableRPC, input: TableRPCInputInsert): Promise<TableRPCResultInsertDTO> {
+    const { tableSchema } = input;
+
+    if (!tableRPC.insert) {
+      throw new Error('Insert operation not permitted on this table');
+    }
+
+    // Check if the record can be inserted
+    if (tableRPC.insert.canBeInserted && !tableRPC.insert.canBeInserted(input.values)) {
+      throw new Error('Record cannot be inserted');
+    }
+
+    // Pre-process the input values
+    if (tableRPC.insert.beforeInsert) {
+      input.values = await tableRPC.insert.beforeInsert(input.values);
+    } else {
+      for (const key in input.values) {
+        const columnSchema = tableSchema.columns.find(column => column.name === key);
+        if (columnSchema) {
+          input.values[key] = await this.prepareRecordValueBeforeUpsert(input.values[key], columnSchema);
+        }
+      }
+    }
+
+    await this.client(tableRPC.table).insert(input.values);
+
+    return {};
+  }
+
+  /**
+   * Update the table records (Table RPC)
+   * @returns The table records
+   */
+  async updateTableRecords(tableRPC: TableRPC, input: TableRPCInputUpdate): Promise<TableRPCResultUpdateDTO> {
+    const { tableSchema } = input;
+
+    if (!tableRPC.update) {
+      throw new Error('Update operation not permitted on this table');
+    }
+
+    // Check if the record can be updated
+    if (tableRPC.update.canBeUpdated && !tableRPC.update.canBeUpdated(input.values)) {
+      throw new Error('Record cannot be updated');
+    }
+
+    // Pre-process the input values
+    if (tableRPC.update.beforeUpdate) {
+      input.values = await tableRPC.update.beforeUpdate(input.values);
+    } else {
+      for (const key in input.values) {
+        const columnSchema = tableSchema.columns.find(column => column.name === key);
+        if (columnSchema) {
+          input.values[key] = await this.prepareRecordValueBeforeUpsert(input.values[key], columnSchema);
+        }
+      }
+    }
+
+    await this.client(tableRPC.table)
+      .whereIn(tableRPC.primaryKeyColumn, input.primaryKeys)
+      .update(input.values);
+
+    return {};
+  }
+
+  /**
+   * Delete the table records (Table RPC)
+   * @returns The table records
+   */
+  async deleteTableRecords(tableRPC: TableRPC, input: TableRPCInputDelete): Promise<true> {
+    if (!tableRPC.delete) {
+      throw new Error('Delete operation not permitted on this table');
+    }
+
+    // Check if the record can be deleted
+    if (tableRPC.delete.canBeDeleted && !tableRPC.delete.canBeDeleted(input.primaryKeys)) {
+      throw new Error('Record cannot be deleted');
+    }
+
+    await this.client.table(tableRPC.table)
+      .whereIn(tableRPC.primaryKeyColumn, input.primaryKeys)
+      .del();
+
+    return true;
+  };
 
   /**
    * Connect to the database

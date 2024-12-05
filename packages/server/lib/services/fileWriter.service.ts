@@ -1,7 +1,7 @@
 import fs from "fs";
 import { PROJECT_DIR } from "../constants/projectDir";
 import path from "path";
-import { AppSchema, getDefaultPage, PageFileStructure } from "@kottster/common";
+import { AppSchema, getDefaultPage, PageFileStructure, stripIndent } from "@kottster/common";
 
 interface FileWriterOptions {
   usingTsc: boolean;
@@ -21,13 +21,21 @@ export class FileWriter {
    * Remove page directory and all its files
    * @param pageId The page ID
    */
-  public removePageDirectory(pageId: string): void {
+  public removePage(pageId: string): void {
     const dir = `${PROJECT_DIR}/app/routes/${pageId}`;
-    if (!fs.existsSync(dir)) {
+    
+    // Check if the directory exists
+    if (fs.existsSync(dir)) {
+      fs.rmdirSync(dir, { recursive: true });
       return;
     }
 
-    fs.rmdirSync(dir, { recursive: true });
+    // Otherwise, check if the file with the same name exists
+    ['jsx', 'tsx', 'js', 'ts'].forEach(ext => {
+      if (fs.existsSync(`${dir}.${ext}`)) {
+        fs.unlinkSync(`${dir}.${ext}`);
+      }
+    });
   }
 
   /**
@@ -35,15 +43,22 @@ export class FileWriter {
    * @param oldPageId The old page ID
    * @param newPageId The new page ID
    */
-  public renamePageDirectory(oldPageId: string, newPageId: string): void {
-    const oldDir = `${PROJECT_DIR}/app/routes/${oldPageId}`;
+  public renamePage(oldPageId: string, newPageId: string): void {
+    const currentDir = `${PROJECT_DIR}/app/routes/${oldPageId}`;
     const newDir = `${PROJECT_DIR}/app/routes/${newPageId}`;
 
-    if (!fs.existsSync(oldDir)) {
+    // Check if the directory exists
+    if (fs.existsSync(currentDir)) {
+      fs.renameSync(currentDir, newDir);
       return;
-    }
+    } 
 
-    fs.renameSync(oldDir, newDir);
+    // Otherwise, check if the file with the same name exists
+    ['jsx', 'tsx', 'js', 'ts'].forEach(ext => {
+      if (fs.existsSync(`${currentDir}.${ext}`)) {
+        fs.renameSync(`${currentDir}.${ext}`, `${newDir}.${ext}`);
+      }
+    });
   }
 
   /**
@@ -64,17 +79,19 @@ export class FileWriter {
    * @param page The page to write
    */
   public writePageToFile({ dirPath, entryFile, files }: PageFileStructure): void {
-    const dir = `${PROJECT_DIR}/${dirPath}`;
+    const dir = dirPath && `${PROJECT_DIR}/${dirPath}`;
     
     // Create the directory
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    } else {
-      this.deleteFilesInDirectory(dir);
+    if (dir) {
+      if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+      } else {
+        this.deleteFilesInDirectory(dir);
+      }
     }
 
     // Write the other files
-    files.forEach(file => {
+    files?.forEach(file => {
       this.writeFile(`${PROJECT_DIR}/${file.filePath}`, file.fileContent);
     });
 
@@ -90,6 +107,46 @@ export class FileWriter {
     const content = JSON.stringify(schema, null, 2);
     const filePath = `${PROJECT_DIR}/app-schema.json`;
 
+    this.writeFile(filePath, content);
+  }
+
+  /**
+   * Write the .env file
+   * @param variables The variables to write
+   */
+  writeDotEnvFile(variables: Record<string, string>): void {
+    const content = Object.entries(variables)
+      .map(([key, value]) => `${key}=${value}`)
+      .join("\n");
+
+    const filePath = `${PROJECT_DIR}/.env`;
+
+    this.writeFile(filePath, content);
+  }
+
+  /**
+   * Write app/.server/app.ts file with the secret key
+   * @param secretKey The secret key
+   */
+  writeAppServerFileWithSecretKey(secretKey: string): void {
+    // TODO: replace with updating the file instead of completely rewriting it
+    const content = stripIndent(`
+      import { createApp } from '@kottster/server';
+      import { dataSourceRegistry } from './data-sources/registry';
+      import schema from '../../app-schema.json';
+
+      export const app = createApp({
+        schema,
+        secretKey: '${secretKey}',
+
+        // For security, consider moving the secret key to an environment variable:
+        // secretKey: process.env.NODE_ENV === 'development' ? 'dev-secret-key' : process.env.SECRET_KEY,
+      });
+
+      app.registerDataSources(dataSourceRegistry);
+    `);
+
+    const filePath = `${PROJECT_DIR}/app/.server/app.ts`;
     this.writeFile(filePath, content);
   }
 

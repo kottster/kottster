@@ -1,9 +1,8 @@
-import { AutoImport } from "@kottster/common";
 import { DSAction } from "../models/action.model";
 import { FileWriter } from "../services/fileWriter.service";
 
 interface Data {
-  updatedPageId: string;
+  pageId: string;
   page: {
     pageId: string;
   };
@@ -14,13 +13,11 @@ interface Data {
  */
 export class UpdatePage extends DSAction {
   public async execute(data: Data) {
-    const { updatedPageId, page } = data;
+    const { pageId, page } = data;
     const fileWriter = new FileWriter({ usingTsc: this.ds.usingTsc });
-    const autoImport = new AutoImport({ usingTsc: this.ds.usingTsc });
     
-    if (updatedPageId !== page.pageId) {
-      fileWriter.renamePageDirectory(updatedPageId, page.pageId);
-      autoImport.createPageRoutersFile();
+    if (pageId !== page.pageId) {
+      fileWriter.renamePage(pageId, page.pageId);
     }
 
     return {};

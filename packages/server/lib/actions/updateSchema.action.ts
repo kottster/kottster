@@ -10,12 +10,9 @@ interface Data extends FullAppSchema {}
  */
 export class UpdateSchema extends DSAction {
   public async execute(data: Data) {
-    const { navItems } = data;
     const fileWriter = new FileWriter({ usingTsc: this.ds.usingTsc });
-    
-    fileWriter.writeSchemaJsonFile({
-      navItems,
-    });
+
+    fileWriter.writeSchemaJsonFile(data);
 
     return {};
   }

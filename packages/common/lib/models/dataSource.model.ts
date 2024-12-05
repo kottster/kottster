@@ -20,7 +20,7 @@ export interface DataSourceTypeInfo {
 
 export interface DataSource {
   type: DataSourceType;
-  ctxPropName: string;
+  name: string;
   adapter: any;
 
   // Only for database data sources

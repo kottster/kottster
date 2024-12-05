@@ -5,12 +5,12 @@ export interface PageFileStructure {
 
   // Root directory of the page
   // Example: src/client/pages/page1
-  dirPath: string;
+  dirPath?: string;
 
   // Entry file of the page
   // Example: src/client/pages/page1/index.jsx
   entryFile: File;
   
   // Files in the page directory, does not include entry file
-  files: File[];
+  files?: File[];
 }

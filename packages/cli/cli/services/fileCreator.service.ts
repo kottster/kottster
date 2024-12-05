@@ -1,6 +1,6 @@
 import path from 'path'
 import fs from 'fs'
-import { AppSchema, DataSourceType } from '@kottster/common'
+import { DataSourceType } from '@kottster/common'
 import { FileTemplateManager } from './fileTemplateManager.service'
 import dataSourcesTypeData from '../constants/dataSourceTypeData'
 
@@ -10,9 +10,7 @@ interface FileCreatorOptions {
 }
 
 interface CreateProjectOptions {
-  projectName: string
-  appId: string
-  secretKey: string
+  projectName: string;
 }
 
 interface PackageJsonOptions {
@@ -67,7 +65,6 @@ export class FileCreator {
     this.createDir('app/routes')
     this.createDir('app/.server')
     this.createDir('app/.server/data-sources')
-    this.createDir('app/.server/trpc-routers')
 
     // Create root files
     this.createPackageJson({ 
@@ -80,28 +77,16 @@ export class FileCreator {
     // Create files
     this.createFileFromTemplate('tsconfig.json', path.join(this.projectDir, 'tsconfig.json'));
     this.createFileFromTemplate('vite.config.ts', path.join(this.projectDir, 'vite.config.ts'));
+    this.createFileFromTemplate('postcss.config.js', path.join(this.projectDir, 'postcss.config.js'));
+    this.createFileFromTemplate('tailwind.config.ts', path.join(this.projectDir, 'tailwind.config.ts'));
     this.createFileFromTemplate('app/root.jsx', path.join(this.projectDir, `app/root.${this.jsxExt}`));
-    this.createFileFromTemplate('app/trpc.client.js', path.join(this.projectDir, `app/trpc.client.${this.jsExt}`));
     this.createFileFromTemplate('app/entry.client.jsx', path.join(this.projectDir, `app/entry.client.${this.jsxExt}`));
     this.createFileFromTemplate('app/service-route.js', path.join(this.projectDir, `app/service-route.${this.jsExt}`));
-    this.createFileFromTemplate('app/.server/trpc.js', path.join(this.projectDir, `app/.server/trpc.${this.jsExt}`));
-    this.createFileFromTemplate(
-      'app/.server/app.js', 
-      path.join(this.projectDir, `app/.server/app.${this.jsExt}`),
-      {
-        appId: options.appId,
-        secretKey: options.secretKey,
-      }
-    );
+    this.createFileFromTemplate('app/.server/app.js', path.join(this.projectDir, `app/.server/app.${this.jsExt}`));
     this.createFileFromTemplate('app/.server/data-sources/registry.js', path.join(this.projectDir, `app/.server/data-sources/registry.${this.jsExt}`));
-    this.createFileFromTemplate('app/.server/trpc-routers/app-router.js', path.join(this.projectDir, `app/.server/trpc-routers/app-router.${this.jsExt}`));
-    this.createFileFromTemplate('app/.server/trpc-routers/page-routers.generated.js', path.join(this.projectDir, `app/.server/trpc-routers/page-routers.generated.${this.jsExt}`));
     
-    // Create auto-generated files
     this.createSchema()
   }
-
-  
 
   /**
    * Get the additional dependencies for a TypeScript project.
@@ -140,12 +125,8 @@ export class FileCreator {
       registryFileContent, 
       [
         `${dataSourceType}DataSource from './${dataSourceType}'`,
-        `{ Knex } from 'knex'`,
       ],
       `${dataSourceType}DataSource`,
-      [
-        ['knex', 'Knex']
-      ],
     );
     this.writeFile(registryFilePath, updatedRegistryFileContent);
 
@@ -164,7 +145,6 @@ export class FileCreator {
     fileContent: string,
     imports: string[],
     newDataSourceName: string,
-    newDataSourceContextToClientItem: [string, string][]
   ): string {
     // Add new imports
     const importRegex = /import.*?from.*?;/g;
@@ -194,20 +174,6 @@ export class FileCreator {
       fileContent = fileContent.replace(dataSourceRegistryRegex, `export const dataSourceRegistry = new DataSourceRegistry([${updatedDataSources}]);`);
     }
   
-    // Update DataSourceContextToClientMap
-    const dataSourceContextMapRegex = /export type DataSourceContextToClientMap = {([^}]*)};/;
-    const dataSourceContextMapMatch = fileContent.match(dataSourceContextMapRegex);
-    if (dataSourceContextMapMatch) {
-      const existingItems = dataSourceContextMapMatch[1].trim();
-      const newItems = newDataSourceContextToClientItem
-        .map(([key, value]) => `  ${key}: ${value}`)
-        .join(',\n');
-      const updatedItems = existingItems
-        ? `${existingItems},\n${newItems}`
-        : `\n${newItems}\n`;
-      fileContent = fileContent.replace(dataSourceContextMapRegex, `export type DataSourceContextToClientMap = {${updatedItems}};`);
-    }
-  
     return fileContent;
   }
 
@@ -235,8 +201,7 @@ export class FileCreator {
         'dev': 'kottster dev --port 5480',
         'dev:add-data-source': 'kottster add-data-source',
         'build': 'remix vite:build',
-        'start': 'remix-serve ./build/server/index.js',
-        'typecheck': 'tsc'
+        'start': 'remix-serve ./build/server/index.js'
       },
       dependencies: {
         'react': '^18.x',
@@ -250,26 +215,9 @@ export class FileCreator {
         '@kottster/cli': KOTTSTER_CLI_DEP_VER ?? '^2.x',
         '@kottster/server': KOTTSTER_SERVER_DEP_VER ?? '^1.x',
         '@kottster/react': KOTTSTER_REACT_DEP_VER ?? '^1.x',
-
-        '@mantine/charts': '^7.x',
-        '@mantine/core': '^7.x',
-        '@mantine/dates': '^7.x',
-        '@mantine/form': '^7.x',
-        '@mantine/hooks': '^7.x',
-        '@mantine/modals': '^7.x',
-        '@mantine/notifications': '^7.x',
-        'react-feather': '^2.x',
-        'recharts': '^2.x',
-
-        '@trpc/client': '^10.x',
-        '@trpc/react-query': '^10.x',
-        '@trpc/server': '^10.x',
         
-        '@tanstack/react-query': '^4.x',
-        'zod': '^3.x',
         'isbot': '^4.x',
-        "dayjs": "^1.x",
-
+        
         ...(options.dependencies ?? {}),
       },
       devDependencies: {
@@ -277,6 +225,9 @@ export class FileCreator {
         'vite': "^5.x",
         'vite-tsconfig-paths': "^4.x",
         'esbuild': '0.23.1',
+        'tailwindcss': '^3.x',
+        'postcss': '^8.x',
+        'autoprefixer': '^10.x',
         "@originjs/vite-plugin-commonjs": "^1.x",
         ...(options.devDependencies ?? {}),
       },
@@ -318,8 +269,8 @@ export class FileCreator {
    * @param filePath The file path
    * @param vars The variables to replace in the template
    */
-  private createFileFromTemplate (templateKey: keyof typeof FileTemplateManager.templates, filePath: string, vars: Record<string, string> = {}): void {
-    const fileContent = this.fileTemplateManager.getTemplate(templateKey, vars);
+  private createFileFromTemplate (templateKey: keyof typeof FileTemplateManager.templates, filePath: string): void {
+    const fileContent = this.fileTemplateManager.getTemplate(templateKey);
     this.writeFile(filePath, fileContent);
   }
 
@@ -348,9 +299,7 @@ export class FileCreator {
    * Create a app-schema.json file
    */
   private createSchema(): void {
-    const appSchema: AppSchema = {
-      navItems: [],
-    };
+    const appSchema = {};
     const filePath = path.join(this.projectDir, 'app-schema.json')
     const fileContent = JSON.stringify(appSchema, null, 2);
     this.writeFile(filePath, fileContent);

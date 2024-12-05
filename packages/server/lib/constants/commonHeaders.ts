@@ -1,6 +1,7 @@
-export const corsHeaders = {
+export const commonHeaders = {
+  // CORS
   'Access-Control-Allow-Credentials': 'true',
-  'Access-Control-Allow-Origin': process.env.KOTTSTER_CORS_ALLOW_ORIGIN ?? 'https://web.kottster.app',
+  'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET,DELETE,PATCH,POST,PUT,OPTIONS',
   'Access-Control-Allow-Headers': '*',
 };

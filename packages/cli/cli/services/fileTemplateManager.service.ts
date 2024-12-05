@@ -25,7 +25,8 @@ export class FileTemplateManager {
             },
             routes(defineRoutes) {
               return defineRoutes((route) => {
-                route('/-/*', 'service-route.ts');
+                route('/auth/*', 'service-route.ts', { id: 'auth' }),
+                route('/-/*', 'service-route.ts', { id: 'service' })
               });
             },
           }),
@@ -35,22 +36,7 @@ export class FileTemplateManager {
           }),
         ],
         optimizeDeps: {
-          include: [
-            'react',
-            'react-dom',
-            'react-feather',
-            '@mantine/core',
-            '@mantine/dates',
-            '@mantine/charts',
-            '@mantine/hooks',
-            '@mantine/modals',
-            '@mantine/form',
-            '@mantine/notifications',
-            '@tanstack/react-query',
-            '@trpc/react-query',
-            'dayjs',
-            'recharts',
-          ],
+          include: ['react', 'react-dom', '@kottster/common', '@kottster/server'],
           exclude: ['@kottster/react'],
         },
       });
@@ -91,30 +77,14 @@ export class FileTemplateManager {
       }
     `),
 
-    'app/.server/trpc.js': stripIndent(`
-      import { AppContext } from '@kottster/common';
-      import { initTRPC } from '@trpc/server';
-      import { DataSourceContextToClientMap } from './data-sources/registry';
-
-      export const t = initTRPC.context<AppContext & DataSourceContextToClientMap>().create();
-    `),
-
-    'app/.server/trpc-routers/page-routers.generated.js': stripIndent(`
-      // This file is auto-generated. Do not modify it manually.
-      // It exports all api.server.(ts|js) files in the app/routes directory.
-
-      export default {};
-    `),
-
-    'app/.server/app.js': (_usingTsc: boolean, vars: Record<string, string>) => stripIndent(`
+    'app/.server/app.js': stripIndent(`
       import { createApp } from '@kottster/server';
       import { dataSourceRegistry } from './data-sources/registry';
       import schema from '../../app-schema.json';
 
       export const app = createApp({
         schema,
-        appId: '${vars.appId}',
-        secretKey: '${vars.secretKey}',
+        secretKey: process.env.SECRET_KEY,
 
         // For security, consider moving the secret key to an environment variable:
         // secretKey: process.env.NODE_ENV === 'development' ? 'dev-secret-key' : process.env.SECRET_KEY,
@@ -129,7 +99,7 @@ export class FileTemplateManager {
       ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
       const dataSource = createDataSource({
         type: ${usingTsc ? `DataSourceType.postgres` : `'postgres'`},
-        ctxPropName: 'knex',
+        name: 'postgres',
         databaseSchemas: ['public'],
         init: () => {
           /**
@@ -138,7 +108,7 @@ export class FileTemplateManager {
            */
           const client = knex({
             client: 'pg',
-            connection: 'postgres://user:password@localhost:5432/database',
+            connection: 'postgresql://myuser:mypassword@localhost:5432/mydatabase',
             searchPath: ['public'],
           });
 
@@ -155,8 +125,7 @@ export class FileTemplateManager {
       ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
       const dataSource = createDataSource({
         type: ${usingTsc ? `DataSourceType.mysql` : `'mysql'`},
-        ctxPropName: 'knex',
-        databaseSchemas: ['public'],
+        name: 'mysql',
         init: () => {
           const client = knex({
             /**
@@ -186,8 +155,7 @@ export class FileTemplateManager {
       ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
       const dataSource = createDataSource({
         type: ${usingTsc ? `DataSourceType.mariadb` : `'mariadb'`},
-        ctxPropName: 'knex',
-        databaseSchemas: ['public'],
+        name: 'mariadb',
         init: () => {
           const client = knex({
             /**
@@ -217,7 +185,7 @@ export class FileTemplateManager {
       ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
       const dataSource = createDataSource({
         type: ${usingTsc ? `DataSourceType.mssql` : `'mssql'`},
-        ctxPropName: 'knex',
+        name: 'knex',
         databaseSchemas: ['dbo'],
         init: () => {
           const client = knex({
@@ -242,41 +210,22 @@ export class FileTemplateManager {
       export default dataSource;
     `),
 
-    'app/.server/data-sources/registry.js': (usingTsc: boolean) => stripIndent(`
+    'app/.server/data-sources/registry.js': stripIndent(`
       import { DataSourceRegistry } from '@kottster/server';
 
       export const dataSourceRegistry = new DataSourceRegistry([]);
-
-      ${usingTsc ? `export type DataSourceContextToClientMap = {};` : ''}
-    `),
-
-    'app/.server/trpc-routers/app-router.js': stripIndent(`
-      import { t } from '../trpc';
-      import pageRoutes from './page-routers.generated';
-
-      export const appRouter = t.router(pageRoutes ?? []);
-
-      export type AppRouter = typeof appRouter;
     `),
 
     'app/root.jsx': stripIndent(`
-      import { useState } from 'react';
       import { Outlet } from '@remix-run/react';
-      import { QueryClient } from '@tanstack/react-query';
-      import { KottsterApp, ClientOnly, RootLayout, RootErrorBoundary, getTRPCClientLinks } from '@kottster/react';
-      import { Notifications } from '@mantine/notifications';
-      import { trpc } from './trpc.client';
+      import { KottsterApp, ClientOnly, getRootLayout } from '@kottster/react';
       import '@kottster/react/dist/style.css';
+      import schema from '../app-schema.json';
 
       function ClientApp() {
-        const [queryClient] = useState(() => new QueryClient());
-        const [trpcClient] = useState(() => trpc.createClient({ links: getTRPCClientLinks() }));
-
         return (
-          <KottsterApp.Provider trpc={trpc} trpcClient={trpcClient} queryClient={queryClient}>
+          <KottsterApp.Provider schema={schema}>
             <Outlet />
-            <KottsterApp.OverlayManager />
-            <Notifications />
           </KottsterApp.Provider>
         );
       }
@@ -289,43 +238,62 @@ export class FileTemplateManager {
         );
       }
 
-      export { RootLayout as Layout, RootErrorBoundary as ErrorBoundary };
+      export const Layout = getRootLayout({ schema });
+      export { App as ErrorBoundary };
     `),
 
     'app/service-route.js': stripIndent(`
       import { app } from '@/.server/app';
-      import { appRouter } from '@/.server/trpc-routers/app-router';
+      import { SpecialRoutePage } from '@kottster/react';
       import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
 
       export const loader = async (args: LoaderFunctionArgs) => {
-        return app.createServiceRouteLoader(appRouter)(args);
+        return app.createServiceRouteLoader()(args);
       };
 
       export const action = async (args: ActionFunctionArgs) => {
-        return app.createServiceRouteLoader(appRouter)(args);
+        return app.createServiceRouteLoader()(args);
       };
+
+      export default SpecialRoutePage;
     `),
 
     'app/entry.client.jsx': stripIndent(`
-      import { RemixBrowser } from '@remix-run/react';
       import { startTransition, StrictMode } from 'react';
+      import { RemixBrowser } from '@remix-run/react';
       import { hydrateRoot } from 'react-dom/client';
+      import { handleRecoverableError } from '@kottster/react';
 
       startTransition(() => {
         hydrateRoot(
           document,
           <StrictMode>
             <RemixBrowser />
-          </StrictMode>
+          </StrictMode>,
+          {
+            onRecoverableError: handleRecoverableError
+          }
         );
       });
     `),
 
-    'app/trpc.client.js': stripIndent(`
-      import { createTRPCReact } from '@trpc/react-query';
-      import { type AppRouter } from '@/.server/trpc-routers/app-router';
+    'postcss.config.js': stripIndent(`
+      export default {
+        plugins: {
+          tailwindcss: {},
+          autoprefixer: {},
+        },
+      };
+    `),
 
-      export const trpc = createTRPCReact<AppRouter>();
+    'tailwind.config.ts': stripIndent(`
+      import type { Config } from "tailwindcss";
+
+      export default {
+        content: ["./app/**/{**,.client,.server}/**/*.{js,jsx,ts,tsx}"],
+        theme: {},
+        plugins: [],
+      } satisfies Config;
     `),
 
   };
@@ -336,14 +304,14 @@ export class FileTemplateManager {
    * @param vars Variables to replace in the template
    * @returns The file content
    */
-  public getTemplate(name: keyof typeof FileTemplateManager.templates, vars: Record<string, string> = {}): string {
+  public getTemplate(name: keyof typeof FileTemplateManager.templates): string {
     const template = FileTemplateManager.templates[name];
     if (!template) {
       throw new Error(`Template ${name} not found`);
     }
     
     if (typeof template === 'function') {
-      return template(this.usingTsc, vars);
+      return template(this.usingTsc);
     }
 
     return template;

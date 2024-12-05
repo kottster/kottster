@@ -1,6 +1,6 @@
 import { Action, DSAction } from "../models/action.model";
-import { GetDataSource } from "../actions/getDataSource.action";
-import { GetSchema } from "../actions/getSchema.action";
+import { GetDataSources } from "../actions/getDataSources.action";
+import { GetDataSourceSchema } from "../actions/getDataSourceSchema.action";
 import { UpdateFiles } from "../actions/updateFiles.action";
 import { GetFiles } from "../actions/getFiles.action";
 import { UpdateSchema } from "../actions/updateSchema.action";
@@ -9,6 +9,7 @@ import { UpdatePage } from "../actions/updatePage.action";
 import { DeletePage } from "../actions/deletePage.action";
 import { DevSync } from "../core/devSync";
 import { KottsterApp } from "../core/app";
+import { InitApp } from "../actions/initApp.action";
 
 /**
  * Service for working with actions
@@ -16,10 +17,10 @@ import { KottsterApp } from "../core/app";
 export class ActionService {
   static getAction(app: KottsterApp, action: string): Action {
     switch (action) {
-      case 'getDataSource':
-        return new GetDataSource(app);
-      case 'getSchema':
-        return new GetSchema(app);
+      case 'getDataSources':
+        return new GetDataSources(app);
+      case 'getDataSourceSchema':
+        return new GetDataSourceSchema(app);
       default:
         throw new Error(`Action ${action} not found`);
     }
@@ -27,6 +28,8 @@ export class ActionService {
 
   static getDSAction(ds: DevSync, action: string): DSAction {
     switch (action) {
+      case 'initApp':
+        return new InitApp(ds);
       case 'updateSchema':
         return new UpdateSchema(ds);
       case 'updateFiles':

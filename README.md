@@ -1,38 +1,42 @@
 # Kottster
 
-Simple low-code platform for building robust admin dashboards fast ⚡
+Instant admin panel for your project ⚡
 
 ![NPM Downloads](https://img.shields.io/npm/dm/%40kottster%2Fcli)
 [![@kottster/server.svg](https://img.shields.io/npm/v/@kottster/server.svg)](https://www.npmjs.com/package/@kottster/server)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![GitHub last commit](https://img.shields.io/github/last-commit/kottster/kottster)
 
-[Website](https://kottster.app) • [Sign Up](https://web.kottster.app/signup) • [Docs](https://kottster.gitbook.io/docs) • [Pricing](https://kottster.app/pricing)
+[Website](https://kottster.app) • [Docs](https://kottster.gitbook.io/docs) • [Pricing](https://kottster.app/pricing) 
 
-[video.webm](https://github.com/user-attachments/assets/90f975b1-9278-4f02-bbc4-2704dbaa184b)
+![Intro](/assets/intro.png)
 
 ## Getting started
 
-#### **1.** [Sign up](https://web.kottster.app/signup) at Kottster.
+To create a new project, run:
 
-#### **2.** Create a new app.
-
-#### **3.** Complete the initial setup:
-
-**3.1. Create a new project using the CLI:**
-  
 ```bash
-npx @kottster/cli new my-app -id <appId> -sk <secretKey>
+npx @kottster/cli new
 ```
-**3.2. Inside your project, run the app locally:**
+
+Make sure you have Node.js version 20 or above installed on your system.
+
+## Next steps
+
+
+#### 1. Inside your project, run the app locally:
 
 ```bash
 npm run dev
 ```
 
-**3.3. Connect the app to your database:**
+#### 2. Create an account.
 
-```bash
+After running the project, you'll need to log in to your account or create a new one. Once logged in, create an app by specifying its name.
+
+#### 3. Connect the app to your database:
+
+```
 # PostgreSQL
 npm run dev:add-data-source postgres
 
@@ -41,25 +45,22 @@ npm run dev:add-data-source mysql
 
 # MariaDB
 npm run dev:add-data-source mariadb
-
-# Microsoft SQL Server
-npm run dev:add-data-source mssql
 ```
 
-After running the command, the new file will be created inside  `app/.server/data-sources/` folder. Edit the file to configure the connection to your database, and restart the server.
+After running the command, the new file will be created inside `app/.server/data-sources/` folder. Edit the file to configure the connection to your database, and restart the server.
 
-#### **4.** Start building your app:
-- Use our builder to generate pages and features instantly.
-- Or, create and customize them on your own.
+#### 4. Start building your app:
 
-#### **5.** [Deploy your app to production](https://kottster.gitbook.io/docs/get-started/deploying-app-to-production) when it's ready.
+- Use our builder to instantly generate pages based on your database.
+- Or, create and customize pages on your own.
+
+#### 5. [Deploy your app to production](https://kottster.gitbook.io/docs/get-started/build-and-deploy) when it's ready.
 
 ## Resources
 
-- [Documentation](https://kottster.gitbook.io/docs)
+- [Docs](https://kottster.gitbook.io/docs)
   - [Quickstart](https://kottster.gitbook.io/docs)
-  - [Deploy app to production](https://kottster.gitbook.io/docs/get-started/deploying-app-to-production)
-  - [Building an app](https://kottster.gitbook.io/docs/building-an-app)
+  - [Build and deploy](https://kottster.gitbook.io/docs/get-started/build-and-deploy)
  
 ## Need Help?
 

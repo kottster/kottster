@@ -1,5 +1,5 @@
-import { StatRPCInputSelect, StatRPCInputSpec } from "./statRpc.model";
-import { TableRPCInputDelete, TableRPCInputInsert, TableRPCInputSelect, TableRPCInputSelectLinkedRecords, TableRPCInputSpec, TableRPCInputUpdate } from "./tableRpc.model";
+import { StatRpcInputSelect, StatRpcInputSpec } from "./statRpc.model";
+import { TableRpcInputDelete, TableRpcInputInsert, TableRpcInputSelect, TableRpcInputSelectLinkedRecords, TableRpcInputSpec, TableRpcInputUpdate } from "./tableRpc.model";
 
 export type RPCActionType = 'table_spec' | 'table_select' | 'table_selectLinkedRecords' | 'table_insert' | 'table_update' | 'table_delete' | 'stat_spec' | 'stat_select';
 
@@ -7,14 +7,14 @@ export interface RPCActionBody<T extends RPCActionType> {
   [key: string]: any;
   action: T;
   input:
-      T extends 'table_spec' ? TableRPCInputSpec 
-    : T extends 'table_select' ? TableRPCInputSelect
-    : T extends 'table_selectLinkedRecords' ? TableRPCInputSelectLinkedRecords
-    : T extends 'table_insert' ? TableRPCInputInsert
-    : T extends 'table_update' ? TableRPCInputUpdate
-    : T extends 'table_delete' ? TableRPCInputDelete
-    : T extends 'stat_spec' ? StatRPCInputSpec
-    : T extends 'stat_select' ? StatRPCInputSelect
+      T extends 'table_spec' ? TableRpcInputSpec 
+    : T extends 'table_select' ? TableRpcInputSelect
+    : T extends 'table_selectLinkedRecords' ? TableRpcInputSelectLinkedRecords
+    : T extends 'table_insert' ? TableRpcInputInsert
+    : T extends 'table_update' ? TableRpcInputUpdate
+    : T extends 'table_delete' ? TableRpcInputDelete
+    : T extends 'stat_spec' ? StatRpcInputSpec
+    : T extends 'stat_select' ? StatRpcInputSelect
     : never;
 }
 

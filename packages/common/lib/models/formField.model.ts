@@ -13,7 +13,7 @@ interface InputField extends BaseFormField {
 
 interface NumberInputField extends BaseFormField {
   type: 'numberInput';
-  float?: boolean;
+  allowDecimal?: boolean;
 }
 
 interface TextareaField extends BaseFormField {
@@ -25,10 +25,15 @@ interface SelectField extends BaseFormField {
   options: SelectOption[];
 }
 
-interface MultipleSelectField extends BaseFormField {
-  type: 'multipleSelect';
-  options: SelectOption[];
+interface CustomField extends BaseFormField {
+  type: 'custom';
+  renderComponent: (value: any, onChange: (value: any) => void) => any;
 }
+
+// interface MultipleSelectField extends BaseFormField {
+//   type: 'multipleSelect';
+//   options: SelectOption[];
+// }
 
 interface CheckboxField extends BaseFormField {
   type: 'checkbox';
@@ -36,11 +41,6 @@ interface CheckboxField extends BaseFormField {
 
 interface RecordSelectField extends BaseFormField {
   type: 'recordSelect';
-  column: string;
-}
-
-interface MultipleRecordSelectField extends BaseFormField {
-  type: 'multipleRecordSelect';
 }
 
 interface DatePickerField extends BaseFormField {
@@ -61,7 +61,6 @@ export type FormField =
   | TimePickerField
   | TextareaField
   | SelectField
-  | MultipleSelectField
   | CheckboxField
   | RecordSelectField
-  | MultipleRecordSelectField;
+  | CustomField;

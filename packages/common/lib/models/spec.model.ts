@@ -1,12 +1,12 @@
 import { RelationalDatabaseSchema } from "./databaseSchema.model";
-import { StatRPC } from "./statRpc.model";
-import { TableRPC } from "./tableRpc.model";
+import { StatRpc } from "./statRpc.model";
+import { TableRpc } from "./tableRpc.model";
 
 export interface TableSpec {
-  tableRPC: TableRPC;
+  tableRpc: TableRpc;
   tableSchema: RelationalDatabaseSchema['tables'][number];
 }
 
 export interface StatSpec {
-  statRPC: StatRPC;
+  statRpc: StatRpc;
 }

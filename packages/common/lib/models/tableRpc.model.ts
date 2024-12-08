@@ -1,15 +1,15 @@
 import { RelationalDatabaseSchemaTable } from "./databaseSchema.model";
 
-export interface TableRPCInputBase {}
+export interface TableRpcInputBase {}
 
-export interface TableRPCInputSpec extends TableRPCInputBase {}
+export interface TableRpcInputSpec extends TableRpcInputBase {}
 
-export enum TableRPCInputSelectOperator {
+export enum TableRpcInputSelectOperator {
   equal = 'equal',
   notEqual = 'not equal',
 }
 
-export interface TableRPCInputSelect extends TableRPCInputBase {
+export interface TableRpcInputSelect extends TableRpcInputBase {
   page: number;
   search?: string;
   sorting?: {
@@ -18,14 +18,14 @@ export interface TableRPCInputSelect extends TableRPCInputBase {
   };
   filters?: {
     column: string;
-    operator: keyof typeof TableRPCInputSelectOperator;
+    operator: keyof typeof TableRpcInputSelectOperator;
     value: any;
   }[];
 
   tableSchema: RelationalDatabaseSchemaTable;
 }
 
-export interface TableRPCInputSelectLinkedRecords extends TableRPCInputBase {
+export interface TableRpcInputSelectLinkedRecords extends TableRpcInputBase {
   linkedItemIndex: number;
   
   page: number;
@@ -35,24 +35,24 @@ export interface TableRPCInputSelectLinkedRecords extends TableRPCInputBase {
   primaryKeyValues?: (string | number)[];
 }
 
-export interface TableRPCInputInsert extends TableRPCInputBase {
+export interface TableRpcInputInsert extends TableRpcInputBase {
   values: Record<string, any>;
 
   tableSchema: RelationalDatabaseSchemaTable;
 }
 
-export interface TableRPCInputUpdate extends TableRPCInputBase {
+export interface TableRpcInputUpdate extends TableRpcInputBase {
   primaryKeys: (string | number)[];
   values: Record<string, any>;
 
   tableSchema: RelationalDatabaseSchemaTable;
 }
 
-export interface TableRPCInputDelete extends TableRPCInputBase {
+export interface TableRpcInputDelete extends TableRpcInputBase {
   primaryKeys: any[];
 }
 
-export interface TableRPCSelectLinkedTableOneToOne {
+export interface TableRpcLinkedTableOneToOne {
   /** Specifies the type of relationship between tables */
   relation: 'oneToOne';
 
@@ -73,7 +73,7 @@ export interface TableRPCSelectLinkedTableOneToOne {
   searchableColumns?: string[];
 }
 
-export interface TableRPCSelectLinkedTableOneToMany {
+export interface TableRpcLinkedTableOneToMany {
   /** Specifies the type of relationship between tables */
   relation: 'oneToMany';
   
@@ -98,7 +98,7 @@ export interface TableRPCSelectLinkedTableOneToMany {
 }
 
 // TODO: will be implemented later
-// export interface TableRPCSelectLinkedTableManyToMany {
+// export interface TableRpcSelectLinkedTableManyToMany {
 //   /** Specifies the type of relationship between tables */
 //   relation: 'manyToMany';
   
@@ -122,9 +122,9 @@ export interface TableRPCSelectLinkedTableOneToMany {
 //   searchableColumns?: string[];
 // }
 
-export type TableRPCSelectLinkedTable = TableRPCSelectLinkedTableOneToOne | TableRPCSelectLinkedTableOneToMany;
+export type TableRpcLinkedTable = TableRpcLinkedTableOneToOne | TableRpcLinkedTableOneToMany;
 
-export interface TableRPCSelect {
+export interface TableRpcSelect {
   columns?: string[];
   excludeColumns?: string[];
   sortableColumns?: string[];
@@ -141,12 +141,9 @@ export interface TableRPCSelect {
     direction: 'asc' | 'desc';
   }[];
   pageSize: number;
-  
-  // For linking tables
-  linked?: TableRPCSelectLinkedTable[];
 }
 
-export interface TableRPCInsert {
+export interface TableRpcInsert {
   columns?: string[];
   excludeColumns?: string[];
   beforeInsert?: (record: Record<string, any>) => Record<string, any>;
@@ -154,43 +151,44 @@ export interface TableRPCInsert {
   canBeInserted?: (record: Record<string, any>) => boolean;
 }
 
-export interface TableRPCUpdate extends Omit<TableRPCInsert, 'canBeInserted' | 'beforeInsert'> {
+export interface TableRpcUpdate extends Omit<TableRpcInsert, 'canBeInserted' | 'beforeInsert'> {
   canBeUpdated?: (record: Record<string, any>) => boolean;
   beforeUpdate?: (record: Record<string, any>) => Record<string, any>;
 }
 
-export interface TableRPCDelete {
+export interface TableRpcDelete {
   canBeDeleted?: (record: Record<string, any>) => boolean;
 }
 
-export interface TableRPC {
+export interface TableRpc {
   primaryKeyColumn: string;
   table: string;
-  select: TableRPCSelect;
-  insert?: TableRPCInsert;
-  update?: TableRPCUpdate;
-  delete?: TableRPCDelete;
+  select: TableRpcSelect;
+  insert?: TableRpcInsert;
+  update?: TableRpcUpdate;
+  delete?: TableRpcDelete;
+  linked?: TableRpcLinkedTable[];
 }
 
-// Public version of TableRPC, available for developers to use
-export interface TableRPCSimplified extends Omit<TableRPC, 'insert' | 'update' | 'delete'> {
-  insert?: boolean | TableRPC['insert'];
-  update?: boolean | TableRPC['update'];
-  delete?: boolean | TableRPC['delete'];
+// Public version of TableRpc, available for developers to use
+export interface TableRpcSimplified extends Omit<TableRpc, 'insert' | 'update' | 'delete'> {
+  insert?: boolean | TableRpc['insert'];
+  update?: boolean | TableRpc['update'];
+  delete?: boolean | TableRpc['delete'];
 }
 
-export type TableRPCResultSelectRecord = Record<string, any>;
+export type TableRpcResultSelectRecord = Record<string, any>;
 
-export interface TableRPCResultSelectDTO {
-  records: TableRPCResultSelectRecord[];
+export interface TableRpcResultSelectDTO {
+  records: TableRpcResultSelectRecord[];
   totalRecords: number;
 }
 
-export interface TableRPCResultSelectLinkedRecordsDTO {
-  records: TableRPCResultSelectRecord[];
+export interface TableRpcResultSelectLinkedRecordsDTO {
+  records: TableRpcResultSelectRecord[];
   totalRecords: number;
 }
 
-export interface TableRPCResultInsertDTO {}
+export interface TableRpcResultInsertDTO {}
 
-export interface TableRPCResultUpdateDTO {}
+export interface TableRpcResultUpdateDTO {}

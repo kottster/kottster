@@ -1,7 +1,7 @@
 {
   "name": "@kottster/common",
   "description": "Common types and utilities for Kottster",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "main": "dist/index.js",
   "license": "Apache-2.0",
   "scripts": {
@@ -19,7 +19,7 @@
     "@types/node": "^20.14.11",
     "eslint": "^9.7.0",
     "husky": "^9.1.1",
-    "rimraf": "^5.0.5",
+    "rimraf": "^6.0.1",
     "synp": "^1.9.13",
     "typescript": "^5.5.3",
     "typescript-eslint": "^7.16.1"

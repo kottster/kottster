@@ -23,6 +23,7 @@ export * from './utils/stripIndent';
 export * from './utils/checkTsUsage';
 export * from './utils/isSchemaEmpty';
 export * from './utils/transformToReadable';
+export * from './utils/isIsoString';
 
 // Constants
 export * from './constants/dataSourceTypes';

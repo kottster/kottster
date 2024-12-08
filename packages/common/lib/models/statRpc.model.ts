@@ -1,20 +1,20 @@
-export interface StatRPCInputBase {}
+export interface StatRpcInputBase {}
 
-export interface StatRPCInputSpec extends StatRPCInputBase {}
+export interface StatRpcInputSpec extends StatRpcInputBase {}
 
-export interface StatRPCInputSelect extends StatRPCInputSpec {}
+export interface StatRpcInputSelect extends StatRpcInputSpec {}
 
-export interface StatRPCStat {
+export interface StatRpcStat {
   id: string;
   query?: string;
   getQuery?: () => any;
 }
 
-export interface StatRPC {
-  stats: StatRPCStat[];
+export interface StatRpc {
+  stats: StatRpcStat[];
 }
 
-export interface StatRPCResultSelectDTO {
+export interface StatRpcResultSelectDTO {
   stats: {
     id: string;
     value: number | string;

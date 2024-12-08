@@ -4,7 +4,7 @@ import { FileCreator } from '../services/fileCreator.service'
 import PackageInstaller from '../services/packageInstaller.service'
 import { getRunDevCommand } from '../utils/getRunDevCommand';
 import { collectNewProjectData } from '../utils/collectNewProjectData';
-import { KottsterAPI } from '../services/kottsterApi.service';
+import { KottsterApi } from '../services/kottsterApi.service';
 
 interface Options {
   skipInstall?: boolean;
@@ -27,7 +27,7 @@ export async function newProject (projectName: string | undefined, options: Opti
     usingTypescript: projectSetupData.useTypeScript,
   };
 
-  KottsterAPI.sendNewProjectCommandUsageData('start', usageDataOptions);
+  KottsterApi.sendNewProjectCommandUsageData('start', usageDataOptions);
 
   try {
     // Create project files
@@ -56,9 +56,9 @@ export async function newProject (projectName: string | undefined, options: Opti
     console.log(chalk.grey(`   ${runDevCommand}`))
     console.log('\n')
 
-    await KottsterAPI.sendNewProjectCommandUsageData('finish', usageDataOptions, startTime);
+    await KottsterApi.sendNewProjectCommandUsageData('finish', usageDataOptions, startTime);
   } catch (error) {
     console.error(chalk.red('Error creating project:', error))
-    await KottsterAPI.sendNewProjectCommandUsageData('error', usageDataOptions);
+    await KottsterApi.sendNewProjectCommandUsageData('error', usageDataOptions);
   }
 }

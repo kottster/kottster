@@ -100,7 +100,6 @@ export class FileTemplateManager {
       const dataSource = createDataSource({
         type: ${usingTsc ? `DataSourceType.postgres` : `'postgres'`},
         name: 'postgres',
-        databaseSchemas: ['public'],
         init: () => {
           /**
            * Replace the following with your connection options.

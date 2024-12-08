@@ -6,7 +6,7 @@ interface NewProjectCommandOptions {
 /**
  * Service for calling the Kottster API.
  */
-export class KottsterAPI {
+export class KottsterApi {
   public static get API_BASE_URL() {
     return 'https://api.kottster.app';
   }

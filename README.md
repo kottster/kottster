@@ -13,7 +13,7 @@ Instant admin panel for your project ⚡
 
 ## Getting started
 
-To create a new project, run:
+#### To create a new project, run:
 
 ```bash
 npx @kottster/cli new

@@ -9,7 +9,7 @@ Instant admin panel for your project ⚡
 
 [Website](https://kottster.app) • [Docs](https://kottster.gitbook.io/docs) • [Pricing](https://kottster.app/pricing) 
 
-![Intro](/assets/intro.png)
+![Intro](/assets/intro-2.png)
 
 ## Getting started
 

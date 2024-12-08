@@ -10,17 +10,6 @@ export class KnexPg extends DataSourceAdapter {
     super(client);
   }
 
-  private baseTypesDatePicker = [
-    PostgresBaseType.date,
-    PostgresBaseType.timestamp_without_time_zone,
-    PostgresBaseType.timestamp_with_time_zone,
-  ];
-  
-  private baseTypesTimePicker = [
-    PostgresBaseType.time_without_time_zone,
-    PostgresBaseType.time_with_time_zone,
-  ];
-
   processColumn(column: RelationalDatabaseSchemaColumn) {
     // Check if it's an array type
     const isArray = column.type.endsWith('[]') || /ARRAY/i.test(column.type);
@@ -45,7 +34,6 @@ export class KnexPg extends DataSourceAdapter {
     if (column.foreignKey) {
       formField = {
         type: 'recordSelect',
-        column: column.name,
       }
     } 
     else if (column.enumValues) {
@@ -54,12 +42,20 @@ export class KnexPg extends DataSourceAdapter {
         options: column.enumValues?.split(',').map(value => ({ label: value, value })) ?? []
       }
     }
-    else if (this.baseTypesDatePicker.includes(cleanType as PostgresBaseType)) {
+    else if ([
+      PostgresBaseType.date,
+      PostgresBaseType.timestamp_without_time_zone,
+      PostgresBaseType.timestamp_with_time_zone,
+    ].includes(cleanType as PostgresBaseType)) {
       formField = {
-        type: 'datePicker'
+        type: 'datePicker',
+        withTime: cleanType === PostgresBaseType.timestamp_without_time_zone || cleanType === PostgresBaseType.timestamp_with_time_zone,
       }
     }
-    else if (this.baseTypesTimePicker.includes(cleanType as PostgresBaseType)) {
+    else if ([
+      PostgresBaseType.time_without_time_zone,
+      PostgresBaseType.time_with_time_zone,
+    ].includes(cleanType as PostgresBaseType)) {
       formField = {
         type: 'timePicker'
       }
@@ -144,7 +140,7 @@ export class KnexPg extends DataSourceAdapter {
   }
   
   async getDatabaseSchema(): Promise<RelationalDatabaseSchema> {
-    const schemaName = this.databaseSchemas[0] || 'public';
+    const schemaName = this.databaseSchemas[0];
 
     // Query to get all tables and their columns with enum values, primary keys, and foreign keys
     const tablesQueryResult = await this.client!.raw(`
@@ -164,7 +160,7 @@ export class KnexPg extends DataSourceAdapter {
             AND c.table_schema = tc.table_schema
         WHERE
           tc.constraint_type = 'PRIMARY KEY'
-          AND tc.table_schema = ?
+          AND tc.table_schema = COALESCE(?, current_schema())
       ),
       fk_info AS (
         SELECT
@@ -182,7 +178,7 @@ export class KnexPg extends DataSourceAdapter {
             AND ccu.table_schema = tc.table_schema
         WHERE
           tc.constraint_type = 'FOREIGN KEY'
-          AND tc.table_schema = ?
+          AND tc.table_schema = COALESCE(?, current_schema())
       )
       SELECT
         t.table_name,
@@ -220,8 +216,8 @@ export class KnexPg extends DataSourceAdapter {
           ON t.table_name = fk.table_name
           AND c.column_name = fk.column_name
       WHERE
-        t.table_schema = ?;
-    `, [schemaName, schemaName, schemaName]);
+        t.table_schema = COALESCE(?, current_schema());
+    `, [schemaName ?? null, schemaName ?? null, schemaName ?? null]);
 
     const tablesData = tablesQueryResult.rows;
 

@@ -1,5 +1,5 @@
 import { Knex } from "knex";
-import { DataSourceAdapterType, FormField, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TableRPC, TableRPCInputDelete, TableRPCInputInsert, TableRPCInputSelect, TableRPCInputSelectLinkedRecords, TableRPCInputSelectOperator, TableRPCInputUpdate, TableRPCResultInsertDTO, TableRPCResultSelectDTO, TableRPCResultSelectLinkedRecordsDTO, TableRPCResultSelectRecord, TableRPCResultUpdateDTO, TableRPCSelect, TableRPCSelectLinkedTableOneToOne } from "@kottster/common";
+import { DataSourceAdapterType, FormField, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TableRpc, TableRpcInputDelete, TableRpcInputInsert, TableRpcInputSelect, TableRpcInputSelectLinkedRecords, TableRpcInputSelectOperator, TableRpcInputUpdate, TableRpcResultInsertDTO, TableRpcResultSelectDTO, TableRpcResultSelectLinkedRecordsDTO, TableRpcResultSelectRecord, TableRpcResultUpdateDTO, TableRpcSelect, TableRpcLinkedTableOneToOne } from "@kottster/common";
 
 /**
  * The base class for all data source adapters
@@ -85,18 +85,18 @@ export abstract class DataSourceAdapter {
    * Get the table records (Table RPC)
    * @returns The table records
    */
-  async getTableRecords(tableRPC: TableRPC, input: TableRPCInputSelect): Promise<TableRPCResultSelectDTO> {
-    tableRPC.select = tableRPC.select as TableRPCSelect;
+  async getTableRecords(tableRpc: TableRpc, input: TableRpcInputSelect): Promise<TableRpcResultSelectDTO> {
+    tableRpc.select = tableRpc.select as TableRpcSelect;
     const { tableSchema } = input;
     
-    const query = this.client(tableRPC.table);
-    const countQuery = this.client(tableRPC.table);
+    const query = this.client(tableRpc.table);
+    const countQuery = this.client(tableRpc.table);
 
     // Select specific columns
-    if (tableRPC.select.columns && tableRPC.select.columns.length > 0) {
-      const columns = tableRPC.select.columns;
-      if (tableRPC.primaryKeyColumn && !columns.includes(tableRPC.primaryKeyColumn)) {
-        columns.push(tableRPC.primaryKeyColumn);
+    if (tableRpc.select.columns && tableRpc.select.columns.length > 0) {
+      const columns = tableRpc.select.columns;
+      if (tableRpc.primaryKeyColumn && !columns.includes(tableRpc.primaryKeyColumn)) {
+        columns.push(tableRpc.primaryKeyColumn);
       }
       query.select(columns);
     } else {
@@ -105,8 +105,8 @@ export abstract class DataSourceAdapter {
     countQuery.count({ count: '*' });
 
     // Apply where conditions
-    if (tableRPC.select.where && tableRPC.select.where.length > 0) {
-      tableRPC.select.where.forEach(condition => {
+    if (tableRpc.select.where && tableRpc.select.where.length > 0) {
+      tableRpc.select.where.forEach(condition => {
         query.where(condition.column, condition.operator, condition.value);
         countQuery.where(condition.column, condition.operator, condition.value);
       });
@@ -114,7 +114,7 @@ export abstract class DataSourceAdapter {
 
     // Apply search
     if (input.search) {
-      const searchableColumns = tableRPC.select.searchableColumns ?? [];
+      const searchableColumns = tableRpc.select.searchableColumns ?? [];
       const searchValue = input.search.trim();
 
       if (searchableColumns.length > 0) {
@@ -126,13 +126,13 @@ export abstract class DataSourceAdapter {
     // Apply ordering
     if (input.sorting) {
       query.orderBy(input.sorting.column, input.sorting.direction);
-    } else if (tableRPC.select.orderBy && tableRPC.select.orderBy.length > 0) {
-      tableRPC.select.orderBy.forEach(order => {
+    } else if (tableRpc.select.orderBy && tableRpc.select.orderBy.length > 0) {
+      tableRpc.select.orderBy.forEach(order => {
         query.orderBy(order.column, order.direction);
       });
     } else {
       // By default, order by the primary key column
-      query.orderBy(tableRPC.primaryKeyColumn, 'desc');
+      query.orderBy(tableRpc.primaryKeyColumn, 'desc');
     }
 
     // Apply filters
@@ -141,7 +141,7 @@ export abstract class DataSourceAdapter {
         const operator: string = {
           equal: '=',
           notEqual: '<>',
-        }[filter.operator as keyof typeof TableRPCInputSelectOperator];
+        }[filter.operator as keyof typeof TableRpcInputSelectOperator];
         
         query.where(filter.column, operator, filter.value);
         countQuery.where(filter.column, operator, filter.value);
@@ -149,9 +149,9 @@ export abstract class DataSourceAdapter {
     };
 
     // Apply pagination
-    const offset = (input.page - 1) * tableRPC.select.pageSize;
+    const offset = (input.page - 1) * tableRpc.select.pageSize;
     query
-      .limit(tableRPC.select.pageSize)
+      .limit(tableRpc.select.pageSize)
       .offset(offset);
 
     const [records, [{ count }]] = await Promise.all([
@@ -159,8 +159,8 @@ export abstract class DataSourceAdapter {
       countQuery
     ]);
 
-    const linkedOneToOne = tableRPC.select.linked?.filter(linkedItem => linkedItem.relation === 'oneToOne') ?? [];
-    const linkedOneToMany = tableRPC.select.linked?.filter(linkedItem => linkedItem.relation === 'oneToMany') ?? [];
+    const linkedOneToOne = tableRpc.linked?.filter(linkedItem => linkedItem.relation === 'oneToOne') ?? [];
+    const linkedOneToMany = tableRpc.linked?.filter(linkedItem => linkedItem.relation === 'oneToMany') ?? [];
     
     // Preload linked one-to-one records
     if (linkedOneToOne.length > 0) {
@@ -227,8 +227,8 @@ export abstract class DataSourceAdapter {
     // Preload linked one-to-many records
     if (linkedOneToMany.length > 0) {
       await Promise.all(linkedOneToMany.map(async (linkedItem) => {
-        const linkedItemIndex = tableRPC.select.linked?.indexOf(linkedItem) ?? -1;
-        const foreignKeyValues = records.map(record => record[tableRPC.primaryKeyColumn]);
+        const linkedItemIndex = tableRpc.linked?.indexOf(linkedItem) ?? -1;
+        const foreignKeyValues = records.map(record => record[tableRpc.primaryKeyColumn]);
         
         // TODO: replace with a single query
         const foreignRecords: Record<string, any> = {};
@@ -260,7 +260,7 @@ export abstract class DataSourceAdapter {
           }
 
           // Loop through the foreign records and add them to the linked field
-          record['_linked'][linkedItemIndex] = foreignRecords[record[tableRPC.primaryKeyColumn]] ?? [];
+          record['_linked'][linkedItemIndex] = foreignRecords[record[tableRpc.primaryKeyColumn]] ?? [];
         });
       }));
     }
@@ -273,7 +273,7 @@ export abstract class DataSourceAdapter {
     };
   };
 
-  private async prepareRecords(records: any[], tableSchema: RelationalDatabaseSchemaTable): Promise<TableRPCResultSelectRecord[]> {
+  private async prepareRecords(records: any[], tableSchema: RelationalDatabaseSchemaTable): Promise<TableRpcResultSelectRecord[]> {
     const preparedRecords = await Promise.all(records.map(async record => {
       const preparedRecord: Record<string, any> = {
         _linked: record._linked,
@@ -299,10 +299,10 @@ export abstract class DataSourceAdapter {
    * Get the linked table records (Table RPC)
    * @returns The table records
    */
-  async getLinkedTableRecords(tableRPC: TableRPC, input: TableRPCInputSelectLinkedRecords): Promise<TableRPCResultSelectLinkedRecordsDTO> {
-    tableRPC.select = tableRPC.select as TableRPCSelect;
+  async getLinkedTableRecords(tableRpc: TableRpc, input: TableRpcInputSelectLinkedRecords): Promise<TableRpcResultSelectLinkedRecordsDTO> {
+    tableRpc.select = tableRpc.select as TableRpcSelect;
 
-    const linkedItem = tableRPC.select.linked?.[input.linkedItemIndex] as TableRPCSelectLinkedTableOneToOne;
+    const linkedItem = tableRpc.linked?.[input.linkedItemIndex] as TableRpcLinkedTableOneToOne;
     if (!linkedItem) {
       throw new Error('Linked item not found');
     }
@@ -363,21 +363,21 @@ export abstract class DataSourceAdapter {
    * Insert the table records (Table RPC)
    * @returns The table records
    */
-  async insertTableRecord(tableRPC: TableRPC, input: TableRPCInputInsert): Promise<TableRPCResultInsertDTO> {
+  async insertTableRecord(tableRpc: TableRpc, input: TableRpcInputInsert): Promise<TableRpcResultInsertDTO> {
     const { tableSchema } = input;
 
-    if (!tableRPC.insert) {
+    if (!tableRpc.insert) {
       throw new Error('Insert operation not permitted on this table');
     }
 
     // Check if the record can be inserted
-    if (tableRPC.insert.canBeInserted && !tableRPC.insert.canBeInserted(input.values)) {
+    if (tableRpc.insert.canBeInserted && !tableRpc.insert.canBeInserted(input.values)) {
       throw new Error('Record cannot be inserted');
     }
 
     // Pre-process the input values
-    if (tableRPC.insert.beforeInsert) {
-      input.values = await tableRPC.insert.beforeInsert(input.values);
+    if (tableRpc.insert.beforeInsert) {
+      input.values = await tableRpc.insert.beforeInsert(input.values);
     } else {
       for (const key in input.values) {
         const columnSchema = tableSchema.columns.find(column => column.name === key);
@@ -387,7 +387,7 @@ export abstract class DataSourceAdapter {
       }
     }
 
-    await this.client(tableRPC.table).insert(input.values);
+    await this.client(tableRpc.table).insert(input.values);
 
     return {};
   }
@@ -396,21 +396,21 @@ export abstract class DataSourceAdapter {
    * Update the table records (Table RPC)
    * @returns The table records
    */
-  async updateTableRecords(tableRPC: TableRPC, input: TableRPCInputUpdate): Promise<TableRPCResultUpdateDTO> {
+  async updateTableRecords(tableRpc: TableRpc, input: TableRpcInputUpdate): Promise<TableRpcResultUpdateDTO> {
     const { tableSchema } = input;
 
-    if (!tableRPC.update) {
+    if (!tableRpc.update) {
       throw new Error('Update operation not permitted on this table');
     }
 
     // Check if the record can be updated
-    if (tableRPC.update.canBeUpdated && !tableRPC.update.canBeUpdated(input.values)) {
+    if (tableRpc.update.canBeUpdated && !tableRpc.update.canBeUpdated(input.values)) {
       throw new Error('Record cannot be updated');
     }
 
     // Pre-process the input values
-    if (tableRPC.update.beforeUpdate) {
-      input.values = await tableRPC.update.beforeUpdate(input.values);
+    if (tableRpc.update.beforeUpdate) {
+      input.values = await tableRpc.update.beforeUpdate(input.values);
     } else {
       for (const key in input.values) {
         const columnSchema = tableSchema.columns.find(column => column.name === key);
@@ -420,8 +420,8 @@ export abstract class DataSourceAdapter {
       }
     }
 
-    await this.client(tableRPC.table)
-      .whereIn(tableRPC.primaryKeyColumn, input.primaryKeys)
+    await this.client(tableRpc.table)
+      .whereIn(tableRpc.primaryKeyColumn, input.primaryKeys)
       .update(input.values);
 
     return {};
@@ -431,18 +431,18 @@ export abstract class DataSourceAdapter {
    * Delete the table records (Table RPC)
    * @returns The table records
    */
-  async deleteTableRecords(tableRPC: TableRPC, input: TableRPCInputDelete): Promise<true> {
-    if (!tableRPC.delete) {
+  async deleteTableRecords(tableRpc: TableRpc, input: TableRpcInputDelete): Promise<true> {
+    if (!tableRpc.delete) {
       throw new Error('Delete operation not permitted on this table');
     }
 
     // Check if the record can be deleted
-    if (tableRPC.delete.canBeDeleted && !tableRPC.delete.canBeDeleted(input.primaryKeys)) {
+    if (tableRpc.delete.canBeDeleted && !tableRpc.delete.canBeDeleted(input.primaryKeys)) {
       throw new Error('Record cannot be deleted');
     }
 
-    await this.client.table(tableRPC.table)
-      .whereIn(tableRPC.primaryKeyColumn, input.primaryKeys)
+    await this.client.table(tableRpc.table)
+      .whereIn(tableRpc.primaryKeyColumn, input.primaryKeys)
       .del();
 
     return true;

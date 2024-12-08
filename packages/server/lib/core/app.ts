@@ -1,6 +1,6 @@
 import { ExtendAppContextFunction } from '../models/appContext.model';
 import { PROJECT_DIR } from '../constants/projectDir';
-import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, TableRPC, RPCActionBody, TableRPCInputSelect, TableRPCInputDelete, TableRPCInputUpdate, TableRPCInputInsert, isSchemaEmpty, RPCResponse, schemaPlaceholder, InternalApiResponse, TableRPCInputSelectLinkedRecords, TableRPCSimplified } from '@kottster/common';
+import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, TableRpc, RPCActionBody, TableRpcInputSelect, TableRpcInputDelete, TableRpcInputUpdate, TableRpcInputInsert, isSchemaEmpty, RPCResponse, schemaPlaceholder, InternalApiResponse, TableRpcInputSelectLinkedRecords, TableRpcSimplified } from '@kottster/common';
 import { DataSourceRegistry } from './dataSourceRegistry';
 import { ActionService } from '../services/action.service';
 import * as jose from 'jose';
@@ -151,14 +151,14 @@ export class KottsterApp {
    */
   public combineRPC(functions: ActionFunction[]): ActionFunction {
     const funcs: {
-      createTableRPC?: typeof this.createTableRPC,
+      createTableRpc?: typeof this.createTableRpc,
     } = {};
     
     functions.find(func => {
-      const rpcFunction: 'createTableRPC' | 'createStatRPC' = func['rpcFunction'];
+      const rpcFunction: 'createTableRpc' | 'createStatRpc' = func['rpcFunction'];
 
-      if (rpcFunction === 'createTableRPC') {
-        funcs.createTableRPC = func;
+      if (rpcFunction === 'createTableRpc') {
+        funcs.createTableRpc = func;
       }
     });
 
@@ -166,8 +166,8 @@ export class KottsterApp {
       const body = await request.clone().json() as RPCActionBody<any>;
       
       if ('action' in body && 'input' in body) {
-        if (body.action.startsWith('table_') && funcs.createTableRPC) {
-          return funcs.createTableRPC!({ request });
+        if (body.action.startsWith('table_') && funcs.createTableRpc) {
+          return funcs.createTableRpc!({ request });
         }
       }
 
@@ -180,25 +180,25 @@ export class KottsterApp {
   /**
    * Create a table RPC function
    * @param dataSource The data source
-   * @param tableRPCSimplified The table RPC
+   * @param tableRpcSimplified The table RPC
    * @returns The action function
    */
-  public createTableRPC(
+  public createTableRpc(
     dataSource: DataSource, 
-    tableRPCSimplified: TableRPCSimplified
+    tableRpcSimplified: TableRpcSimplified
   ): ActionFunction {
-    const tableRPC: TableRPC = {
-      ...tableRPCSimplified,
-      insert: typeof tableRPCSimplified.insert === 'boolean' ? (tableRPCSimplified.insert ? {} : undefined) : tableRPCSimplified.insert,
-      update: typeof tableRPCSimplified.update === 'boolean' ? (tableRPCSimplified.update ? {} : undefined) : tableRPCSimplified.update,
-      delete: typeof tableRPCSimplified.delete === 'boolean' ? (tableRPCSimplified.delete ? {} : undefined) : tableRPCSimplified.delete,
+    const tableRpc: TableRpc = {
+      ...tableRpcSimplified,
+      insert: typeof tableRpcSimplified.insert === 'boolean' ? (tableRpcSimplified.insert ? {} : undefined) : tableRpcSimplified.insert,
+      update: typeof tableRpcSimplified.update === 'boolean' ? (tableRpcSimplified.update ? {} : undefined) : tableRpcSimplified.update,
+      delete: typeof tableRpcSimplified.delete === 'boolean' ? (tableRpcSimplified.delete ? {} : undefined) : tableRpcSimplified.delete,
     };
 
     const func: ActionFunction = async ({ request }) => {
       let response: RPCResponse;
       
       try {
-        const res = await this.processTableRPC(dataSource, request, tableRPC);
+        const res = await this.processTableRpc(dataSource, request, tableRpc);
         response = {
           status: 'success',
           result: res,
@@ -219,12 +219,12 @@ export class KottsterApp {
       return json(response);
     };
     
-    func['rpcFunction'] = 'createTableRPC';
+    func['rpcFunction'] = 'createTableRpc';
     
     return func;
   };
 
-  private async processTableRPC(dataSource: DataSource, request: Request, tableRPC: TableRPC): Promise<any> {
+  private async processTableRpc(dataSource: DataSource, request: Request, tableRpc: TableRpc): Promise<any> {
     const [isTokenValid, newRequest] = await this.ensureValidToken(request);
     if (!isTokenValid) {
       throw new Error('Unauthorized');
@@ -235,29 +235,29 @@ export class KottsterApp {
 
     try {
       if (body.action === 'table_spec') {
-        const tableSchema = await dataSourceAdapter.getTableSchema(tableRPC.table);
+        const tableSchema = await dataSourceAdapter.getTableSchema(tableRpc.table);
         if (!tableSchema) {
           return new Response('Table does not exist in the database', { status: 404 });
         }
         
         return { 
-          tableRPC,
+          tableRpc,
           tableSchema 
         };
       } else if (body.action === 'table_select') {
-        const result = await dataSourceAdapter.getTableRecords(tableRPC, body.input as TableRPCInputSelect);
+        const result = await dataSourceAdapter.getTableRecords(tableRpc, body.input as TableRpcInputSelect);
         return result;
       } else if (body.action === 'table_selectLinkedRecords') {
-        const result = await dataSourceAdapter.getLinkedTableRecords(tableRPC, body.input as TableRPCInputSelectLinkedRecords);
+        const result = await dataSourceAdapter.getLinkedTableRecords(tableRpc, body.input as TableRpcInputSelectLinkedRecords);
         return result;
       } else if (body.action === 'table_insert') {
-        const result = await dataSourceAdapter.insertTableRecord(tableRPC, body.input as TableRPCInputInsert);
+        const result = await dataSourceAdapter.insertTableRecord(tableRpc, body.input as TableRpcInputInsert);
         return result;
       } else if (body.action === 'table_update') {
-        const result = await dataSourceAdapter.updateTableRecords(tableRPC, body.input as TableRPCInputUpdate);
+        const result = await dataSourceAdapter.updateTableRecords(tableRpc, body.input as TableRpcInputUpdate);
         return result;
       } else if (body.action === 'table_delete') {
-        const result = await dataSourceAdapter.deleteTableRecords(tableRPC, body.input as TableRPCInputDelete);
+        const result = await dataSourceAdapter.deleteTableRecords(tableRpc, body.input as TableRpcInputDelete);
         return result;
       };
     } catch (error) {

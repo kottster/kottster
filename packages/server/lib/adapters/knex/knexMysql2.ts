@@ -1,4 +1,4 @@
-import { DataSourceAdapterType, FormField, JsType, MysqlBaseType, mysqlBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn } from "@kottster/common";
+import { DataSourceAdapterType, FormField, isIsoString, JsType, MysqlBaseType, mysqlBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn } from "@kottster/common";
 import { DataSourceAdapter } from "../../models/dataSourceAdapter.model";
 import { Knex } from "knex";
 
@@ -8,15 +8,6 @@ export class KnexMysql2 extends DataSourceAdapter {
   constructor(protected client: Knex) {
     super(client);
   }
-
-  private baseTypesDatePicker = [
-    MysqlBaseType.timestamp,
-    MysqlBaseType.datetime,
-  ];
-
-  private baseTypesTimePicker = [
-    MysqlBaseType.time,
-  ];
 
   processColumn(column: RelationalDatabaseSchemaColumn) {
     // Check if it's an array type
@@ -38,7 +29,6 @@ export class KnexMysql2 extends DataSourceAdapter {
     if (column.foreignKey) {
       formField = {
         type: 'recordSelect',
-        column: column.name,
       }
     } 
     else if (column.enumValues) {
@@ -47,12 +37,13 @@ export class KnexMysql2 extends DataSourceAdapter {
         options: column.enumValues?.split(',').map(value => ({ label: value, value })) ?? []
       }
     }
-    else if (this.baseTypesDatePicker.includes(cleanType as MysqlBaseType)) {
+    else if ([MysqlBaseType.timestamp, MysqlBaseType.datetime,].includes(cleanType as MysqlBaseType)) {
       formField = {
-        type: 'datePicker'
+        type: 'datePicker',
+        withTime: true,
       }
     }
-    else if (this.baseTypesTimePicker.includes(cleanType as MysqlBaseType)) {
+    else if ([MysqlBaseType.time,].includes(cleanType as MysqlBaseType)) {
       formField = {
         type: 'timePicker'
       }
@@ -113,9 +104,7 @@ export class KnexMysql2 extends DataSourceAdapter {
     if (
       [MysqlBaseType.timestamp, MysqlBaseType.datetime, MysqlBaseType.time].includes(columnSchema.type as MysqlBaseType)
     ) {
-      const isoPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?(Z|[+-]\d{2}:?\d{2})?$/;
-
-      if (isoPattern.test(value)) {
+      if (isIsoString(value)) {
         const date = new Date(value);
         if (!isNaN(date.getTime())) {
           return date.toISOString().slice(0, 19).replace('T', ' ');
@@ -124,7 +113,6 @@ export class KnexMysql2 extends DataSourceAdapter {
 
       return value;
     }
-    // TODO: Or Convert to JSON here
     
     return value;
   }

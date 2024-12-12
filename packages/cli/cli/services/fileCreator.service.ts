@@ -105,7 +105,7 @@ export class FileCreator {
    * @param dataSourceType The type of the data source.
    * @returns The path to the data source file.
    */
-  public addDataSource (dataSourceType: DataSourceType, data: Record<string, any> = {}): string {
+  public addDataSource (dataSourceType: DataSourceType, data: Record<string, unknown> = {}): string {
     const dataSourceTypeData = dataSourcesTypeData[dataSourceType];
     const { fileTemplateName } = dataSourceTypeData;
 
@@ -217,8 +217,8 @@ export class FileCreator {
    * @param filePath The file path
    * @param vars The variables to replace in the template
    */
-  private createFileFromTemplate (templateKey: keyof typeof FileTemplateManager.templates, filePath: string, vars?: Record<string, any>): void {
-    const fileContent = this.fileTemplateManager.getTemplate(templateKey, vars = {});
+  private createFileFromTemplate (templateKey: keyof typeof FileTemplateManager.templates, filePath: string): void {
+    const fileContent = this.fileTemplateManager.getTemplate(templateKey, {});
     this.writeFile(filePath, fileContent);
   }
 

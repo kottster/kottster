@@ -27,7 +27,7 @@ export async function addDataSource (dataSourceType: DataSourceType, options: Op
   }
 
   if (!options.skipFileGeneration) {
-    let data: Record<string, any> = {}; 
+    let data: Record<string, unknown> = {}; 
     try {
       data = options.data ? JSON.parse(options.data) : {};
     } catch (error) {

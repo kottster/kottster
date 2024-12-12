@@ -355,7 +355,7 @@ export class FileTemplateManager {
    */
   public getTemplate<T extends keyof TemplateVars>(
     name: T,
-    vars?: TemplateVars[T]
+    vars: TemplateVars[T] = {} as TemplateVars[T]
   ): string {
     const template = FileTemplateManager.templates[name];
     if (!template) {
@@ -363,7 +363,7 @@ export class FileTemplateManager {
     }
     
     if (typeof template === 'function') {
-      return template(this.usingTsc, vars as any);
+      return template(this.usingTsc, vars as TemplateVars[T]);
     }
 
     return template;

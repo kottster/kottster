@@ -24,6 +24,7 @@ export class DevSyncRunner {
     // Run the executable code
     const process = spawn('node', [
       '--no-warnings',
+      '--max-http-header-size=10485760', // 10MB
       '--input-type=module',
       '-e',
       this.getExecutableCode()

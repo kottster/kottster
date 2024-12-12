@@ -1,8 +1,7 @@
 import path from 'path'
 import fs from 'fs'
-import { DataSourceType } from '@kottster/common'
+import { dataSourcesTypeData, DataSourceType } from '@kottster/common'
 import { FileTemplateManager } from './fileTemplateManager.service'
-import dataSourcesTypeData from '../constants/dataSourceTypeData'
 
 interface FileCreatorOptions {
   projectDir?: string
@@ -106,7 +105,7 @@ export class FileCreator {
    * @param dataSourceType The type of the data source.
    * @returns The path to the data source file.
    */
-  public addDataSource (dataSourceType: DataSourceType): string {
+  public addDataSource (dataSourceType: DataSourceType, data: Record<string, any> = {}): string {
     const dataSourceTypeData = dataSourcesTypeData[dataSourceType];
     const { fileTemplateName } = dataSourceTypeData;
 
@@ -115,66 +114,15 @@ export class FileCreator {
 
     // Create file
     const filePath = path.join(this.projectDir, `app/.server/data-sources/${dataSourceType}`, `index.${this.jsExt}`)
-    const fileContent = this.fileTemplateManager.getTemplate(fileTemplateName);
+    const fileContent = this.fileTemplateManager.getTemplate(fileTemplateName as keyof typeof FileTemplateManager.templates, data);
     this.writeFile(filePath, fileContent)
 
     // Update app/.server/data-sources/registry.ts
     const registryFilePath = path.join(this.projectDir, 'app/.server/data-sources', `registry.${this.jsExt}`)
-    const registryFileContent = fs.readFileSync(registryFilePath, 'utf8');
-    const updatedRegistryFileContent = this.updateDataSourceRegistryFileContent(
-      registryFileContent, 
-      [
-        `${dataSourceType}DataSource from './${dataSourceType}'`,
-      ],
-      `${dataSourceType}DataSource`,
-    );
-    this.writeFile(registryFilePath, updatedRegistryFileContent);
+    const registryFileContent = this.fileTemplateManager.getTemplate('app/.server/data-sources/registry.js', { dataSourceName: dataSourceType });
+    this.writeFile(registryFilePath, registryFileContent);
 
     return filePath;
-  }
-
-  /**
-   * Update the data source registry file.
-   * @param fileContent The file content.
-   * @param imports The imports to add.
-   * @param newDataSourceName The new data source name.
-   * @param newDataSourceContextToClientItem The new data source context to client entry.
-   * @returns The updated file content.
-   */
-  private updateDataSourceRegistryFileContent(
-    fileContent: string,
-    imports: string[],
-    newDataSourceName: string,
-  ): string {
-    // Add new imports
-    const importRegex = /import.*?from.*?;/g;
-    const existingImports = [...fileContent.matchAll(importRegex)].map(match => match[0]);
-    const lastImportMatch = existingImports.pop();
-
-    if (lastImportMatch) {
-      const insertPosition = fileContent.indexOf(lastImportMatch) + lastImportMatch.length;
-      const newImports = imports
-        .filter(imp => !existingImports.some(existing => existing.includes(imp)))
-        .map(imp => `import ${imp};`)
-        .join('\n');
-      
-      if (newImports) {
-        fileContent = fileContent.slice(0, insertPosition) + '\n' + newImports + fileContent.slice(insertPosition);
-      }
-    }
-  
-    // dataSourceRegistry
-    const dataSourceRegistryRegex = /export const dataSourceRegistry = new DataSourceRegistry\(\[([^\]]*)\]\);/;
-    const dataSourceRegistryMatch = fileContent.match(dataSourceRegistryRegex);
-    if (dataSourceRegistryMatch) {
-      const existingDataSources = dataSourceRegistryMatch[1].trim();
-      const updatedDataSources = existingDataSources
-        ? `${existingDataSources},\n  ${newDataSourceName}`
-        : `\n  ${newDataSourceName}\n`;
-      fileContent = fileContent.replace(dataSourceRegistryRegex, `export const dataSourceRegistry = new DataSourceRegistry([${updatedDataSources}]);`);
-    }
-  
-    return fileContent;
   }
 
   /**
@@ -269,8 +217,8 @@ export class FileCreator {
    * @param filePath The file path
    * @param vars The variables to replace in the template
    */
-  private createFileFromTemplate (templateKey: keyof typeof FileTemplateManager.templates, filePath: string): void {
-    const fileContent = this.fileTemplateManager.getTemplate(templateKey);
+  private createFileFromTemplate (templateKey: keyof typeof FileTemplateManager.templates, filePath: string, vars?: Record<string, any>): void {
+    const fileContent = this.fileTemplateManager.getTemplate(templateKey, vars = {});
     this.writeFile(filePath, fileContent);
   }
 

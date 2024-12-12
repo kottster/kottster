@@ -1,5 +1,48 @@
 import { stripIndent } from "@kottster/common";
 
+type TemplateVars = {
+  'vite.config.ts': undefined;
+  'tsconfig.json': undefined;
+  'app/.server/app.js': undefined;
+  'app/.server/data-sources/postgres/index.js': {
+    connection?: string | {
+      host: string;
+      port: number;
+      user: string;
+      password: string;
+      database: string;
+    };
+    searchPath?: string;
+  };
+  'app/.server/data-sources/mysql/index.js': {
+    connection?: string | {
+      host: string;
+      port: number;
+      user: string;
+      password: string;
+      database: string;
+    };
+  };
+  'app/.server/data-sources/mariadb/index.js': {
+    connection?: string | {
+      host: string;
+      port: number;
+      user: string;
+      password: string;
+      database: string;
+    };
+  };
+  'app/.server/data-sources/mssql/index.js': undefined;
+  'app/.server/data-sources/registry.js': {
+    dataSourceName: string;
+  };
+  'app/root.jsx': undefined;
+  'app/service-route.js': undefined;
+  'app/entry.client.jsx': undefined;
+  'postcss.config.js': undefined;
+  'tailwind.config.ts': undefined;
+};
+
 /**
  * Service for storing file templates
  */
@@ -8,7 +51,11 @@ export class FileTemplateManager {
     private readonly usingTsc: boolean
   ) {}
 
-  static templates = {
+  static templates: {
+    [K in keyof TemplateVars]: TemplateVars[K] extends undefined 
+      ? string | ((usingTsc: boolean) => string)
+      : (usingTsc: boolean, vars: TemplateVars[K]) => string;
+  } = {
     'vite.config.ts': stripIndent(`
       import { vitePlugin as remix } from '@remix-run/dev';
       import { defineConfig } from 'vite';
@@ -93,7 +140,7 @@ export class FileTemplateManager {
       app.registerDataSources(dataSourceRegistry);
     `),
 
-    'app/.server/data-sources/postgres/index.js': (usingTsc: boolean) => stripIndent(`
+    'app/.server/data-sources/postgres/index.js': (usingTsc, vars) => stripIndent(`
       import { createDataSource, KnexPgAdapter } from '@kottster/server';
       import knex from 'knex';
       ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
@@ -101,14 +148,19 @@ export class FileTemplateManager {
         type: ${usingTsc ? `DataSourceType.postgres` : `'postgres'`},
         name: 'postgres',
         init: () => {
-          /**
-           * Replace the following with your connection options.
-           * Read more at https://knexjs.org/guide/#configuration-options
+          /**${!vars.connection ? ` \n           * Replace the following with your connection options. ` : ''}
+           * Learn more at https://knexjs.org/guide/#configuration-options
            */
           const client = knex({
             client: 'pg',
-            connection: 'postgresql://myuser:mypassword@localhost:5432/mydatabase',
-            searchPath: ['public'],
+            connection: ${typeof vars.connection !== 'object' ? `'${vars.connection || 'postgresql://myuser:mypassword@localhost:5432/mydatabase'}',` : `{
+              host: '${vars.connection.host || ''}',
+              port: ${vars.connection.port ? Number(vars.connection.port) : '5432'},
+              user: '${vars.connection.user || ''}',
+              password: '${vars.connection.password || ''}',
+              database: '${vars.connection.database || ''}',
+            },`}
+            searchPath: ['${vars.searchPath || 'public'}'],
           });
 
           return new KnexPgAdapter(client);
@@ -118,7 +170,7 @@ export class FileTemplateManager {
       export default dataSource;
     `),
 
-    'app/.server/data-sources/mysql/index.js': (usingTsc: boolean) => stripIndent(`
+    'app/.server/data-sources/mysql/index.js': (usingTsc, vars) => stripIndent(`
       import { createDataSource, KnexMysql2Adapter } from '@kottster/server';
       import knex from 'knex';
       ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
@@ -126,19 +178,18 @@ export class FileTemplateManager {
         type: ${usingTsc ? `DataSourceType.mysql` : `'mysql'`},
         name: 'mysql',
         init: () => {
+          /**${!vars.connection ? ` \n           * Replace the following with your connection options. ` : ''}
+           * Learn more at https://knexjs.org/guide/#configuration-options
+           */
           const client = knex({
-            /**
-             * Replace the following with your connection options.
-             * Read more at https://knexjs.org/guide/#configuration-options
-             */
             client: 'mysql2',
-            connection: {
-              host: '127.0.0.1',
-              port: 3306,
-              user: 'your_database_user',
-              password: 'your_database_password',
-              database: 'myapp_test',
-            },
+            connection: ${typeof vars.connection === 'string' ? `'${vars.connection}',` : `{
+              host: '${vars.connection?.host || 'localhost'}',
+              port: ${vars.connection?.port ? Number(vars.connection.port) : '3306'},
+              user: '${vars.connection?.user || 'myuser'}',
+              password: '${vars.connection?.password || 'mypassword'}',
+              database: '${vars.connection?.database || 'mydatabase'}',
+            },`}
           });
 
           return new KnexMysql2Adapter(client);
@@ -148,7 +199,7 @@ export class FileTemplateManager {
       export default dataSource;
     `),
 
-    'app/.server/data-sources/mariadb/index.js': (usingTsc: boolean) => stripIndent(`
+    'app/.server/data-sources/mariadb/index.js': (usingTsc, vars) => stripIndent(`
       import { createDataSource, KnexMysql2Adapter } from '@kottster/server';
       import knex from 'knex';
       ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
@@ -156,19 +207,18 @@ export class FileTemplateManager {
         type: ${usingTsc ? `DataSourceType.mariadb` : `'mariadb'`},
         name: 'mariadb',
         init: () => {
+          /**${!vars.connection ? ` \n           * Replace the following with your connection options. ` : ''}
+           * Learn more at https://knexjs.org/guide/#configuration-options
+           */
           const client = knex({
-            /**
-             * Replace the following with your connection options.
-             * Read more at https://knexjs.org/guide/#configuration-options
-             */
             client: 'mysql2',
-            connection: {
-              host: '127.0.0.1',
-              port: 3306,
-              user: 'your_database_user',
-              password: 'your_database_password',
-              database: 'myapp_test',
-            },
+            connection: ${typeof vars.connection === 'string' ? `'${vars.connection}',` : `{
+              host: '${vars.connection?.host || 'localhost'}',
+              port: ${vars.connection?.port ? Number(vars.connection.port) : '3307'},
+              user: '${vars.connection?.user || 'myuser'}',
+              password: '${vars.connection?.password || 'mypassword'}',
+              database: '${vars.connection?.database || 'mydatabase'}',
+            },`}
           });
 
           return new KnexMysql2Adapter(client);
@@ -178,7 +228,7 @@ export class FileTemplateManager {
       export default dataSource;
     `),
 
-    'app/.server/data-sources/mssql/index.js': (usingTsc: boolean) => stripIndent(`
+    'app/.server/data-sources/mssql/index.js': (usingTsc) => stripIndent(`
       import { createDataSource, KnexTediousAdapter } from '@kottster/server';
       import knex from 'knex';
       ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
@@ -189,7 +239,6 @@ export class FileTemplateManager {
         init: () => {
           const client = knex({
             /**
-             * Replace the following with your connection options.
              * Read more at https://knexjs.org/guide/#configuration-options
              */
             client: 'mssql',
@@ -198,7 +247,7 @@ export class FileTemplateManager {
               port: 1433,
               user: 'your_database_user',
               password: 'your_database_password',
-              database: 'myapp_test',
+              database: 'your_database',
             },
           });
 
@@ -209,10 +258,11 @@ export class FileTemplateManager {
       export default dataSource;
     `),
 
-    'app/.server/data-sources/registry.js': stripIndent(`
+    'app/.server/data-sources/registry.js': (_, vars) => stripIndent(`
       import { DataSourceRegistry } from '@kottster/server';
+      ${vars.dataSourceName ? `import ${vars.dataSourceName}DataSource from './${vars.dataSourceName}';` : ''}
 
-      export const dataSourceRegistry = new DataSourceRegistry([]);
+      export const dataSourceRegistry = new DataSourceRegistry([${vars.dataSourceName ? `${vars.dataSourceName}DataSource` : ''}]);
     `),
 
     'app/root.jsx': stripIndent(`
@@ -303,16 +353,19 @@ export class FileTemplateManager {
    * @param vars Variables to replace in the template
    * @returns The file content
    */
-  public getTemplate(name: keyof typeof FileTemplateManager.templates): string {
+  public getTemplate<T extends keyof TemplateVars>(
+    name: T,
+    vars?: TemplateVars[T]
+  ): string {
     const template = FileTemplateManager.templates[name];
     if (!template) {
       throw new Error(`Template ${name} not found`);
     }
     
     if (typeof template === 'function') {
-      return template(this.usingTsc);
+      return template(this.usingTsc, vars as any);
     }
 
     return template;
-  };
+  }
 }

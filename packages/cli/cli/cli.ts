@@ -27,5 +27,8 @@ program
 program
   .command('add-data-source <data-source-type>')
   .description('Add a new data source to the project')
+  .option('--skipInstall', 'Skip installing dependencies')
+  .option('--skipFileGeneration', 'Do not create a file for the data source')
+  .option('--data <json>', 'The stringified JSON data with the connection details', String)
   .allowUnknownOption()
   .action(addDataSource)

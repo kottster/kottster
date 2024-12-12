@@ -4,6 +4,8 @@ import { JsType } from "./js.model";
 export interface RelationalDatabaseSchemaColumn {
   name: string;
   type: string;
+  fullType: string;
+
   /** If true, the column is an array */
   isArray?: boolean;
   formField?: FormField;

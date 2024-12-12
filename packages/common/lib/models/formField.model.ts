@@ -9,6 +9,7 @@ interface BaseFormField {
 
 interface InputField extends BaseFormField {
   type: 'input';
+  maxLength?: number;
 }
 
 interface NumberInputField extends BaseFormField {
@@ -18,6 +19,7 @@ interface NumberInputField extends BaseFormField {
 
 interface TextareaField extends BaseFormField {
   type: 'textarea';
+  maxLength?: number;
 }
 
 interface SelectField extends BaseFormField {
@@ -29,11 +31,6 @@ interface CustomField extends BaseFormField {
   type: 'custom';
   renderComponent: (value: any, onChange: (value: any) => void) => any;
 }
-
-// interface MultipleSelectField extends BaseFormField {
-//   type: 'multipleSelect';
-//   options: SelectOption[];
-// }
 
 interface CheckboxField extends BaseFormField {
   type: 'checkbox';

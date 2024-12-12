@@ -24,8 +24,10 @@ export * from './utils/checkTsUsage';
 export * from './utils/isSchemaEmpty';
 export * from './utils/transformToReadable';
 export * from './utils/isIsoString';
+export * from './utils/removeTrailingZeros';
 
 // Constants
 export * from './constants/dataSourceTypes';
+export * from './constants/dataSourceTypeData';
 export * from './constants/postgres';
 export * from './constants/mysql';

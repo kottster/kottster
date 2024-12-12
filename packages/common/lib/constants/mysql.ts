@@ -1,20 +1,18 @@
 import { JsType } from "../models/js.model"
 
 export enum MysqlBaseType {
+  int = "int",
   bigint = "bigint",
   blob = "blob",
   char = "char",
   datetime = "datetime",
   decimal = "decimal",
   double = "double",
-  enum = "enum",
   float = "float",
-  int = "int",
-  json = "json",
   longblob = "longblob",
   longtext = "longtext",
   mediumblob = "mediumblob",
-  mediumint = "mediumint", 
+  mediumint = "mediumint",
   mediumtext = "mediumtext",
   smallint = "smallint",
   text = "text",
@@ -23,6 +21,13 @@ export enum MysqlBaseType {
   tinyint = "tinyint",
   varbinary = "varbinary",
   varchar = "varchar",
+  enum = "enum",
+  binary = "binary",
+  date = "date",
+  tinyblob = "tinyblob",
+  tinytext = "tinytext",
+  year = "year",
+  json = "json",
 };
 
 export const mysqlBaseTypeToJsType: Record<keyof typeof MysqlBaseType, keyof typeof JsType> = {
@@ -33,8 +38,6 @@ export const mysqlBaseTypeToJsType: Record<keyof typeof MysqlBaseType, keyof typ
   decimal: 'string',
   double: 'number',
   float: 'number',
-  int: 'number',
-  json: 'object',
   longblob: 'buffer',
   longtext: 'string',
   mediumblob: 'buffer',
@@ -42,14 +45,17 @@ export const mysqlBaseTypeToJsType: Record<keyof typeof MysqlBaseType, keyof typ
   mediumtext: 'string',
   smallint: 'number',
   text: 'string',
-  time: 'date',
+  time: 'string',
   timestamp: 'date',
   tinyint: 'number',
   varbinary: 'buffer',
   varchar: 'string',
-  enum: 'string'
+  enum: 'string',
+  binary: 'buffer',
+  date: 'date',
+  tinyblob: 'buffer',
+  tinytext: 'string',
+  year: 'number',
+  json: 'object',
+  int: 'number'
 };
-
-// export const mysqlBaseTypeToArrayReturn: Record<keyof typeof MysqlBaseType, boolean> = {
-
-// };

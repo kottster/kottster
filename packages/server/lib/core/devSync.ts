@@ -17,10 +17,8 @@ export class DevSync {
   constructor() {
     this.usingTsc = checkTsUsage(PROJECT_DIR);
 
-    // Create a server with increased header size limit
-    this.server = createServer({
-      maxHeaderSize: 32 * 1024 // 32KB
-    }, this.handleRequest.bind(this));
+    this.server = createServer({}, this.handleRequest.bind(this));
+    this.server.maxHeadersCount = 10485760; // 10MB
   }
 
   private async handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
@@ -92,8 +90,9 @@ export class DevSync {
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(result));
       } catch (error) {
+        console.error(error);
         res.writeHead(500, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: 'Internal Server Error' }));
+        res.end(JSON.stringify({ error: error instanceof Error ? error.message : 'An error occurred' }));
       }
     });
   }

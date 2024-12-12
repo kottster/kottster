@@ -10,6 +10,8 @@ import { DeletePage } from "../actions/deletePage.action";
 import { DevSync } from "../core/devSync";
 import { KottsterApp } from "../core/app";
 import { InitApp } from "../actions/initApp.action";
+import { AddDataSource } from "../actions/addDataSource.action";
+import { InstallPackagesForDataSource } from "../actions/installPackagesForDataSource.action";
 
 /**
  * Service for working with actions
@@ -42,6 +44,10 @@ export class ActionService {
         return new UpdatePage(ds);
       case 'deletePage':
         return new DeletePage(ds);
+      case 'addDataSource':
+        return new AddDataSource(ds);
+      case 'installPackagesForDataSource':
+        return new InstallPackagesForDataSource(ds);
       default:
         throw new Error(`Action ${action} not found`);
     }

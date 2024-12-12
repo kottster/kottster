@@ -1,9 +1,10 @@
-import { DataSourceAdapterType, FormField, isIsoString, JsType, MysqlBaseType, mysqlBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn } from "@kottster/common";
+import { DataSourceAdapterType, FormField, isIsoString, JsType, MysqlBaseType, mysqlBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, removeTrailingZeros } from "@kottster/common";
 import { DataSourceAdapter } from "../../models/dataSourceAdapter.model";
 import { Knex } from "knex";
 
 export class KnexMysql2 extends DataSourceAdapter {
   type = DataSourceAdapterType.knex_mysql2;
+  
 
   constructor(protected client: Knex) {
     super(client);
@@ -37,15 +38,44 @@ export class KnexMysql2 extends DataSourceAdapter {
         options: column.enumValues?.split(',').map(value => ({ label: value, value })) ?? []
       }
     }
-    else if ([MysqlBaseType.timestamp, MysqlBaseType.datetime,].includes(cleanType as MysqlBaseType)) {
+    else if ([
+      MysqlBaseType.timestamp, 
+      MysqlBaseType.datetime, 
+      MysqlBaseType.date,
+    ].includes(cleanType as MysqlBaseType)) {
       formField = {
         type: 'datePicker',
-        withTime: true,
+        withTime: cleanType === MysqlBaseType.timestamp || cleanType === MysqlBaseType.datetime,
       }
     }
     else if ([MysqlBaseType.time,].includes(cleanType as MysqlBaseType)) {
       formField = {
         type: 'timePicker'
+      }
+    }
+    // Assuming that tinyint(1) is a boolean
+    else if (column.fullType === 'tinyint(1)') {
+      formField = {
+        type: 'checkbox',
+      }
+    }
+    else if (cleanType === MysqlBaseType.char) {
+      formField = {
+        type: 'input',
+        maxLength: 1,
+      }
+    }
+    else if ([
+      MysqlBaseType.text,
+      MysqlBaseType.longtext,
+      MysqlBaseType.mediumtext,
+      MysqlBaseType.json,
+      MysqlBaseType.blob,
+      MysqlBaseType.mediumblob,
+      MysqlBaseType.longblob,
+    ].includes(cleanType as MysqlBaseType)) {
+      formField = {
+        type: 'textarea',
       }
     }
     else {
@@ -86,14 +116,39 @@ export class KnexMysql2 extends DataSourceAdapter {
   }
 
   prepareRecordValue(value: any, columnSchema: RelationalDatabaseSchemaColumn): any {
+    const type = columnSchema.type as MysqlBaseType;
+    
     // If it's a date object, return it as an ISO string
-    if (columnSchema.returnedJsType === JsType.date && value instanceof Date) {
+    if (
+      [
+        MysqlBaseType.timestamp, 
+        MysqlBaseType.datetime, 
+        MysqlBaseType.date, 
+        MysqlBaseType.time
+      ].includes(type) 
+      && value instanceof Date
+    ) {
       return value.toISOString();
     }
 
     // If it's a buffer, return it as a string
-    if (columnSchema.returnedJsType === JsType.buffer && value instanceof Buffer) {
+    if (
+      [
+        MysqlBaseType.blob,
+        MysqlBaseType.longblob,
+        MysqlBaseType.mediumblob,
+        MysqlBaseType.varbinary,
+        MysqlBaseType.binary,
+        MysqlBaseType.tinyblob,
+      ].includes(type) 
+      && value instanceof Buffer
+    ) {
       return value.toString();
+    }
+
+    // Remove the excess decimal points to avoid showing values like 23.000000000000000000000000000000
+    if (type === MysqlBaseType.decimal && typeof value === 'string') {
+      return removeTrailingZeros(value);
     }
     
     return value;
@@ -102,7 +157,12 @@ export class KnexMysql2 extends DataSourceAdapter {
   prepareRecordValueBeforeUpsert(value: any, columnSchema: RelationalDatabaseSchemaColumn): any {
     // Convert ISO string to MySQL datetime format (without timezone)
     if (
-      [MysqlBaseType.timestamp, MysqlBaseType.datetime, MysqlBaseType.time].includes(columnSchema.type as MysqlBaseType)
+      [
+        MysqlBaseType.timestamp, 
+        MysqlBaseType.datetime, 
+        MysqlBaseType.date, 
+        MysqlBaseType.time
+      ].includes(columnSchema.type as MysqlBaseType)
     ) {
       if (isIsoString(value)) {
         const date = new Date(value);
@@ -204,6 +264,7 @@ export class KnexMysql2 extends DataSourceAdapter {
         const column: RelationalDatabaseSchemaColumn = {
           name: columnData.column_name,
           type: columnData.data_type,
+          fullType: columnData.column_type,
           nullable: columnData.is_nullable === 'YES',
           enumValues,
         };

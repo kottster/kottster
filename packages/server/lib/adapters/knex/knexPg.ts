@@ -60,6 +60,24 @@ export class KnexPg extends DataSourceAdapter {
         type: 'timePicker'
       }
     }
+    else if (cleanType === PostgresBaseType.char || cleanType === PostgresBaseType.character) {
+      formField = {
+        type: 'input',
+        maxLength: 1,
+      }
+    }
+    else if ([
+      PostgresBaseType.text,
+      PostgresBaseType.json,
+      PostgresBaseType.jsonb,
+      PostgresBaseType.xml,
+      PostgresBaseType.tsquery,
+      PostgresBaseType.tsvector,
+    ].includes(cleanType as PostgresBaseType)) {
+      formField = {
+        type: 'textarea',
+      }
+    }
     else {
       switch (returnedJsType) {
         case JsType.string:
@@ -100,7 +118,7 @@ export class KnexPg extends DataSourceAdapter {
   async prepareRecordValue(value, columnSchema: RelationalDatabaseSchemaColumn) {
     // If it's an array, but it's returned as a string, parse it
     if (columnSchema.isArray && !columnSchema.returnedAsArray && typeof value === 'string') {
-      // TODO: Try to implement it using pg's `setTypeParser` function
+      // TODO: Implement it using pg's `setTypeParser` function
       // https://github.com/brianc/node-pg-types
       return parsePostgresArray(value);
     }
@@ -242,6 +260,7 @@ export class KnexPg extends DataSourceAdapter {
       const column: RelationalDatabaseSchemaColumn = {
         name: row.column_name,
         type: row.data_type,
+        fullType: row.data_type,
         nullable: row.nullable,
         enumValues: row.enum_values,
       };

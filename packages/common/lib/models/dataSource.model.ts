@@ -3,6 +3,8 @@ export enum DataSourceType {
   mysql = 'mysql',
   mariadb = 'mariadb',
   mssql = 'mssql',
+  mongodb = 'mongodb',
+  sqlite = 'sqlite',
 }
 
 export enum DataSourceAdapterType {

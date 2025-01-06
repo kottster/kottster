@@ -12,6 +12,7 @@ import { KottsterApp } from "../core/app";
 import { InitApp } from "../actions/initApp.action";
 import { AddDataSource } from "../actions/addDataSource.action";
 import { InstallPackagesForDataSource } from "../actions/installPackagesForDataSource.action";
+import { GetProjectSettings } from "../actions/getProjectSettings.action";
 
 /**
  * Service for working with actions
@@ -48,6 +49,8 @@ export class ActionService {
         return new AddDataSource(ds);
       case 'installPackagesForDataSource':
         return new InstallPackagesForDataSource(ds);
+      case 'getProjectSettings':
+        return new GetProjectSettings(ds);
       default:
         throw new Error(`Action ${action} not found`);
     }

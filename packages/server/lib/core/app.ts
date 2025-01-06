@@ -114,9 +114,9 @@ export class KottsterApp {
     let response: InternalApiResponse;
     
     try {
-      const [isTokenValid, newRequest] = await this.ensureValidToken(request);
+      const [isTokenValid, newRequest, errorMessage] = await this.ensureValidToken(request);
       if (!isTokenValid) {
-        return new Response(`Invalid JWT token, please check your app's secret key or reload the page`, { status: 401, headers: commonHeaders });
+        return new Response(`Invalid JWT token: ${errorMessage}. Please check your app's secret key or reload the page.`, { status: 401, headers: commonHeaders });
       }
       
       const { searchParams } = new URL(newRequest.url);
@@ -225,9 +225,9 @@ export class KottsterApp {
   };
 
   private async processTableRpc(dataSource: DataSource, request: Request, tableRpc: TableRpc): Promise<any> {
-    const [isTokenValid, newRequest] = await this.ensureValidToken(request);
+    const [isTokenValid, newRequest, errorMessage] = await this.ensureValidToken(request);
     if (!isTokenValid) {
-      throw new Error('Unauthorized');
+      throw new Error(`Invalid JWT token: ${errorMessage}`);
     }
 
     const body = await newRequest.json() as RPCActionBody<'table_spec' | 'table_select' | 'table_selectLinkedRecords' | 'table_insert' | 'table_update' | 'table_delete'>;
@@ -235,6 +235,13 @@ export class KottsterApp {
 
     try {
       if (body.action === 'table_spec') {
+        // If the table is not specified, return the response without the table schema
+        if (!tableRpc.table) {
+          return {
+            tableRpc,
+          }
+        }
+
         const tableSchema = await dataSourceAdapter.getTableSchema(tableRpc.table);
         if (!tableSchema) {
           return new Response('Table does not exist in the database', { status: 404 });
@@ -283,7 +290,7 @@ export class KottsterApp {
     };
   }
 
-  private async ensureValidToken(request: Request): Promise<[boolean, Request]> {
+  private async ensureValidToken(request: Request): Promise<[boolean, Request] | [boolean, Request, string]> {
     let token = request.headers.get('authorization')?.replace('Bearer ', '');
     if (!token) {
       const cookieHeader = request.headers.get('Cookie');
@@ -291,11 +298,11 @@ export class KottsterApp {
       token = cookieData.jwtToken;
     }
     if (!token) {
-      throw new Error('Invalid JWT token: token not passed');
+      return [false, request, 'Invalid JWT token: token not passed'];
     }
 
     if (!this.secretKey) {
-      throw new Error('Invalid JWT token: secret key not set');
+      return [false, request, 'Invalid JWT token: secret key not set'];
     }
 
     try {
@@ -311,7 +318,7 @@ export class KottsterApp {
       
       return [true, newRequest];
     } catch (error) {
-      return [false, request];
+      return [false, request, error.message];
     }
   }
 

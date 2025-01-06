@@ -129,6 +129,7 @@ export class FileWriter {
    * @param secretKey The secret key
    */
   writeAppServerFileWithSecretKey(secretKey: string): void {
+    
     // TODO: replace with updating the file instead of completely rewriting it
     const content = stripIndent(`
       import { createApp } from '@kottster/server';
@@ -146,7 +147,7 @@ export class FileWriter {
       app.registerDataSources(dataSourceRegistry);
     `);
 
-    const filePath = `${PROJECT_DIR}/app/.server/app.ts`;
+    const filePath = `${PROJECT_DIR}/app/.server/app.${this.usingTsc ? 'ts' : 'js'}`;
     this.writeFile(filePath, content);
   }
 

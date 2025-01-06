@@ -41,24 +41,18 @@ export class FileReader {
    * @returns The page structure or null if the page does not exist
    */
   public getPageFileStructure(pageId: string): PageFileStructure | null {
-    const dir = `${PROJECT_DIR}/app/routes/${pageId}`;
-    const entryFilePath = fs.existsSync(`${dir}/index.tsx`) ? `${dir}/index.tsx` : `${dir}/index.jsx`;
+    const baseFilename = `${PROJECT_DIR}/app/routes/${pageId}`;
+    const entryFilePath = fs.existsSync(`${baseFilename}.tsx`) ? `${baseFilename}.tsx` : `${baseFilename}.jsx`;
 
-    if (!fs.existsSync(dir)) {
+    if (!fs.existsSync(entryFilePath)) {
       return null;
     }
 
-    // Get all files in the directory, except the entry file
-    const dirFilePaths = this.getAllFilePathsInDirectory(dir).filter((filePath) => filePath !== entryFilePath);
-
     const entryFile: File = this.getFileByPath(entryFilePath);
-    const files = dirFilePaths.map((filePath) => this.getFileByPath(filePath));
-
     const pageStructure: PageFileStructure = {
       pageId,
       dirPath: `app/routes/${pageId}`,
       entryFile,
-      files
     };
 
     return pageStructure;
@@ -103,6 +97,7 @@ export class FileReader {
       fileName: path.basename(filePath),
       filePath,
       fileContent: fs.readFileSync(filePath, 'utf8'),
+      absoluteFilePath,
     };
   }
 

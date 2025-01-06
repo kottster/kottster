@@ -17,8 +17,8 @@ export async function collectNewProjectData(askProjectName: boolean = false): Pr
     {
       type: 'list',
       name: 'language',
-      message: 'Will you be using TypeScript or JavaScript?',
-      choices: ['TypeScript', 'JavaScript'],
+      message: 'Will you be using JavaScript or TypeScript?',
+      choices: ['JavaScript', 'TypeScript'],
     },
     {
       type: 'list',

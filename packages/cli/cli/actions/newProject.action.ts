@@ -33,7 +33,7 @@ export async function newProject (projectName: string | undefined, options: Opti
     // Create project files
     const fileCreator = new FileCreator({
       projectDir,
-      usingTsc: true,
+      usingTsc: projectSetupData.useTypeScript,
     })
     fileCreator.createProject({
       projectName,

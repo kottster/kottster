@@ -56,7 +56,7 @@ export class FileTemplateManager {
       ? string | ((usingTsc: boolean) => string)
       : (usingTsc: boolean, vars: TemplateVars[K]) => string;
   } = {
-    'vite.config.ts': stripIndent(`
+    'vite.config.ts': (usingTsc) => stripIndent(`
       import { vitePlugin as remix } from '@remix-run/dev';
       import { defineConfig } from 'vite';
       import tsconfigPaths from 'vite-tsconfig-paths';
@@ -72,8 +72,8 @@ export class FileTemplateManager {
             },
             routes(defineRoutes) {
               return defineRoutes((route) => {
-                route('/auth/*', 'service-route.ts', { id: 'auth' }),
-                route('/-/*', 'service-route.ts', { id: 'service' })
+                route('/auth/*', 'service-route.${usingTsc ? 'ts' : 'js'}', { id: 'auth' }),
+                route('/-/*', 'service-route.${usingTsc ? 'ts' : 'js'}', { id: 'service' })
               });
             },
           }),
@@ -291,16 +291,16 @@ export class FileTemplateManager {
       export { App as ErrorBoundary };
     `),
 
-    'app/service-route.js': stripIndent(`
-      import { app } from '@/.server/app';
+    'app/service-route.js': (usingTsc) => stripIndent(`
+      import { app } from './.server/app';
       import { SpecialRoutePage } from '@kottster/react';
-      import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';
+      ${usingTsc ? `import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';` : ''}
 
-      export const loader = async (args: LoaderFunctionArgs) => {
+      export const loader = async (args${usingTsc ? ': LoaderFunctionArgs' : ''}) => {
         return app.createServiceRouteLoader()(args);
       };
 
-      export const action = async (args: ActionFunctionArgs) => {
+      export const action = async (args${usingTsc ? ': ActionFunctionArgs' : ''}) => {
         return app.createServiceRouteLoader()(args);
       };
 

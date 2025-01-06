@@ -74,7 +74,6 @@ export class FileCreator {
     this.createGitIgnore()
     
     // Create files
-    this.createFileFromTemplate('tsconfig.json', path.join(this.projectDir, 'tsconfig.json'));
     this.createFileFromTemplate('vite.config.ts', path.join(this.projectDir, 'vite.config.ts'));
     this.createFileFromTemplate('postcss.config.js', path.join(this.projectDir, 'postcss.config.js'));
     this.createFileFromTemplate('tailwind.config.ts', path.join(this.projectDir, 'tailwind.config.ts'));
@@ -83,6 +82,9 @@ export class FileCreator {
     this.createFileFromTemplate('app/service-route.js', path.join(this.projectDir, `app/service-route.${this.jsExt}`));
     this.createFileFromTemplate('app/.server/app.js', path.join(this.projectDir, `app/.server/app.${this.jsExt}`));
     this.createFileFromTemplate('app/.server/data-sources/registry.js', path.join(this.projectDir, `app/.server/data-sources/registry.${this.jsExt}`));
+    if (this.usingTsc) {
+      this.createFileFromTemplate('tsconfig.json', path.join(this.projectDir, 'tsconfig.json'));
+    }
     
     this.createSchema()
   }
@@ -94,7 +96,7 @@ export class FileCreator {
   private getTypescriptDependencies(): Record<string, string> {
     return {
       'typescript': '^5.x',
-      '@types/node': '^18.x',
+      '@types/node': '^20.x',
       '@types/react': '^18.x',
       '@types/react-dom': "^18.x",
     };

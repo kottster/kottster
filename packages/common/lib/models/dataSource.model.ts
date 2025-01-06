@@ -20,10 +20,10 @@ export interface DataSourceTypeInfo {
   isActive: boolean;
 }
 
-export interface DataSource {
+export interface DataSource<T = any> {
   type: DataSourceType;
   name: string;
-  adapter: any;
+  adapter: T;
 
   // Only for database data sources
   databaseSchemas?: string[];

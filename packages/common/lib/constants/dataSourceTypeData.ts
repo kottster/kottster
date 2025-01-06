@@ -12,7 +12,7 @@ const knexPackages: Record<string, string> = {
   'knex': '^3.x',
 };
 
-export const dataSourcesTypeData: Record<DataSourceType, DataSourceTypeData> = {
+export const dataSourcesTypeData: Record<string, DataSourceTypeData> = {
   [DataSourceType.postgres]: {
     packages: {
       ...knexPackages,

@@ -25,14 +25,22 @@ export interface TableRpcInputSelect extends TableRpcInputBase {
   tableSchema: RelationalDatabaseSchemaTable;
 }
 
+export interface TableRpcInputSelectUsingExecuteQuery extends TableRpcInputBase {
+  page?: number;
+  search?: string;
+}
+
 export interface TableRpcInputSelectLinkedRecords extends TableRpcInputBase {
-  linkedItemIndex: number;
+  linkedItemKey: string;
   
   page: number;
   search?: string;
   
   // For selecting particular records
   primaryKeyValues?: (string | number)[];
+
+  // For selecting linked records
+  foreignKeyValues?: (string | number)[];
 }
 
 export interface TableRpcInputInsert extends TableRpcInputBase {
@@ -71,6 +79,9 @@ export interface TableRpcLinkedTableOneToOne {
   
   /** Optional array of column names from the target table that can be used for searching */
   searchableColumns?: string[];
+
+  /** TODO: Optional object to specify nested linked tables */
+  linked?: Record<string, TableRpcLinkedTable>;
 }
 
 export interface TableRpcLinkedTableOneToMany {
@@ -92,39 +103,39 @@ export interface TableRpcLinkedTableOneToMany {
   
   /** Optional array of column names from the target table that can be used for filtering/searching */
   searchableColumns?: string[];
-
-  /** Optional number of records to select from the target table when joining */
-  previewMaxRecords: number;
 }
 
-// TODO: will be implemented later
-// export interface TableRpcSelectLinkedTableManyToMany {
-//   /** Specifies the type of relationship between tables */
-//   relation: 'manyToMany';
-  
-//   /** Name of the intermediate table that connects the source and target tables */
-//   junctionTableName: string;
-  
-//   /** The column in the junction table that references the source table's primary key */
-//   sourceColumnInJunction: string;
-  
-//   /** The column in the junction table that references the target table's primary key */
-//   targetColumnInJunction: string;
-  
-//   /** Name of the target table being referenced through the junction table */
-//   targetTable: string;
-  
-//   /** Optional array of column names to select from the target table. 
-//    * If not provided, all columns will be selected */
-//   columns?: string[];
-  
-//   /** Optional array of column names from the target table that can be used for filtering/searching */
-//   searchableColumns?: string[];
-// }
+export interface TableRpcLinkedTableManyToMany {
+  /** Specifies the type of relationship between tables */
+  relation: 'manyToMany';
 
-export type TableRpcLinkedTable = TableRpcLinkedTableOneToOne | TableRpcLinkedTableOneToMany;
+  /** Name of the table being referenced/joined */
+  targetTable: string;
+
+  /** The primary key column in the target table */
+  targetTableKeyColumn: string;
+  
+  /** Name of the intermediate table that connects the source and target tables */
+  junctionTable: string;
+
+  /** The foreign key column in the junction table that references the source table's primary key */
+  junctionTableSourceKeyColumn: string;
+
+  /** The foreign key column in the junction table that references the target table's primary key */
+  junctionTableTargetKeyColumn: string
+  
+  /** Optional array of column names to select from the target table. 
+   * If not provided, all columns will be selected */
+  columns?: string[];
+  
+  /** Optional array of column names from the target table that can be used for filtering/searching */
+  searchableColumns?: string[];
+}
+
+export type TableRpcLinkedTable = TableRpcLinkedTableOneToOne | TableRpcLinkedTableOneToMany | TableRpcLinkedTableManyToMany;
 
 export interface TableRpcSelect {
+  pageSize?: number;
   columns?: string[];
   excludeColumns?: string[];
   sortableColumns?: string[];
@@ -140,7 +151,7 @@ export interface TableRpcSelect {
     column: string;
     direction: 'asc' | 'desc';
   }[];
-  pageSize: number;
+  executeQuery?: (input: TableRpcInputSelectUsingExecuteQuery) => Promise<TableRpcResultSelectDTO>;
 }
 
 export interface TableRpcInsert {
@@ -161,13 +172,15 @@ export interface TableRpcDelete {
 }
 
 export interface TableRpc {
-  primaryKeyColumn: string;
-  table: string;
+  primaryKeyColumn?: string;
+  table?: string;
   select: TableRpcSelect;
   insert?: TableRpcInsert;
   update?: TableRpcUpdate;
   delete?: TableRpcDelete;
-  linked?: TableRpcLinkedTable[];
+
+  /** Optional object to specify linked tables */
+  linked?: Record<string, TableRpcLinkedTable>;
 }
 
 // Public version of TableRpc, available for developers to use
@@ -179,14 +192,19 @@ export interface TableRpcSimplified extends Omit<TableRpc, 'insert' | 'update' |
 
 export type TableRpcResultSelectRecord = Record<string, any>;
 
+export type TableRpcResultSelectRecordLinkedDTO = Record<string, {
+  records?: TableRpcResultSelectRecord[];
+  totalRecords?: number;
+}>;
+
 export interface TableRpcResultSelectDTO {
-  records: TableRpcResultSelectRecord[];
-  totalRecords: number;
+  records?: TableRpcResultSelectRecord[];
+  totalRecords?: number;
 }
 
 export interface TableRpcResultSelectLinkedRecordsDTO {
-  records: TableRpcResultSelectRecord[];
-  totalRecords: number;
+  records?: TableRpcResultSelectRecord[];
+  totalRecords?: number;
 }
 
 export interface TableRpcResultInsertDTO {}

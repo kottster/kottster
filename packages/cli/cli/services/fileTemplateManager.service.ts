@@ -41,6 +41,7 @@ type TemplateVars = {
   'app/entry.client.jsx': undefined;
   'postcss.config.js': undefined;
   'tailwind.config.ts': undefined;
+  'app/tailwind.css': undefined;
 };
 
 /**
@@ -270,6 +271,7 @@ export class FileTemplateManager {
       import { KottsterApp, ClientOnly, getRootLayout } from '@kottster/react';
       import '@kottster/react/dist/style.css';
       import schema from '../app-schema.json';
+      import './tailwind.css';
 
       function ClientApp() {
         return (
@@ -343,6 +345,17 @@ export class FileTemplateManager {
         theme: {},
         plugins: [],
       } satisfies Config;
+    `),
+
+    'app/tailwind.css': stripIndent(`
+      @tailwind base;
+      @tailwind components;
+      @tailwind utilities;
+
+      html,
+      body {
+        @apply bg-white;
+      }
     `),
 
   };

@@ -1,5 +1,6 @@
 import { Knex } from "knex";
 import { DataSourceAdapterType, FormField, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TableRpc, TableRpcInputDelete, TableRpcInputInsert, TableRpcInputSelect, TableRpcInputSelectLinkedRecords, TableRpcInputSelectOperator, TableRpcInputUpdate, TableRpcResultInsertDTO, TableRpcResultSelectDTO, TableRpcResultSelectLinkedRecordsDTO, TableRpcResultSelectRecord, TableRpcResultUpdateDTO, TableRpcSelect, TableRpcLinkedTableOneToOne, TableRpcLinkedTableOneToMany, TableRpcResultSelectRecordLinkedDTO, TableRpcLinkedTable, TableRpcLinkedTableManyToMany, defaultTablePageSize, TableRpcInputSelectUsingExecuteQuery } from "@kottster/common";
+import { KottsterApp } from "../core/app";
 
 /**
  * The base class for all data source adapters
@@ -8,8 +9,16 @@ import { DataSourceAdapterType, FormField, JsType, RelationalDatabaseSchema, Rel
 export abstract class DataSourceAdapter {
   abstract type: DataSourceAdapterType;
   protected databaseSchemas: string[];
+  private app: KottsterApp;
 
   constructor(protected client: Knex) {}
+
+  /**
+   * Set the app instance
+   */
+  public setApp(app: KottsterApp): void {
+    this.app = app;
+  }
 
   /**
    * Get the database schemas
@@ -30,7 +39,7 @@ export abstract class DataSourceAdapter {
    * Get the database schema
    * @returns The database schema
    */
-  abstract getDatabaseSchema(): Promise<RelationalDatabaseSchema>;
+  abstract getDatabaseSchema(tableNames?: string[]): Promise<RelationalDatabaseSchema>;
 
   /**
    * Process the column
@@ -68,7 +77,7 @@ export abstract class DataSourceAdapter {
    * @returns The table schema
    */
   async getTableSchema(tableName: string): Promise<RelationalDatabaseSchemaTable | null> {
-    const schema = await this.getDatabaseSchema();
+    const schema = await this.getDatabaseSchema([tableName]);
     const tableSchema = schema.tables.find(table => table.name === tableName) ?? null;
     
     if (!tableSchema) {
@@ -425,6 +434,9 @@ export abstract class DataSourceAdapter {
   async insertTableRecord(tableRpc: TableRpc, input: TableRpcInputInsert): Promise<TableRpcResultInsertDTO> {
     const { tableSchema } = input;
 
+    if (this.app.readOnlyMode) {
+      throw new Error('Insert operation not permitted in read-only mode');
+    }
     if (!tableRpc.insert) {
       throw new Error('Insert operation not permitted on this table');
     }
@@ -462,6 +474,9 @@ export abstract class DataSourceAdapter {
 
     const { tableSchema } = input;
 
+    if (this.app.readOnlyMode) {
+      throw new Error('Update operation not permitted in read-only mode');
+    }
     if (!tableRpc.update) {
       throw new Error('Update operation not permitted on this table');
     }
@@ -499,6 +514,9 @@ export abstract class DataSourceAdapter {
       throw new Error('Table name or primary key column not provided');
     }
 
+    if (this.app.readOnlyMode) {
+      throw new Error('Delete operation not permitted in read-only mode');
+    }
     if (!tableRpc.delete) {
       throw new Error('Delete operation not permitted on this table');
     }

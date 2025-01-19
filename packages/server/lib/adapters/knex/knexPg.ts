@@ -157,7 +157,7 @@ export class KnexPg extends DataSourceAdapter {
     };
   }
   
-  async getDatabaseSchema(): Promise<RelationalDatabaseSchema> {
+  async getDatabaseSchema(tableNames?: string[]): Promise<RelationalDatabaseSchema> {
     const schemaName = this.databaseSchemas[0];
 
     // Query to get all tables and their columns with enum values, primary keys, and foreign keys
@@ -234,8 +234,18 @@ export class KnexPg extends DataSourceAdapter {
           ON t.table_name = fk.table_name
           AND c.column_name = fk.column_name
       WHERE
-        t.table_schema = COALESCE(?, current_schema());
-    `, [schemaName ?? null, schemaName ?? null, schemaName ?? null]);
+        t.table_schema = COALESCE(?, current_schema())
+        AND (
+          CARDINALITY(?::text[]) = 0
+          OR t.table_name = ANY(?::text[])
+        );
+    `, [
+      schemaName ?? null,
+      schemaName ?? null,
+      schemaName ?? null,
+      tableNames ?? [],
+      tableNames ?? []
+    ]);
 
     const tablesData = tablesQueryResult.rows;
 

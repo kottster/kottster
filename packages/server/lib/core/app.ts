@@ -12,6 +12,18 @@ import { parse as parseCookie } from 'cookie';
 export interface KottsterAppOptions {
   secretKey?: string;
   schema: AppSchema | Record<string, never>;
+
+  /** Enable read-only mode */
+  __readOnlyMode?: boolean;
+
+  /** Custom token validation function */
+  __ensureValidToken?: (request: Request) => Promise<EnsureValidTokenResponse>;
+}
+
+interface EnsureValidTokenResponse {
+  isTokenValid: boolean;
+  newRequest: Request;
+  invalidTokenErrorMessage?: string;
 }
 
 /**
@@ -21,10 +33,12 @@ export class KottsterApp {
   public readonly appId: string;
   private readonly secretKey: string;
   public readonly usingTsc: boolean;
-  public readonly stage: Stage = (process.env.NODE_ENV || 'production') as Stage;  
+  public readonly readOnlyMode: boolean = false;
+  public readonly stage: Stage = (process.env.NODE_ENV || 'production') as Stage;
   public dataSources: DataSource[] = [];
   public schema: AppSchema;
-
+  private customEnsureValidToken?: (request: Request) => Promise<EnsureValidTokenResponse>;
+  
   public extendContext: ExtendAppContextFunction;
 
   constructor(options: KottsterAppOptions) {
@@ -32,6 +46,8 @@ export class KottsterApp {
     this.secretKey = options.secretKey ?? '';
     this.usingTsc = checkTsUsage(PROJECT_DIR);
     this.schema = !isSchemaEmpty(options.schema) ? options.schema : schemaPlaceholder;
+    this.customEnsureValidToken = options.__ensureValidToken;
+    this.readOnlyMode = options.__readOnlyMode ?? false;
   }
 
   /**
@@ -40,6 +56,14 @@ export class KottsterApp {
    */
   public registerDataSources(registry: DataSourceRegistry<{}>) {
     this.dataSources = Object.values(registry.dataSources);
+
+    this.dataSources.forEach(dataSource => {
+      const adapter = dataSource.adapter as DataSourceAdapter;
+
+      if (this) {
+        adapter.setApp(this);
+      };
+    });
   }
 
   /**
@@ -114,9 +138,9 @@ export class KottsterApp {
     let response: InternalApiResponse;
     
     try {
-      const [isTokenValid, newRequest, errorMessage] = await this.ensureValidToken(request);
+      const { isTokenValid, newRequest, invalidTokenErrorMessage } = await this.ensureValidToken(request);
       if (!isTokenValid) {
-        return new Response(`Invalid JWT token: ${errorMessage}. Please check your app's secret key or reload the page.`, { status: 401, headers: commonHeaders });
+        return new Response(`Invalid JWT token: ${invalidTokenErrorMessage}. Please check your app's secret key or reload the page.`, { status: 401, headers: commonHeaders });
       }
       
       const { searchParams } = new URL(newRequest.url);
@@ -225,9 +249,9 @@ export class KottsterApp {
   };
 
   private async processTableRpc(dataSource: DataSource, request: Request, tableRpc: TableRpc): Promise<any> {
-    const [isTokenValid, newRequest, errorMessage] = await this.ensureValidToken(request);
+    const { isTokenValid, newRequest, invalidTokenErrorMessage } = await this.ensureValidToken(request);
     if (!isTokenValid) {
-      throw new Error(`Invalid JWT token: ${errorMessage}`);
+      throw new Error(`Invalid JWT token: ${invalidTokenErrorMessage}`);
     }
 
     const body = await newRequest.json() as RPCActionBody<'table_spec' | 'table_select' | 'table_selectLinkedRecords' | 'table_insert' | 'table_update' | 'table_delete'>;
@@ -290,7 +314,12 @@ export class KottsterApp {
     };
   }
 
-  private async ensureValidToken(request: Request): Promise<[boolean, Request] | [boolean, Request, string]> {
+  private async ensureValidToken(request: Request): Promise<EnsureValidTokenResponse> {
+    // If a custom token validation function is provided, use it
+    if (this.customEnsureValidToken) {
+      return this.customEnsureValidToken(request);
+    }
+
     let token = request.headers.get('authorization')?.replace('Bearer ', '');
     if (!token) {
       const cookieHeader = request.headers.get('Cookie');
@@ -298,11 +327,11 @@ export class KottsterApp {
       token = cookieData.jwtToken;
     }
     if (!token) {
-      return [false, request, 'Invalid JWT token: token not passed'];
+      return { isTokenValid: false, newRequest: request, invalidTokenErrorMessage: 'Invalid JWT token: token not passed' };
     }
 
     if (!this.secretKey) {
-      return [false, request, 'Invalid JWT token: secret key not set'];
+      return { isTokenValid: false, newRequest: request, invalidTokenErrorMessage: 'Invalid JWT token: secret key not set' };
     }
 
     try {
@@ -316,9 +345,9 @@ export class KottsterApp {
       const newRequest = request.clone();
       newRequest.headers.set('x-user', JSON.stringify(user));
       
-      return [true, newRequest];
+      return { isTokenValid: true, newRequest };
     } catch (error) {
-      return [false, request, error.message];
+      return { isTokenValid: false, newRequest: request, invalidTokenErrorMessage: error.message };
     }
   }
 

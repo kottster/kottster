@@ -1,6 +1,6 @@
 {
   "name": "@kottster/server",
-  "version": "1.5.4",
+  "version": "1.5.5",
   "description": "Simple low-code builder for building robust admin dashboards fast",
   "keywords": [
     "admin",
@@ -9,7 +9,8 @@
     "no-code",
     "low-code",
     "builder",
-    "generate"
+    "generate",
+    "crud"
   ],
   "main": "dist/index.js",
   "license": "Apache-2.0",

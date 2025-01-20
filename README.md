@@ -7,7 +7,7 @@ Instant admin panel for your project ⚡
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![GitHub last commit](https://img.shields.io/github/last-commit/kottster/kottster)
 
-[Get Started](https://kottster.gitbook.io/docs) • [Live Demo](https://kottster.gitbook.io/docs) • [Our Website](https://kottster.app) • [Docs](https://kottster.gitbook.io/docs) • [Pricing](https://kottster.app/pricing) 
+[Get Started](https://kottster.gitbook.io/docs) • [Live Demo](https://demo.kottster.app) • [Our Website](https://kottster.app) • [Docs](https://kottster.gitbook.io/docs) • [Pricing](https://kottster.app/pricing) 
 
 ![Intro](/assets/intro-2.png)
 

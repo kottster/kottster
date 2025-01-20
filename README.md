@@ -7,7 +7,7 @@ Instant admin panel for your project ⚡
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![GitHub last commit](https://img.shields.io/github/last-commit/kottster/kottster)
 
-[Website](https://kottster.app) • [Docs](https://kottster.gitbook.io/docs) • [Pricing](https://kottster.app/pricing) 
+[Get Started](https://kottster.gitbook.io/docs) • [Live Demo](https://kottster.gitbook.io/docs) • [Our Website](https://kottster.app) • [Docs](https://kottster.gitbook.io/docs) • [Pricing](https://kottster.app/pricing) 
 
 ![Intro](/assets/intro-2.png)
 
@@ -34,20 +34,7 @@ npm run dev
 
 After running the project, you'll need to log in to your account or create a new one. Once logged in, create an app by specifying its name.
 
-#### 3. Connect the app to your database:
-
-```
-# PostgreSQL
-npm run dev:add-data-source postgres
-
-# MySQL
-npm run dev:add-data-source mysql
-
-# MariaDB
-npm run dev:add-data-source mariadb
-```
-
-After running the command, the new file will be created inside `app/.server/data-sources/` folder. Edit the file to configure the connection to your database, and restart the server.
+#### 3. Connect the app to your database.
 
 #### 4. Start building your app:
 
@@ -60,7 +47,7 @@ After running the command, the new file will be created inside `app/.server/data
 
 - [Docs](https://kottster.gitbook.io/docs)
   - [Quickstart](https://kottster.gitbook.io/docs)
-  - [Build and deploy](https://kottster.gitbook.io/docs/get-started/build-and-deploy)
+  - [Deploy to production](https://kottster.gitbook.io/docs/get-started/deploy-to-production)
  
 ## Need Help?
 

@@ -23,10 +23,6 @@ export class KnexPg extends DataSourceAdapter {
       .split('(')[0]
       .trim();
 
-    if (!Object.values(PostgresBaseType).includes(cleanType as any) && cleanType !== 'user-defined') {
-      console.warn(`Unknown column type: ${cleanType} (${column.type})`);
-    }
-
     const returnedJsType = postgresBaseTypeToJsType[cleanType as keyof typeof PostgresBaseType] ?? JsType.string;
     const returnedAsArray = isArray && (postgresBaseTypeToArrayReturn[cleanType as keyof typeof postgresBaseTypeToArrayReturn] ?? false);
 

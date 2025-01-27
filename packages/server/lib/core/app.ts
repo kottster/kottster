@@ -169,45 +169,56 @@ export class KottsterApp {
   }
 
   /**
-   * Combine multiple RPC functions into one
-   * @param functions The functions to combine
+   * Define a custom controller
+   * @param procedures The procedures
    * @returns The action function
    */
-  public combineRPC(functions: ActionFunction[]): ActionFunction {
-    const funcs: {
-      createTableRpc?: typeof this.createTableRpc,
-    } = {};
-    
-    functions.find(func => {
-      const rpcFunction: 'createTableRpc' | 'createStatRpc' = func['rpcFunction'];
-
-      if (rpcFunction === 'createTableRpc') {
-        funcs.createTableRpc = func;
-      }
-    });
-
+  public defineCustomController(procedures: Record<string, (input: any) => {}>): ActionFunction {
     const func: ActionFunction = async ({ request }) => {
-      const body = await request.clone().json() as RPCActionBody<any>;
-      
-      if ('action' in body && 'input' in body) {
-        if (body.action.startsWith('table_') && funcs.createTableRpc) {
-          return funcs.createTableRpc!({ request });
+      const { isTokenValid, newRequest, invalidTokenErrorMessage } = await this.ensureValidToken(request);
+      if (!isTokenValid) {
+        return new Response(`Invalid JWT token: ${invalidTokenErrorMessage}`, { status: 401 });
+      }
+
+      const body = await newRequest.json() as RPCActionBody<'custom'>;
+      const action = body.action;
+      const { procedure, procedureInput } = body.input;
+
+      if (procedure in procedures) {
+        try {
+          return json({
+            status: 'success',
+            result: await procedures[procedure](procedureInput),
+          });
+        } catch (error) {
+          console.error(`Error executing procedure "${procedure}":`, error);
+          return json({
+            status: 'error',
+            error: error.message,
+          });
         }
       }
 
-      return new Response('Bad request', { status: 400 });
+      return new Response(`Unknown procedure: ${action}`, { status: 404 });
     };
 
     return func;
   }
 
   /**
-   * Create a table RPC function
+   * @deprecated Use defineTableController instead
+   */
+  public createTableRpc(dataSource: DataSource, tableRpc: TableRpcSimplified) {
+    return this.defineTableController(dataSource, tableRpc);
+  }
+
+  /**
+   * Define a table controller
    * @param dataSource The data source
    * @param tableRpcSimplified The table RPC
    * @returns The action function
    */
-  public createTableRpc(
+  public defineTableController(
     dataSource: DataSource, 
     tableRpcSimplified: TableRpcSimplified
   ): ActionFunction {
@@ -222,7 +233,7 @@ export class KottsterApp {
       let response: RPCResponse;
       
       try {
-        const res = await this.processTableRpc(dataSource, request, tableRpc);
+        const res = await this.processTableControllerRequest(dataSource, request, tableRpc);
         response = {
           status: 'success',
           result: res,
@@ -248,7 +259,7 @@ export class KottsterApp {
     return func;
   };
 
-  private async processTableRpc(dataSource: DataSource, request: Request, tableRpc: TableRpc): Promise<any> {
+  private async processTableControllerRequest(dataSource: DataSource, request: Request, tableRpc: TableRpc): Promise<any> {
     const { isTokenValid, newRequest, invalidTokenErrorMessage } = await this.ensureValidToken(request);
     if (!isTokenValid) {
       throw new Error(`Invalid JWT token: ${invalidTokenErrorMessage}`);

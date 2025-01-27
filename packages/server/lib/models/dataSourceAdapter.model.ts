@@ -331,7 +331,12 @@ export abstract class DataSourceAdapter {
         if (!columnSchema) {
           preparedRecord[key] = value;
         } else {
-          preparedRecord[key] = await this.prepareRecordValue(value, columnSchema);
+          try {
+            preparedRecord[key] = await this.prepareRecordValue(value, columnSchema);
+          } catch (e) {
+            console.error('Error preparing record value:', e);
+            preparedRecord[key] = value;
+          }
         };
       }));
 

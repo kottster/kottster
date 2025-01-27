@@ -1,6 +1,6 @@
 {
   "name": "@kottster/server",
-  "version": "1.5.5",
+  "version": "1.5.6",
   "description": "Simple low-code builder for building robust admin dashboards fast",
   "keywords": [
     "admin",
@@ -31,7 +31,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.2.0",
-    "@kottster/common": "^1.5.5",
+    "@kottster/common": "^1.5.6",
     "@remix-run/node": "^2.14.0",
     "@trpc/server": "^10.45.2",
     "@types/dotenv": "^8.2.0",

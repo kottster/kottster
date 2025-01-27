@@ -7,7 +7,7 @@ Instant admin panel for your project ⚡
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![GitHub last commit](https://img.shields.io/github/last-commit/kottster/kottster)
 
-[Get Started](https://kottster.gitbook.io/docs) • [Live Demo](https://demo.kottster.app) • [Our Website](https://kottster.app) • [Docs](https://kottster.gitbook.io/docs) • [Pricing](https://kottster.app/pricing) 
+[Get Started](https://docs.kottster.app/) • [Live Demo](https://demo.kottster.app) • [Our Website](https://kottster.app) • [Docs](https://docs.kottster.app/) • [Pricing](https://kottster.app/pricing) 
 
 ![Intro](/assets/intro-2.png)
 
@@ -41,13 +41,13 @@ After running the project, you'll need to log in to your account or create a new
 - Use our builder to instantly generate pages based on your database.
 - Or, create and customize pages on your own.
 
-#### 5. [Deploy your app to production](https://kottster.gitbook.io/docs/get-started/build-and-deploy) when it's ready.
+#### 5. [Deploy your app to production](https://docs.kottster.app/deploying) when it's ready.
 
 ## Resources
 
-- [Docs](https://kottster.gitbook.io/docs)
-  - [Quickstart](https://kottster.gitbook.io/docs)
-  - [Deploy to production](https://kottster.gitbook.io/docs/get-started/deploy-to-production)
+- [Docs](https://docs.kottster.app/)
+  - [Quickstart](https://docs.kottster.app/)
+  - [Deploy to production](https://docs.kottster.app/deploying)
  
 ## Need Help?
 

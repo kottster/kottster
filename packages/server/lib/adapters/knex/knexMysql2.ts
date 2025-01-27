@@ -191,7 +191,7 @@ export class KnexMysql2 extends DataSourceAdapter {
     };
   }
 
-  async getDatabaseSchema(): Promise<RelationalDatabaseSchema> {
+  async getDatabaseSchema(tableNames?: string[]): Promise<RelationalDatabaseSchema> {
     const schemaName = this.databaseSchemas[0];
 
     const tablesResult = await this.client!.raw(`
@@ -209,6 +209,11 @@ export class KnexMysql2 extends DataSourceAdapter {
 
     for (const table of tables) {
       const tableName = table.table_name;
+
+      // Skip if tableNames is provided and the current table is not in the list
+      if (tableNames && !tableNames.includes(tableName)) {
+        continue;
+      }
 
       // Get column info including primary key
       const columnsResult = await this.client!.raw(`

@@ -31,4 +31,5 @@ export * from './constants/dataSourceTypes';
 export * from './constants/dataSourceTypeData';
 export * from './constants/postgres';
 export * from './constants/mysql';
+export * from './constants/sqlite';
 export * from './constants/table';

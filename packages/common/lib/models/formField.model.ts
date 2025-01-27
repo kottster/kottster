@@ -29,7 +29,14 @@ interface SelectField extends BaseFormField {
 
 interface CustomField extends BaseFormField {
   type: 'custom';
-  renderComponent: (value: any, onChange: (value: any) => void) => any;
+  renderComponent: (
+    value: any, 
+    onChange: (value: any) => void,
+    params: {
+      hasError: boolean;
+      readOnly: boolean;
+    }
+  ) => any;
 }
 
 interface CheckboxField extends BaseFormField {

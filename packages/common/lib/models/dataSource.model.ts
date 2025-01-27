@@ -5,12 +5,14 @@ export enum DataSourceType {
   mssql = 'mssql',
   mongodb = 'mongodb',
   sqlite = 'sqlite',
+  firebase = 'firebase',
 }
 
 export enum DataSourceAdapterType {
   knex_pg = 'knex_pg', // PostgreSQL
   knex_mysql2 = 'knex_mysql2', // MySQL, MariaDB
   knex_tedious = 'knex_tedious', // MSSQL
+  knex_better_sqlite3 = 'knex_better_sqlite3', // SQLite
 }
 
 export interface DataSourceTypeInfo {

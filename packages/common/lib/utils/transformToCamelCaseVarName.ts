@@ -6,5 +6,6 @@ export function transformToCamelCaseVarName(input: string): string {
   return input
     .replace(/[^a-zA-Z0-9]+(.)/g, (_, char) => char.toUpperCase())
     .replace(/^[^a-zA-Z]+/, '')
-    .replace(/^[A-Z]/, char => char.toLowerCase());
+    .replace(/^[A-Z]/, char => char.toLowerCase())
+    .trim();
 }

@@ -20,6 +20,12 @@ export const dataSourceTypes: DataSourceTypeInfo[] = [
     isActive: true,
   },
   {
+    type: DataSourceType.sqlite,
+    name: 'SQLite',
+    icon: 'https://web.kottster.app/icons/sqlite.svg',
+    isActive: true,
+  },
+  {
     type: DataSourceType.mssql,
     name: 'MS SQL',
     icon: 'https://web.kottster.app/icons/mssql.svg',
@@ -32,9 +38,9 @@ export const dataSourceTypes: DataSourceTypeInfo[] = [
     isActive: false,
   },
   {
-    type: DataSourceType.sqlite,
-    name: 'SQLite',
-    icon: 'https://web.kottster.app/icons/sqlite.svg',
+    type: DataSourceType.firebase,
+    name: 'Firebase',
+    icon: 'https://web.kottster.app/icons/firebase.svg',
     isActive: false,
   },
 ];

@@ -45,6 +45,14 @@ export const dataSourcesTypeData: Record<string, DataSourceTypeData> = {
     fileTemplateName: 'app/.server/data-sources/mssql/index.js',
     knexClientStr: 'tedious',
   },
+  [DataSourceType.sqlite]: {
+    packages: {
+      ...knexPackages,
+      'better-sqlite3': '^11.8.1',
+    },
+    fileTemplateName: 'app/.server/data-sources/sqlite/index.js',
+    knexClientStr: 'better-sqlite3',
+  },
 };
 
 export default dataSourcesTypeData;

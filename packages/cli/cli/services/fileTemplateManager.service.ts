@@ -33,6 +33,11 @@ type TemplateVars = {
     };
   };
   'app/.server/data-sources/mssql/index.js': undefined;
+  'app/.server/data-sources/sqlite/index.js': {
+    connection?: {
+      filename: string;
+    };
+  };
   'app/.server/data-sources/registry.js': {
     dataSourceName: string;
   };
@@ -254,6 +259,31 @@ export class FileTemplateManager {
 
           return new KnexTediousAdapter(client);
         }
+      });
+
+      export default dataSource;
+    `),
+
+    'app/.server/data-sources/sqlite/index.js': (usingTsc, vars) => stripIndent(`
+      import { createDataSource, KnexBetterSqlite3Adapter } from '@kottster/server';
+      import knex from 'knex';
+      ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
+      const dataSource = createDataSource({
+        type: ${usingTsc ? `DataSourceType.sqlite` : `'sqlite'`},
+        name: 'sqlite',
+        init: () => {
+          /**${!vars.connection ? ` \n           * Replace the following with your connection options. ` : ''}
+           * Learn more at https://knexjs.org/guide/#configuration-options
+           */
+          const client = knex({
+            client: 'better-sqlite3',
+            connection: {
+              filename: '${vars.connection?.filename || '/path/to/database.sqlite'}',
+            }
+          });
+
+          return new KnexBetterSqlite3Adapter(client);
+        },
       });
 
       export default dataSource;

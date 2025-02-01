@@ -11,3 +11,8 @@ export { createDataSource } from './factories/createDataSource';
 export { KnexPg as KnexPgAdapter } from './adapters/knex/knexPg';
 export { KnexMysql2 as KnexMysql2Adapter } from './adapters/knex/knexMysql2';
 export { KnexBetterSqlite3 as KnexBetterSqlite3Adapter } from './adapters/knex/knexBetterSqlite3';
+
+// Models
+export * from './models/oneToOneRelation';
+export * from './models/oneToManyRelation';
+export * from './models/manyToManyRelation';

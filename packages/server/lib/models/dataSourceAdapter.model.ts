@@ -1,6 +1,9 @@
 import { Knex } from "knex";
-import { DataSourceAdapterType, FormField, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TableRpc, TableRpcInputDelete, TableRpcInputInsert, TableRpcInputSelect, TableRpcInputSelectLinkedRecords, TableRpcInputSelectOperator, TableRpcInputUpdate, TableRpcResultInsertDTO, TableRpcResultSelectDTO, TableRpcResultSelectLinkedRecordsDTO, TableRpcResultSelectRecord, TableRpcResultUpdateDTO, TableRpcSelect, TableRpcLinkedTableOneToOne, TableRpcLinkedTableOneToMany, TableRpcResultSelectRecordLinkedDTO, TableRpcLinkedTable, TableRpcLinkedTableManyToMany, defaultTablePageSize, TableRpcInputSelectUsingExecuteQuery } from "@kottster/common";
+import { DataSourceAdapterType, FormField, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TableRpc, TableRpcInputDelete, TableRpcInputInsert, TableRpcInputSelect, TableRpcInputSelectLinkedRecords, TableRpcInputSelectOperator, TableRpcInputUpdate, TableRpcResultInsertDTO, TableRpcResultSelectDTO, TableRpcResultSelectLinkedRecordsDTO, TableRpcResultSelectRecord, TableRpcResultUpdateDTO, TableRpcSelect, TableRpcResultSelectRecordLinkedDTO, defaultTablePageSize, TableRpcInputSelectUsingExecuteQuery } from "@kottster/common";
 import { KottsterApp } from "../core/app";
+import { OneToOneRelation } from "./oneToOneRelation";
+import { OneToManyRelation } from "./oneToManyRelation";
+import { ManyToManyRelation } from "./manyToManyRelation";
 
 /**
  * The base class for all data source adapters
@@ -179,17 +182,17 @@ export abstract class DataSourceAdapter {
     const linkedOneToOne = Object.fromEntries(
       Object.entries(tableRpc.linked ?? {})
         .filter(([, linkedItem]) => linkedItem.relation === 'oneToOne')
-    ) as Record<string, TableRpcLinkedTableOneToOne>;
+    ) as Record<string, OneToOneRelation>;
     
     const linkedOneToMany = Object.fromEntries(
       Object.entries(tableRpc.linked ?? {})
         .filter(([, linkedItem]) => linkedItem.relation === 'oneToMany')
-    ) as Record<string, TableRpcLinkedTableOneToMany>;
+    ) as Record<string, OneToManyRelation>;
 
     const linkedManyToMany = Object.fromEntries(
       Object.entries(tableRpc.linked ?? {})
         .filter(([, linkedItem]) => linkedItem.relation === 'manyToMany')
-    ) as Record<string, TableRpcLinkedTableManyToMany>;
+    ) as Record<string, ManyToManyRelation>;
     
     // Preload linked one-to-one records
     if (Object.keys(linkedOneToOne).length > 0) {
@@ -357,7 +360,7 @@ export abstract class DataSourceAdapter {
     
     tableRpc.select = tableRpc.select as TableRpcSelect;
 
-    const linkedItem = tableRpc.linked?.[input.linkedItemKey] as TableRpcLinkedTable;
+    const linkedItem = tableRpc.linked?.[input.linkedItemKey] as (OneToManyRelation | ManyToManyRelation);
     if (!linkedItem) {
       throw new Error('Linked item not found');
     }

@@ -1,8 +1,9 @@
 import { DSAction } from "../models/action.model";
+import { FileReader } from "../services/fileReader.service";
 import { FileWriter } from "../services/fileWriter.service";
 
 interface Data {
-  pageId: string;
+  id: string;
 }
 
 /**
@@ -11,9 +12,15 @@ interface Data {
 export class DeletePage extends DSAction {
   public async execute(data: Data) {
     const fileWriter = new FileWriter({ usingTsc: this.ds.usingTsc });
-    const { pageId } = data;
-
-    fileWriter.removePage(pageId);
+    const fileReader = new FileReader();
+    const { id } = data;
+    const appSchema = fileReader.readSchemaJsonFile();
+    
+    // Remove nav item from app schema
+    appSchema.navItems = appSchema.navItems.filter(item => item.id !== id);
+    
+    fileWriter.removePage(id);
+    fileWriter.writeSchemaJsonFile(appSchema);
 
     return null;
   }

@@ -14,6 +14,9 @@ export * from './models/tableRpc.model';
 export * from './models/statRpc.model';
 export * from './models/formField.model';
 export * from './models/js.model';
+export * from './models/oneToOneRelation';
+export * from './models/oneToManyRelation';
+export * from './models/manyToManyRelation';
 
 // Utils
 export * from './utils/getEnvOrThrow';

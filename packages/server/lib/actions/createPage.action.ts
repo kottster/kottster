@@ -1,8 +1,12 @@
+import { PageFileStructure } from "@kottster/common";
 import { DSAction } from "../models/action.model";
+import { FileReader } from "../services/fileReader.service";
 import { FileWriter } from "../services/fileWriter.service";
 
 interface Data {
-  pageId: string;
+  id: string;
+  name?: string;
+  file?: PageFileStructure;
 }
 
 /**
@@ -11,9 +15,22 @@ interface Data {
 export class CreatePage extends DSAction {
   public async execute(data: Data) {
     const fileWriter = new FileWriter({ usingTsc: this.ds.usingTsc });
-    const { pageId } = data;
+    const fileReader = new FileReader();
+    const { id, name } = data;
+    const appSchema = fileReader.readSchemaJsonFile();
 
-    fileWriter.createNewEmptyPage(pageId);
+    // Add new nav item to app schema
+    appSchema.navItems.push({
+      id: id,
+      name: name || id,
+      icon: 'file',
+    });
+
+    fileWriter.createNewEmptyPage(id);
+    fileWriter.writeSchemaJsonFile(appSchema);
+    if (data.file) {
+      fileWriter.writePageToFile(data.file);
+    };
 
     return null;
   }

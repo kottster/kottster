@@ -7,7 +7,7 @@ import { PageFileStructure } from '../models/page.model';
  * @returns The default page structure.
  */
 export function getDefaultPage(pageId: string, usingTsc: boolean): PageFileStructure {
-  const fileContent = `import React from 'react'; \nimport { Page, usePage } from '@kottster/react'; \n\nexport default () => {\n  const { navItem } = usePage();\n\n  return (\n    <Page title={navItem.name}>\n      {/* Add content here */}\n    </Page>\n  );\n};`;
+  const fileContent = `import { Page, usePage } from '@kottster/react'; \n\nexport default () => {\n  const { navItem } = usePage();\n\n  return (\n    <Page title={navItem.name}>\n      {/* Add content here */}\n    </Page>\n  );\n};`;
   const fileName = `${pageId}.${usingTsc ? 'tsx' : 'jsx'}`;
 
   return {

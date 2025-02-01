@@ -8,6 +8,7 @@ interface Data {
 
 /**
  * Update files for pages and procedures
+ * @deprecated Use createPage/updatePage instead
  */
 export class UpdateFiles extends DSAction {
   public async execute(data: Data) {

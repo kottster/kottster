@@ -1,4 +1,7 @@
 import { RelationalDatabaseSchemaTable } from "./databaseSchema.model";
+import { ManyToManyRelationConfig } from "./manyToManyRelation";
+import { OneToManyRelationConfig } from "./oneToManyRelation";
+import { OneToOneRelationConfig } from "./oneToOneRelation";
 
 export interface TableRpcInputBase {}
 
@@ -60,80 +63,6 @@ export interface TableRpcInputDelete extends TableRpcInputBase {
   primaryKeys: any[];
 }
 
-export interface TableRpcLinkedTableOneToOne {
-  /** Specifies the type of relationship between tables */
-  relation: 'oneToOne';
-
-  /** The name of the column in the current table that references the target table's primary key */
-  foreignKeyColumn: string;
-  
-  /** Name of the table being referenced/joined */
-  targetTable: string;
-  
-  /** The foreign key column in the current table that references the target table's primary key */
-  targetTableKeyColumn: string;
-  
-  /** Optional array of column names to select from the target table. 
-   * If not provided, all columns will be selected */
-  columns?: string[];
-  
-  /** Optional array of column names from the target table that can be used for searching */
-  searchableColumns?: string[];
-
-  /** TODO: Optional object to specify nested linked tables */
-  linked?: Record<string, TableRpcLinkedTable>;
-}
-
-export interface TableRpcLinkedTableOneToMany {
-  /** Specifies the type of relationship between tables */
-  relation: 'oneToMany';
-  
-  /** Name of the table being referenced/joined */
-  targetTable: string;
-
-  /** The primary key column in the target table */
-  targetTableKeyColumn: string;
-  
-  /** The foreign key column in the foreign table that references the target table's primary key */
-  targetTableForeignKeyColumn: string;
-  
-  /** Optional array of column names to select from the target table. 
-   * If not provided, all columns will be selected */
-  columns?: string[];
-  
-  /** Optional array of column names from the target table that can be used for filtering/searching */
-  searchableColumns?: string[];
-}
-
-export interface TableRpcLinkedTableManyToMany {
-  /** Specifies the type of relationship between tables */
-  relation: 'manyToMany';
-
-  /** Name of the table being referenced/joined */
-  targetTable: string;
-
-  /** The primary key column in the target table */
-  targetTableKeyColumn: string;
-  
-  /** Name of the intermediate table that connects the source and target tables */
-  junctionTable: string;
-
-  /** The foreign key column in the junction table that references the source table's primary key */
-  junctionTableSourceKeyColumn: string;
-
-  /** The foreign key column in the junction table that references the target table's primary key */
-  junctionTableTargetKeyColumn: string
-  
-  /** Optional array of column names to select from the target table. 
-   * If not provided, all columns will be selected */
-  columns?: string[];
-  
-  /** Optional array of column names from the target table that can be used for filtering/searching */
-  searchableColumns?: string[];
-}
-
-export type TableRpcLinkedTable = TableRpcLinkedTableOneToOne | TableRpcLinkedTableOneToMany | TableRpcLinkedTableManyToMany;
-
 export interface TableRpcSelect {
   pageSize?: number;
   columns?: string[];
@@ -180,7 +109,7 @@ export interface TableRpc {
   delete?: TableRpcDelete;
 
   /** Optional object to specify linked tables */
-  linked?: Record<string, TableRpcLinkedTable>;
+  linked?: Record<string, OneToOneRelationConfig | OneToManyRelationConfig | ManyToManyRelationConfig>;
 }
 
 // Public version of TableRpc, available for developers to use

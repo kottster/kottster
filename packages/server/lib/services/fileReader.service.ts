@@ -1,12 +1,25 @@
 import fs from "fs";
 import { PROJECT_DIR } from "../constants/projectDir";
 import path from "path";
-import { PageFileStructure, File } from "@kottster/common";
+import { PageFileStructure, File, AppSchema } from "@kottster/common";
 
 /**
  * Service for reading files
  */
 export class FileReader {
+
+  /**
+   * Read the schema from the app-schema.json file
+   */
+  public readSchemaJsonFile(): AppSchema {
+    const filePath = `${PROJECT_DIR}/app-schema.json`;
+    if (!fs.existsSync(filePath)) {
+      throw new Error(`File not found: ${filePath}`);
+    }
+
+    const content = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(content);
+  }
 
   /**
    * Read the package.json file

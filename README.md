@@ -19,7 +19,7 @@ Instant admin panel for your project ⚡
 npx @kottster/cli new
 ```
 
-Make sure you have Node.js version 20 or above installed on your system.
+Make sure you have **Node.js (v20 or above)** installed on your system.
 
 ## Next steps
 

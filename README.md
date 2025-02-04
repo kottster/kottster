@@ -9,7 +9,7 @@ Instant admin panel for your project ⚡
 
 [Get Started](https://docs.kottster.app/) • [Live Demo](https://demo.kottster.app) • [Our Website](https://kottster.app) • [Docs](https://docs.kottster.app/) • [Pricing](https://kottster.app/pricing) 
 
-![Intro](/assets/intro-2.png)
+![Intro](/assets/intro-3.png)
 
 ## Getting started
 
@@ -22,7 +22,6 @@ npx @kottster/cli new
 Make sure you have Node.js version 20 or above installed on your system.
 
 ## Next steps
-
 
 #### 1. Inside your project, run the app locally:
 
@@ -38,8 +37,8 @@ After running the project, you'll need to log in to your account or create a new
 
 #### 4. Start building your app:
 
-- Use our builder to instantly generate pages based on your database.
-- Or, create and customize pages on your own.
+- Generate pages for viewing and managing data in your database.
+- Or, create and customize pages from scratch.
 
 #### 5. [Deploy your app to production](https://docs.kottster.app/deploying) when it's ready.
 
@@ -47,6 +46,7 @@ After running the project, you'll need to log in to your account or create a new
 
 - [Docs](https://docs.kottster.app/)
   - [Quickstart](https://docs.kottster.app/)
+  - [Tutorial (5 min)](https://docs.kottster.app/tutorial/)
   - [Deploy to production](https://docs.kottster.app/deploying)
  
 ## Need Help?

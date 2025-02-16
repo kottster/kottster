@@ -25,7 +25,16 @@ export interface TableRpcInputSelect extends TableRpcInputBase {
     value: any;
   }[];
 
+  /** Table schema of the table to select from */
   tableSchema: RelationalDatabaseSchemaTable;
+  
+  /** If selecting records from linked table */
+  linkedItemKey?: string;
+
+  /** For selecting particular records */
+  primaryKeyValues?: (string | number)[];
+
+  foreignKeyValues?: (string | number)[];
 }
 
 export interface TableRpcInputSelectUsingExecuteQuery extends TableRpcInputBase {
@@ -33,17 +42,17 @@ export interface TableRpcInputSelectUsingExecuteQuery extends TableRpcInputBase 
   search?: string;
 }
 
-export interface TableRpcInputSelectLinkedRecords extends TableRpcInputBase {
-  linkedItemKey: string;
-  
-  page: number;
-  search?: string;
-  
-  // For selecting particular records
+export interface TableRpcInputSelectSingle extends TableRpcInputBase {
+  /** If selecting records from linked table */
+  linkedItemKey?: string;
+
+  /** For selecting particular records */
   primaryKeyValues?: (string | number)[];
 
-  // For selecting linked records
-  foreignKeyValues?: (string | number)[];
+  /** Table schema of the table to select from */
+  tableSchema: RelationalDatabaseSchemaTable;
+
+  forPreview?: boolean;
 }
 
 export interface TableRpcInputInsert extends TableRpcInputBase {
@@ -70,7 +79,6 @@ export interface TableRpcSelect {
   sortableColumns?: string[];
   searchableColumns?: string[];
   filterableColumns?: string[];
-  columnsOrder?: string[];
   where?: {
     column: string;
     operator: '=' | '>' | '>=' | '<' | '<=' | '<>';
@@ -100,19 +108,20 @@ export interface TableRpcDelete {
   canBeDeleted?: (record: Record<string, any>) => boolean;
 }
 
+export type LinkedItem = OneToOneRelationConfig | OneToManyRelationConfig | ManyToManyRelationConfig;
+
 export interface TableRpc {
-  primaryKeyColumn?: string;
-  table?: string;
+  primaryKeyColumn: string;
+  table: string;
   select: TableRpcSelect;
   insert?: TableRpcInsert;
   update?: TableRpcUpdate;
   delete?: TableRpcDelete;
 
   /** Optional object to specify linked tables */
-  linked?: Record<string, OneToOneRelationConfig | OneToManyRelationConfig | ManyToManyRelationConfig>;
+  linked?: Record<string, LinkedItem>;
 }
 
-// Public version of TableRpc, available for developers to use
 export interface TableRpcSimplified extends Omit<TableRpc, 'insert' | 'update' | 'delete'> {
   insert?: boolean | TableRpc['insert'];
   update?: boolean | TableRpc['update'];
@@ -131,9 +140,8 @@ export interface TableRpcResultSelectDTO {
   totalRecords?: number;
 }
 
-export interface TableRpcResultSelectLinkedRecordsDTO {
-  records?: TableRpcResultSelectRecord[];
-  totalRecords?: number;
+export interface TableRpcResultSelectSingleDTO {
+  record: TableRpcResultSelectRecord;
 }
 
 export interface TableRpcResultInsertDTO {}

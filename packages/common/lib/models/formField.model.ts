@@ -45,6 +45,7 @@ interface CheckboxField extends BaseFormField {
 
 interface RecordSelectField extends BaseFormField {
   type: 'recordSelect';
+  linkedKey?: string;
 }
 
 interface DatePickerField extends BaseFormField {

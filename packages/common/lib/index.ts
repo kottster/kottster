@@ -28,6 +28,8 @@ export * from './utils/isSchemaEmpty';
 export * from './utils/transformToReadable';
 export * from './utils/isIsoString';
 export * from './utils/removeTrailingZeros';
+export * from './utils/findLinkedItem';
+export * from './utils/getPrimaryKeyColumnFromLinkedItem';
 
 // Constants
 export * from './constants/dataSourceTypes';

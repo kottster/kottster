@@ -129,7 +129,6 @@ export class FileWriter {
    * @param secretKey The secret key
    */
   writeAppServerFileWithSecretKey(secretKey: string): void {
-    
     // TODO: replace with updating the file instead of completely rewriting it
     const content = stripIndent(`
       import { createApp } from '@kottster/server';

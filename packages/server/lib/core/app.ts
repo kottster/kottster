@@ -1,6 +1,6 @@
 import { ExtendAppContextFunction } from '../models/appContext.model';
 import { PROJECT_DIR } from '../constants/projectDir';
-import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, TableRpc, RPCActionBody, TableRpcInputSelect, TableRpcInputDelete, TableRpcInputUpdate, TableRpcInputInsert, isSchemaEmpty, RPCResponse, schemaPlaceholder, InternalApiResponse, TableRpcInputSelectLinkedRecords, TableRpcSimplified } from '@kottster/common';
+import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, TableRpc, RPCActionBody, TableRpcInputSelect, TableRpcInputDelete, TableRpcInputUpdate, TableRpcInputInsert, isSchemaEmpty, RPCResponse, schemaPlaceholder, InternalApiResponse, TableRpcSimplified, TableSpec, TableRpcInputSelectSingle } from '@kottster/common';
 import { DataSourceRegistry } from './dataSourceRegistry';
 import { ActionService } from '../services/action.service';
 import * as jose from 'jose';
@@ -265,7 +265,7 @@ export class KottsterApp {
       throw new Error(`Invalid JWT token: ${invalidTokenErrorMessage}`);
     }
 
-    const body = await newRequest.json() as RPCActionBody<'table_spec' | 'table_select' | 'table_selectLinkedRecords' | 'table_insert' | 'table_update' | 'table_delete'>;
+    const body = await newRequest.json() as RPCActionBody<'table_spec' | 'table_select' | 'table_selectOne' | 'table_insert' | 'table_update' | 'table_delete'>;
     const dataSourceAdapter = dataSource.adapter as DataSourceAdapter;
 
     try {
@@ -274,23 +274,38 @@ export class KottsterApp {
         if (!tableRpc.table) {
           return {
             tableRpc,
-          }
+          } as TableSpec;
         }
 
-        const tableSchema = await dataSourceAdapter.getTableSchema(tableRpc.table);
+        // Get all linked table names
+        // TODO: collect all linked tables recursively to support more than 2 levels of linked
+        const linkedTableNames: string[] = [];
+        Object.entries(tableRpc.linked ?? {}).forEach(([, linkedTable]) => {
+          linkedTableNames.push(linkedTable.targetTable);
+
+          Object.entries(linkedTable.linked ?? {}).forEach(([, linkedTable]) => {
+            linkedTableNames.push(linkedTable.targetTable);
+          });
+        });
+
+        const tableSchemas = await dataSourceAdapter.getTableSchemas([...new Set([tableRpc.table, ...(linkedTableNames ?? [])])]);
+        const tableSchema = tableSchemas.find(schema => schema.name === tableRpc.table);
+        const linkedTableSchemas = tableSchemas.filter(schema => linkedTableNames?.includes(schema.name));
+
         if (!tableSchema) {
           return new Response('Table does not exist in the database', { status: 404 });
         }
         
         return { 
           tableRpc,
-          tableSchema 
-        };
+          tableSchema,
+          linkedTableSchemas, 
+        } as TableSpec;
       } else if (body.action === 'table_select') {
         const result = await dataSourceAdapter.getTableRecords(tableRpc, body.input as TableRpcInputSelect);
         return result;
-      } else if (body.action === 'table_selectLinkedRecords') {
-        const result = await dataSourceAdapter.getLinkedTableRecords(tableRpc, body.input as TableRpcInputSelectLinkedRecords);
+      } else if (body.action === 'table_selectOne') {
+        const result = await dataSourceAdapter.getOneTableRecord(tableRpc, body.input as TableRpcInputSelectSingle);
         return result;
       } else if (body.action === 'table_insert') {
         const result = await dataSourceAdapter.insertTableRecord(tableRpc, body.input as TableRpcInputInsert);

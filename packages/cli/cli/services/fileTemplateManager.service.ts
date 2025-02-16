@@ -75,6 +75,8 @@ export class FileTemplateManager {
               v3_fetcherPersist: true,
               v3_relativeSplatPath: true,
               v3_throwAbortReason: true,
+              v3_lazyRouteDiscovery: false,
+              v3_singleFetch: false,
             },
             routes(defineRoutes) {
               return defineRoutes((route) => {

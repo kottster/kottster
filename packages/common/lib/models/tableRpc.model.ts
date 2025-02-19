@@ -111,8 +111,8 @@ export interface TableRpcDelete {
 export type LinkedItem = OneToOneRelationConfig | OneToManyRelationConfig | ManyToManyRelationConfig;
 
 export interface TableRpc {
-  primaryKeyColumn: string;
-  table: string;
+  primaryKeyColumn?: string;
+  table?: string;
   select: TableRpcSelect;
   insert?: TableRpcInsert;
   update?: TableRpcUpdate;

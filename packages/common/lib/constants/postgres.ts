@@ -1,3 +1,4 @@
+import { ContentHint } from "../models/contentHint.model";
 import { JsType } from "../models/js.model";
 
 export enum PostgresBaseType {
@@ -193,4 +194,32 @@ export const postgresBaseTypeToArrayReturn: Record<keyof typeof PostgresBaseType
   xid: false,
   xid8: false,
   xml: false
+};
+
+export const postgresBaseTypesByContentHint: Record<keyof typeof ContentHint, PostgresBaseType[]> = {
+  string: [
+    PostgresBaseType.text, 
+    PostgresBaseType.character_varying, 
+    PostgresBaseType.character, 
+    PostgresBaseType.name
+  ],
+  number: [
+    PostgresBaseType.integer, 
+    PostgresBaseType.bigint, 
+    PostgresBaseType.real, 
+    PostgresBaseType.double_precision, 
+    PostgresBaseType.numeric, 
+    PostgresBaseType.smallint,
+  ],
+  boolean: [
+    PostgresBaseType.boolean
+  ],
+  date: [
+    PostgresBaseType.date,
+    PostgresBaseType.time_with_time_zone, 
+    PostgresBaseType.time_without_time_zone,
+    PostgresBaseType.timestamp_with_time_zone,
+    PostgresBaseType.timestamp_without_time_zone,
+    PostgresBaseType.interval,
+  ],
 };

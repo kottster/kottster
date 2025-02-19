@@ -1,3 +1,4 @@
+import { ContentHint } from "../models/contentHint.model";
 import { JsType } from "../models/js.model"
 
 export enum MysqlBaseType {
@@ -58,4 +59,34 @@ export const mysqlBaseTypeToJsType: Record<keyof typeof MysqlBaseType, keyof typ
   year: 'number',
   json: 'object',
   int: 'number'
+};
+
+export const mysqlBaseTypesByContentHint: Record<keyof typeof ContentHint, MysqlBaseType[]> = {
+  string: [
+    MysqlBaseType.char, 
+    MysqlBaseType.varchar, 
+    MysqlBaseType.text, 
+    MysqlBaseType.longtext, 
+    MysqlBaseType.mediumtext, 
+    MysqlBaseType.tinytext
+  ],
+  number: [
+    MysqlBaseType.tinyint, 
+    MysqlBaseType.smallint, 
+    MysqlBaseType.mediumint, 
+    MysqlBaseType.int, 
+    MysqlBaseType.bigint, 
+    MysqlBaseType.float, 
+    MysqlBaseType.double, 
+    MysqlBaseType.decimal
+  ],
+  boolean: [
+    MysqlBaseType.tinyint
+  ],
+  date: [
+    MysqlBaseType.time, 
+    MysqlBaseType.date, 
+    MysqlBaseType.datetime, 
+    MysqlBaseType.timestamp
+  ],
 };

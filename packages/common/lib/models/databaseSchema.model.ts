@@ -1,3 +1,4 @@
+import { ContentHint } from "./contentHint.model";
 import { FormField } from "./formField.model";
 import { JsType } from "./js.model";
 
@@ -27,6 +28,8 @@ export interface RelationalDatabaseSchemaColumn {
     table: string;
     column: string;
   };
+
+  contentHint?: keyof typeof ContentHint;
 }
 
 export interface RelationalDatabaseSchemaTable {

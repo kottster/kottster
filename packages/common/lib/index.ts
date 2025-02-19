@@ -30,6 +30,9 @@ export * from './utils/isIsoString';
 export * from './utils/removeTrailingZeros';
 export * from './utils/findLinkedItem';
 export * from './utils/getPrimaryKeyColumnFromLinkedItem';
+export * from './utils/findNameLikeColumns';
+export * from './utils/sortColumnsByPriority';
+export * from './utils/getLabelFromForeignKeyColumnName';
 
 // Constants
 export * from './constants/dataSourceTypes';

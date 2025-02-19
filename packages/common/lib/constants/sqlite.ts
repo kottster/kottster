@@ -1,3 +1,4 @@
+import { ContentHint } from "../models/contentHint.model";
 import { JsType } from "../models/js.model";
 
 export enum SqliteBaseType {
@@ -58,4 +59,38 @@ export const sqliteBaseTypeToJsType: Record<keyof typeof SqliteBaseType, keyof t
   boolean: 'number',
   date: 'string',
   datetime: 'string'
+};
+
+export const sqliteBaseTypesByContentHint: Record<keyof typeof ContentHint, SqliteBaseType[]> = {
+  string: [
+    SqliteBaseType.character, 
+    SqliteBaseType.varchar, 
+    SqliteBaseType.varying_character, 
+    SqliteBaseType.nchar, 
+    SqliteBaseType.native_character, 
+    SqliteBaseType.nvarchar, 
+    SqliteBaseType.text, 
+    SqliteBaseType.clob
+  ],
+  number: [
+    SqliteBaseType.int, 
+    SqliteBaseType.integer, 
+    SqliteBaseType.tinyint, 
+    SqliteBaseType.smallint, 
+    SqliteBaseType.mediumint, 
+    SqliteBaseType.bigint, 
+    SqliteBaseType.unsigned_big_int, 
+    SqliteBaseType.int2, 
+    SqliteBaseType.int8, 
+    SqliteBaseType.numeric, 
+    SqliteBaseType.decimal, 
+    SqliteBaseType.boolean
+  ],
+  boolean: [
+    SqliteBaseType.boolean
+  ],
+  date: [
+    SqliteBaseType.date, 
+    SqliteBaseType.datetime
+  ],
 };

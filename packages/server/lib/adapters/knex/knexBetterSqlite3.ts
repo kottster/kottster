@@ -1,6 +1,7 @@
-import { DataSourceAdapterType, FormField, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, SqliteBaseType, sqliteBaseTypeToJsType } from "@kottster/common";
+import { DataSourceAdapterType, FormField, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, SqliteBaseType, sqliteBaseTypesByContentHint, sqliteBaseTypeToJsType } from "@kottster/common";
 import { DataSourceAdapter } from "../../models/dataSourceAdapter.model";
 import { Knex } from "knex";
+import { ContentHint } from "@kottster/common/dist/models/contentHint.model";
 
 export class KnexBetterSqlite3 extends DataSourceAdapter {
   type = DataSourceAdapterType.knex_better_sqlite3;
@@ -17,6 +18,7 @@ export class KnexBetterSqlite3 extends DataSourceAdapter {
       .split('(')[0]                  // Remove size notation
       .trim();
 
+    const contentHint = Object.keys(sqliteBaseTypesByContentHint).find(key => sqliteBaseTypesByContentHint[key].includes(cleanType)) as ContentHint | undefined;
     const returnedJsType = sqliteBaseTypeToJsType[cleanType as keyof typeof SqliteBaseType] ?? JsType.string;
     const returnedAsArray = false;
 
@@ -85,6 +87,7 @@ export class KnexBetterSqlite3 extends DataSourceAdapter {
       isArray: false,
       returnedJsType,
       returnedAsArray,
+      contentHint,
       formField: {
         ...formField,
         asArray: false,
@@ -200,11 +203,12 @@ export class KnexBetterSqlite3 extends DataSourceAdapter {
           };
         }
 
-        const { isArray, returnedAsArray, returnedJsType, formField } = this.processColumn(column);
+        const { isArray, returnedAsArray, returnedJsType, formField, contentHint } = this.processColumn(column);
 
         return {
           ...column,
           formField,
+          contentHint,
           isArray,
           returnedJsType,
           returnedAsArray,

@@ -391,11 +391,14 @@ export abstract class DataSourceAdapter {
     const columns = linkedItem ? linkedItem.columns : tableRpc.select.columns;
     const table = linkedItem ? linkedItem.targetTable : tableRpc.table;
     const primaryKeyColumn = linkedItem ? linkedItem.targetTableKeyColumn : tableRpc.primaryKeyColumn;
+    if (!table || !primaryKeyColumn) {
+      throw new Error('Table name or primary key column not provided');
+    }
 
     const query = this.client(table);
 
     // Select specific columns
-    if (columns?.length) {
+    if (columns?.length && !forPreview) {
       const combinedColumns = columns.concat([primaryKeyColumn]) ?? [primaryKeyColumn];
       query.select(combinedColumns.map(column => `${table}.${column}`));
     } else {

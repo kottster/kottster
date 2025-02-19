@@ -1,6 +1,7 @@
-import { DataSourceAdapterType, FormField, isIsoString, JsType, MysqlBaseType, mysqlBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, removeTrailingZeros } from "@kottster/common";
+import { DataSourceAdapterType, FormField, isIsoString, JsType, MysqlBaseType, mysqlBaseTypesByContentHint, mysqlBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, removeTrailingZeros } from "@kottster/common";
 import { DataSourceAdapter } from "../../models/dataSourceAdapter.model";
 import { Knex } from "knex";
+import { ContentHint } from "@kottster/common/dist/models/contentHint.model";
 
 export class KnexMysql2 extends DataSourceAdapter {
   type = DataSourceAdapterType.knex_mysql2;
@@ -23,6 +24,7 @@ export class KnexMysql2 extends DataSourceAdapter {
       .split('(')[0]
       .trim();
 
+    const contentHint = Object.keys(mysqlBaseTypesByContentHint).find(key => mysqlBaseTypesByContentHint[key].includes(cleanType)) as ContentHint | undefined;
     const returnedJsType = mysqlBaseTypeToJsType[cleanType as keyof typeof MysqlBaseType] ?? JsType.string;
     const returnedAsArray = false;
 
@@ -108,6 +110,7 @@ export class KnexMysql2 extends DataSourceAdapter {
       isArray,
       returnedJsType,
       returnedAsArray,
+      contentHint,
       formField: {
         ...formField,
         asArray: isArray ?? undefined,
@@ -287,11 +290,12 @@ export class KnexMysql2 extends DataSourceAdapter {
           };
         }
 
-        const { isArray, returnedAsArray, returnedJsType, formField } = this.processColumn(column);
+        const { isArray, returnedAsArray, returnedJsType, formField, contentHint } = this.processColumn(column);
 
         return {
           ...column,
           formField,
+          contentHint,
           isArray,
           returnedJsType,
           returnedAsArray,

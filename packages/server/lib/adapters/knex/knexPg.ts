@@ -1,7 +1,8 @@
-import { DataSourceAdapterType, FormField, JsType, PostgresBaseType, postgresBaseTypeToArrayReturn, postgresBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn } from "@kottster/common";
+import { DataSourceAdapterType, FormField, JsType, PostgresBaseType, postgresBaseTypesByContentHint, postgresBaseTypeToArrayReturn, postgresBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn } from "@kottster/common";
 import { DataSourceAdapter } from "../../models/dataSourceAdapter.model";
 import { Knex } from "knex";
 import { parse as parsePostgresArray } from 'postgres-array';
+import { ContentHint } from "@kottster/common/dist/models/contentHint.model";
 
 export class KnexPg extends DataSourceAdapter {
   type = DataSourceAdapterType.knex_pg;
@@ -23,6 +24,7 @@ export class KnexPg extends DataSourceAdapter {
       .split('(')[0]
       .trim();
 
+    const contentHint = Object.keys(postgresBaseTypesByContentHint).find(key => postgresBaseTypesByContentHint[key].includes(cleanType)) as ContentHint | undefined;
     const returnedJsType = postgresBaseTypeToJsType[cleanType as keyof typeof PostgresBaseType] ?? JsType.string;
     const returnedAsArray = isArray && (postgresBaseTypeToArrayReturn[cleanType as keyof typeof postgresBaseTypeToArrayReturn] ?? false);
 
@@ -104,6 +106,7 @@ export class KnexPg extends DataSourceAdapter {
       isArray,
       returnedJsType,
       returnedAsArray,
+      contentHint,
       formField: {
         ...formField,
         asArray: isArray ?? undefined,
@@ -284,11 +287,12 @@ export class KnexPg extends DataSourceAdapter {
         };
       }
 
-      const { isArray, returnedAsArray, returnedJsType, formField } = this.processColumn(column);
+      const { isArray, returnedAsArray, returnedJsType, formField, contentHint } = this.processColumn(column);
       
       table.columns.push({
         ...column,
         formField,
+        contentHint,
         isArray,
         returnedJsType,
         returnedAsArray,

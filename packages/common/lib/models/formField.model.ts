@@ -20,6 +20,9 @@ interface NumberInputField extends BaseFormField {
 interface TextareaField extends BaseFormField {
   type: 'textarea';
   maxLength?: number;
+  autoSize?: boolean;
+  minRows?: number;
+  maxRows?: number;
 }
 
 interface SelectField extends BaseFormField {

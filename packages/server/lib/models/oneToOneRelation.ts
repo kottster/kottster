@@ -6,10 +6,6 @@ export class OneToOneRelation implements OneToOneRelationConfig {
   public readonly targetTableKeyColumn: string;
   public readonly foreignKeyColumn: string;
   public readonly previewColumns: string[];
-  public readonly columns?: string[];
-  public readonly searchableColumns?: string[];
-  public readonly sortableColumns?: string[];
-  public readonly filterableColumns?: string[];
   public readonly linked?: Record<string, any>;
 
   constructor(config: Omit<OneToOneRelationConfig, 'relation'>) {
@@ -17,10 +13,6 @@ export class OneToOneRelation implements OneToOneRelationConfig {
     this.targetTableKeyColumn = config.targetTableKeyColumn;
     this.foreignKeyColumn = config.foreignKeyColumn;
     this.previewColumns = config.previewColumns;
-    this.columns = config.columns;
-    this.searchableColumns = config.searchableColumns;
-    this.sortableColumns = config.sortableColumns;
-    this.filterableColumns = config.filterableColumns;
     this.linked = config.linked;
   }
 }

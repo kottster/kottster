@@ -19,18 +19,19 @@ export class CreatePage extends DSAction {
     const { id, name } = data;
     const appSchema = fileReader.readSchemaJsonFile();
 
+    if (data.file) {
+      fileWriter.writePageToFile(data.file);
+    } else {
+      fileWriter.createNewEmptyPage(id);
+    }
+
     // Add new nav item to app schema
     appSchema.navItems.push({
       id: id,
       name: name || id,
       icon: 'file',
     });
-
-    fileWriter.createNewEmptyPage(id);
     fileWriter.writeSchemaJsonFile(appSchema);
-    if (data.file) {
-      fileWriter.writePageToFile(data.file);
-    };
 
     return null;
   }

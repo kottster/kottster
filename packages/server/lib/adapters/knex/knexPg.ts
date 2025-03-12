@@ -46,8 +46,7 @@ export class KnexPg extends DataSourceAdapter {
       PostgresBaseType.timestamp_with_time_zone,
     ].includes(cleanType as PostgresBaseType)) {
       formField = {
-        type: 'datePicker',
-        withTime: cleanType === PostgresBaseType.timestamp_without_time_zone || cleanType === PostgresBaseType.timestamp_with_time_zone,
+        type: (cleanType === PostgresBaseType.timestamp_without_time_zone || cleanType === PostgresBaseType.timestamp_with_time_zone) ? 'dateTimePicker' : 'datePicker',
       }
     }
     else if ([
@@ -156,7 +155,7 @@ export class KnexPg extends DataSourceAdapter {
     };
   }
   
-  async getDatabaseSchema(tableNames?: string[]): Promise<RelationalDatabaseSchema> {
+  async getDatabaseSchemaRaw(tableNames?: string[]): Promise<RelationalDatabaseSchema> {
     const schemaName = this.databaseSchemas[0];
 
     // Query to get all tables and their columns with enum values, primary keys, and foreign keys
@@ -165,7 +164,18 @@ export class KnexPg extends DataSourceAdapter {
         SELECT
           c.table_name,
           c.column_name,
-          pg_get_serial_sequence(c.table_name::text, c.column_name::text) IS NOT NULL as is_auto_increment
+          CASE
+            WHEN EXISTS (
+              SELECT 1 FROM pg_class c2
+              JOIN pg_namespace n ON n.oid = c2.relnamespace
+              JOIN pg_attribute a ON a.attrelid = c2.oid
+              JOIN pg_attrdef d ON d.adrelid = c2.oid AND d.adnum = a.attnum
+              WHERE c2.relname = c.table_name
+                AND a.attname = c.column_name
+                AND pg_get_expr(d.adbin, d.adrelid) LIKE 'nextval%'
+            ) THEN TRUE
+            ELSE FALSE
+          END as is_auto_increment
         FROM
           information_schema.table_constraints tc
           JOIN information_schema.constraint_column_usage ccu 
@@ -243,7 +253,7 @@ export class KnexPg extends DataSourceAdapter {
       schemaName ?? null,
       schemaName ?? null,
       tableNames ?? [],
-      tableNames ?? []
+      tableNames ?? [],
     ]);
 
     const tablesData = tablesQueryResult.rows;

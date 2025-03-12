@@ -46,8 +46,7 @@ export class KnexMysql2 extends DataSourceAdapter {
       MysqlBaseType.date,
     ].includes(cleanType as MysqlBaseType)) {
       formField = {
-        type: 'datePicker',
-        withTime: cleanType === MysqlBaseType.timestamp || cleanType === MysqlBaseType.datetime,
+        type: (cleanType === MysqlBaseType.timestamp || cleanType === MysqlBaseType.datetime) ? 'dateTimePicker' : 'datePicker',
       }
     }
     else if ([MysqlBaseType.time,].includes(cleanType as MysqlBaseType)) {
@@ -194,7 +193,7 @@ export class KnexMysql2 extends DataSourceAdapter {
     };
   }
 
-  async getDatabaseSchema(tableNames?: string[]): Promise<RelationalDatabaseSchema> {
+  async getDatabaseSchemaRaw(tableNames?: string[]): Promise<RelationalDatabaseSchema> {
     const schemaName = this.databaseSchemas[0];
 
     const tablesResult = await this.client!.raw(`

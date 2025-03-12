@@ -1,10 +1,11 @@
-import { DataSource } from "@kottster/common";
+import { DataSource, DataSourceTablesConfig } from "@kottster/common";
 import { DataSourceAdapter } from "../models/dataSourceAdapter.model";
 
 interface CreateDataSource<T extends DataSourceAdapter> {
   type: DataSource['type'];
   name: DataSource['name'];
   init: () => T;
+  tablesConfig: DataSourceTablesConfig;
   
   // Only for database data sources
   databaseSchemas?: DataSource['databaseSchemas'];
@@ -22,6 +23,7 @@ export function createDataSource<T extends DataSourceAdapter>({
   type, 
   name, 
   databaseSchemas, 
+  tablesConfig,
   init 
 }: CreateDataSource<T>): DataSource<T> {
   const adapter = init();
@@ -32,5 +34,6 @@ export function createDataSource<T extends DataSourceAdapter>({
     name,
     databaseSchemas,
     adapter,
+    tablesConfig,
   };
 }

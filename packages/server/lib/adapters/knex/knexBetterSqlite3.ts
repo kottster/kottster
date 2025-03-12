@@ -39,8 +39,7 @@ export class KnexBetterSqlite3 extends DataSourceAdapter {
       SqliteBaseType.datetime,
     ].includes(cleanType as SqliteBaseType)) {
       formField = {
-        type: 'datePicker',
-        withTime: cleanType === SqliteBaseType.datetime,
+        type: cleanType === SqliteBaseType.datetime ? 'dateTimePicker' : 'datePicker',
       }
     }
     else if ([
@@ -140,7 +139,7 @@ export class KnexBetterSqlite3 extends DataSourceAdapter {
     };
   }
   
-  async getDatabaseSchema(tableNames?: string[]): Promise<RelationalDatabaseSchema> {
+  async getDatabaseSchemaRaw(tableNames?: string[]): Promise<RelationalDatabaseSchema> {
     const databaseSchema: RelationalDatabaseSchema = {
       name: 'main', // SQLite's default schema name
       tables: []

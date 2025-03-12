@@ -22,8 +22,9 @@ export class GetDataSourceSchema extends Action {
     try {
       const adapter = dataSource.adapter as DataSourceAdapter;
       const databaseSchema = await adapter.getDatabaseSchema();
+      const cleanDatabaseSchema = adapter.removeExcludedTablesAndColumns(databaseSchema);
       
-      return databaseSchema;
+      return cleanDatabaseSchema;
     } catch (error) {
       throw new Error(`Failed to get database schema: ${error.message}`);
     }

@@ -54,18 +54,27 @@ export class FileReader {
    * @returns The page structure or null if the page does not exist
    */
   public getPageFileStructure(pageId: string): PageFileStructure | null {
-    const baseFilename = `${PROJECT_DIR}/app/routes/${pageId}`;
-    const entryFilePath = fs.existsSync(`${baseFilename}.tsx`) ? `${baseFilename}.tsx` : `${baseFilename}.jsx`;
-
+    const dirPath = `app/routes/${pageId}`;
+    const absoluteDirPath = `${PROJECT_DIR}/${dirPath}`;
+    
+    // Get the entry file path
+    let entryFilePath = fs.existsSync(`${absoluteDirPath}.tsx`) ? `${absoluteDirPath}.tsx` : `${absoluteDirPath}.jsx`;
+    if (!fs.existsSync(entryFilePath)) {
+      entryFilePath = fs.existsSync(`${absoluteDirPath}/index.tsx`) ? `${absoluteDirPath}/index.tsx` : `${absoluteDirPath}/index.jsx`;
+    }
     if (!fs.existsSync(entryFilePath)) {
       return null;
     }
-
+    
+    const filePaths = this.getAllFilePathsInDirectory(absoluteDirPath);
     const entryFile: File = this.getFileByPath(entryFilePath);
+    const files: File[] = filePaths.map((filePath) => this.getFileByPath(filePath)).filter((file) => file.filePath !== entryFilePath);
+
     const pageStructure: PageFileStructure = {
       pageId,
-      dirPath: `app/routes/${pageId}`,
+      dirPath,
       entryFile,
+      files,
     };
 
     return pageStructure;
@@ -77,6 +86,11 @@ export class FileReader {
    * @returns The file paths
    */
   private getAllFilePathsInDirectory(dirPath: string): string[] {
+    // Check if the directory exists
+    if (!fs.existsSync(dirPath)) {
+      return [];
+    }
+    
     const files: string[] = [];
   
     function traverseDir(currentPath: string) {

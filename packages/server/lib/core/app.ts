@@ -1,6 +1,6 @@
 import { ExtendAppContextFunction } from '../models/appContext.model';
 import { PROJECT_DIR } from '../constants/projectDir';
-import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, TableRpc, RPCActionBody, TableRpcInputSelect, TableRpcInputDelete, TableRpcInputUpdate, TableRpcInputInsert, isSchemaEmpty, RPCResponse, schemaPlaceholder, InternalApiResponse, TableRpcSimplified, TableSpec, TableRpcInputSelectSingle } from '@kottster/common';
+import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, TableRpc, RPCActionBody, TableRpcInputSelect, TableRpcInputDelete, TableRpcInputUpdate, TableRpcInputInsert, isSchemaEmpty, RPCResponse, schemaPlaceholder, InternalApiResponse, TableSpec, TableRpcInputSelectSingle, PageSettings, pageSettingsTableRpcKey, PageSettingsWithVersion } from '@kottster/common';
 import { DataSourceRegistry } from './dataSourceRegistry';
 import { ActionService } from '../services/action.service';
 import * as jose from 'jose';
@@ -62,6 +62,7 @@ export class KottsterApp {
 
       if (this) {
         adapter.setApp(this);
+        adapter.setTablesConfig(dataSource.tablesConfig);
       };
     });
   }
@@ -206,13 +207,6 @@ export class KottsterApp {
   }
 
   /**
-   * @deprecated Use defineTableController instead
-   */
-  public createTableRpc(dataSource: DataSource, tableRpc: TableRpcSimplified) {
-    return this.defineTableController(dataSource, tableRpc);
-  }
-
-  /**
    * Define a table controller
    * @param dataSource The data source
    * @param tableRpcSimplified The table RPC
@@ -220,20 +214,20 @@ export class KottsterApp {
    */
   public defineTableController(
     dataSource: DataSource, 
-    tableRpcSimplified: TableRpcSimplified
+    tableRpcOrPageSettings: TableRpc | PageSettingsWithVersion,
   ): ActionFunction {
-    const tableRpc: TableRpc = {
-      ...tableRpcSimplified,
-      insert: typeof tableRpcSimplified.insert === 'boolean' ? (tableRpcSimplified.insert ? {} : undefined) : tableRpcSimplified.insert,
-      update: typeof tableRpcSimplified.update === 'boolean' ? (tableRpcSimplified.update ? {} : undefined) : tableRpcSimplified.update,
-      delete: typeof tableRpcSimplified.delete === 'boolean' ? (tableRpcSimplified.delete ? {} : undefined) : tableRpcSimplified.delete,
-    };
+    // Determine if the input is a PageSettings object or a TableRpc object
+    const pageSettings = pageSettingsTableRpcKey in tableRpcOrPageSettings 
+      ? tableRpcOrPageSettings as PageSettings 
+      : {
+        [pageSettingsTableRpcKey]: tableRpcOrPageSettings,
+      };
 
     const func: ActionFunction = async ({ request }) => {
       let response: RPCResponse;
       
       try {
-        const res = await this.processTableControllerRequest(dataSource, request, tableRpc);
+        const res = await this.processTableControllerRequest(dataSource, request, pageSettings);
         response = {
           status: 'success',
           result: res,
@@ -259,62 +253,39 @@ export class KottsterApp {
     return func;
   };
 
-  private async processTableControllerRequest(dataSource: DataSource, request: Request, tableRpc: TableRpc): Promise<any> {
+  private async processTableControllerRequest(dataSource: DataSource, request: Request, pageSettings: PageSettings): Promise<any> {
+    const tableRpc = pageSettings[pageSettingsTableRpcKey];
+
     const { isTokenValid, newRequest, invalidTokenErrorMessage } = await this.ensureValidToken(request);
     if (!isTokenValid) {
       throw new Error(`Invalid JWT token: ${invalidTokenErrorMessage}`);
     }
 
-    const body = await newRequest.json() as RPCActionBody<'table_spec' | 'table_select' | 'table_selectOne' | 'table_insert' | 'table_update' | 'table_delete'>;
+    const body = await newRequest.json() as RPCActionBody<'page_settings' | 'table_spec' | 'table_select' | 'table_selectOne' | 'table_insert' | 'table_update' | 'table_delete'>;
     const dataSourceAdapter = dataSource.adapter as DataSourceAdapter;
+    const databaseSchema = await dataSourceAdapter.getDatabaseSchema();
 
     try {
-      if (body.action === 'table_spec') {
-        // If the table is not specified, return the response without the table schema
-        if (!tableRpc.table) {
-          return {
-            tableRpc,
-          } as TableSpec;
-        }
-
-        // Get all linked table names
-        // TODO: collect all linked tables recursively to support more than 2 levels of linked
-        const linkedTableNames: string[] = [];
-        Object.entries(tableRpc.linked ?? {}).forEach(([, linkedTable]) => {
-          linkedTableNames.push(linkedTable.targetTable);
-
-          Object.entries(linkedTable.linked ?? {}).forEach(([, linkedTable]) => {
-            linkedTableNames.push(linkedTable.targetTable);
-          });
-        });
-
-        const tableSchemas = await dataSourceAdapter.getTableSchemas([...new Set([tableRpc.table, ...(linkedTableNames ?? [])])]);
-        const tableSchema = tableSchemas.find(schema => schema.name === tableRpc.table);
-        const linkedTableSchemas = tableSchemas.filter(schema => linkedTableNames?.includes(schema.name));
-
-        if (!tableSchema) {
-          return new Response('Table does not exist in the database', { status: 404 });
-        }
-        
-        return { 
+      if (body.action === 'page_settings') {
+        return pageSettings;
+      } else if (body.action === 'table_spec') {
+        return {
           tableRpc,
-          tableSchema,
-          linkedTableSchemas, 
         } as TableSpec;
       } else if (body.action === 'table_select') {
-        const result = await dataSourceAdapter.getTableRecords(tableRpc, body.input as TableRpcInputSelect);
+        const result = await dataSourceAdapter.getTableRecords(body.input as TableRpcInputSelect, databaseSchema);
         return result;
       } else if (body.action === 'table_selectOne') {
-        const result = await dataSourceAdapter.getOneTableRecord(tableRpc, body.input as TableRpcInputSelectSingle);
+        const result = await dataSourceAdapter.getOneTableRecord(body.input as TableRpcInputSelectSingle, databaseSchema);
         return result;
       } else if (body.action === 'table_insert') {
-        const result = await dataSourceAdapter.insertTableRecord(tableRpc, body.input as TableRpcInputInsert);
+        const result = await dataSourceAdapter.insertTableRecord(body.input as TableRpcInputInsert, databaseSchema);
         return result;
       } else if (body.action === 'table_update') {
-        const result = await dataSourceAdapter.updateTableRecords(tableRpc, body.input as TableRpcInputUpdate);
+        const result = await dataSourceAdapter.updateTableRecords(body.input as TableRpcInputUpdate, databaseSchema);
         return result;
       } else if (body.action === 'table_delete') {
-        const result = await dataSourceAdapter.deleteTableRecords(tableRpc, body.input as TableRpcInputDelete);
+        const result = await dataSourceAdapter.deleteTableRecords(body.input as TableRpcInputDelete, databaseSchema);
         return result;
       };
     } catch (error) {

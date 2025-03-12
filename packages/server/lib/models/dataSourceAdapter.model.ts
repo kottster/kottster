@@ -1,5 +1,5 @@
 import { Knex } from "knex";
-import { DataSourceAdapterType, FormField, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TableRpc, TableRpcInputDelete, TableRpcInputInsert, TableRpcInputSelect, TableRpcInputSelectOperator, TableRpcInputUpdate, TableRpcResultInsertDTO, TableRpcResultSelectDTO, TableRpcResultSelectRecord, TableRpcResultUpdateDTO, TableRpcResultSelectRecordLinkedDTO, defaultTablePageSize, TableRpcInputSelectUsingExecuteQuery, TableRpcInputSelectSingle, TableRpcResultSelectSingleDTO, findLinkedItem, getPrimaryKeyColumnFromLinkedItem } from "@kottster/common";
+import { DataSourceAdapterType, FormField, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TableRpcInputDelete, TableRpcInputInsert, TableRpcInputSelect, TableRpcInputSelectOperator, TableRpcInputUpdate, TableRpcResultInsertDTO, TableRpcResultSelectDTO, TableRpcResultSelectRecord, TableRpcResultUpdateDTO, TableRpcResultSelectRecordLinkedDTO, defaultTablePageSize, TableRpcInputSelectUsingExecuteQuery, TableRpcInputSelectSingle, TableRpcResultSelectSingleDTO, findLinkedItem, DataSourceTablesConfig, getTableData } from "@kottster/common";
 import { KottsterApp } from "../core/app";
 import { OneToOneRelation } from "./oneToOneRelation";
 import { OneToManyRelation } from "./oneToManyRelation";
@@ -13,6 +13,8 @@ export abstract class DataSourceAdapter {
   abstract type: DataSourceAdapterType;
   protected databaseSchemas: string[];
   private app: KottsterApp;
+  private tablesConfig: DataSourceTablesConfig;
+  private cachedFullDatabaseSchemaSchema: RelationalDatabaseSchema | null = null;
 
   constructor(protected client: Knex) {}
 
@@ -21,6 +23,13 @@ export abstract class DataSourceAdapter {
    */
   public setApp(app: KottsterApp): void {
     this.app = app;
+  }
+
+  /**
+   * Set the tables config
+   */
+  public setTablesConfig(tablesConfig: DataSourceTablesConfig): void {
+    this.tablesConfig = tablesConfig;
   }
 
   /**
@@ -39,10 +48,55 @@ export abstract class DataSourceAdapter {
   }
 
   /**
+   * Remove excluded tables and columns from the schema
+   * @returns The schema without the excluded tables and columns based on the tables config
+   */
+  public removeExcludedTablesAndColumns(schema: RelationalDatabaseSchema): RelationalDatabaseSchema {
+    if (!this.tablesConfig) {
+      return schema;
+    }
+
+    const tablesConfig = this.tablesConfig;
+    const tables = schema.tables.filter(table => {
+      if (tablesConfig[table.name]?.excluded) {
+        return false;
+      }
+
+      const excludedColumns = tablesConfig[table.name]?.excludedColumns;
+      if (excludedColumns) {
+        table.columns = table.columns.filter(column => !excludedColumns.includes(column.name));
+      }
+
+      return true;
+    });
+
+    return {
+      ...schema,
+      tables,
+    };
+  }
+
+  abstract getDatabaseSchemaRaw(tableNames?: string[]): Promise<RelationalDatabaseSchema>;
+  
+  /**
    * Get the database schema
    * @returns The database schema
    */
-  abstract getDatabaseSchema(tableNames?: string[]): Promise<RelationalDatabaseSchema>;
+  async getDatabaseSchema(tableNames?: string[]): Promise<RelationalDatabaseSchema> {
+    let databaseSchema: RelationalDatabaseSchema;
+  
+    if (tableNames && tableNames.length > 0) {
+      databaseSchema = await this.getDatabaseSchemaRaw(tableNames);
+    } else if (this.cachedFullDatabaseSchemaSchema) {
+      databaseSchema = this.cachedFullDatabaseSchemaSchema;
+    } else {
+      databaseSchema = await this.getDatabaseSchemaRaw();
+      this.cachedFullDatabaseSchemaSchema = this.removeExcludedTablesAndColumns(databaseSchema);
+      return this.cachedFullDatabaseSchemaSchema;
+    }
+    
+    return this.removeExcludedTablesAndColumns(databaseSchema);
+  };
 
   /**
    * Process the column
@@ -93,19 +147,26 @@ export abstract class DataSourceAdapter {
    * Get the table records (Table RPC)
    * @returns The table records
    */
-  async getTableRecords(tableRpc: TableRpc, input: TableRpcInputSelect): Promise<TableRpcResultSelectDTO> {
-    const linkedItem = input.linkedItemKey ? tableRpc.linked?.[input.linkedItemKey] : null;
-    const primaryKeyColumn = linkedItem ? getPrimaryKeyColumnFromLinkedItem(linkedItem) : tableRpc.primaryKeyColumn;
-    const executeQuery = linkedItem ? null : tableRpc.select.executeQuery;
-    const table = linkedItem ? linkedItem.targetTable : tableRpc.table;
-    const columns = linkedItem ? linkedItem.columns : tableRpc.select.columns;
-    const searchableColumns = linkedItem ? linkedItem.searchableColumns : tableRpc.select.searchableColumns;
-    const sortableColumns = linkedItem ? linkedItem.sortableColumns : tableRpc.select.sortableColumns;
-    const filterableColumns = linkedItem ? linkedItem.filterableColumns : tableRpc.select.filterableColumns;
-    const where = linkedItem ? [] : tableRpc.select.where;
-    const orderBy = linkedItem ? [] : tableRpc.select.orderBy;
-    const pageSize = linkedItem ? defaultTablePageSize : (tableRpc.select.pageSize || defaultTablePageSize);
-    const linked = linkedItem ? linkedItem.linked : tableRpc.linked;
+  async getTableRecords(input: TableRpcInputSelect, databaseSchema: RelationalDatabaseSchema): Promise<TableRpcResultSelectDTO> {
+    const { tableRpc } = input;
+    const { 
+      linked, 
+      tableSchema, 
+      searchableColumns, 
+      sortableColumns, 
+      filterableColumns,
+      primaryKeyColumn,
+    } = getTableData({ tableRpc, databaseSchema });
+    if (!tableSchema) {
+      throw new Error('Table schema not provided');
+    }
+
+    const executeQuery = tableRpc.executeQuery;
+    const table = tableRpc.table;
+    const columns = tableRpc.columns;
+    const where = tableRpc.where;
+    const orderBy = tableRpc.orderBy;
+    const pageSize = (tableRpc.pageSize || defaultTablePageSize);
     
     // If a custom query is provided, execute it and return the result directly
     if (executeQuery) {
@@ -115,21 +176,21 @@ export abstract class DataSourceAdapter {
     if (!table || !primaryKeyColumn) {
       throw new Error('Table name or primary key column not provided');
     }
+
+    if (this.tablesConfig[table]?.excluded) {
+      throw new Error(`Access to the table "${table}" is restricted`);
+    }
     
-    const { tableSchema } = input;
     const query = this.client(table);
     const countQuery = this.client(table);
 
-    // If primary key values are provided, filter by them
-    if (input.primaryKeyValues && linkedItem) {
-      query.whereIn(linkedItem.targetTableKeyColumn, input.primaryKeyValues);
-      countQuery.whereIn(linkedItem.targetTableKeyColumn, input.primaryKeyValues);
-    }
-
-    // If foreign key values are provided and the relation is one-to-many, filter by them
-    if (input.foreignKeyValues && linkedItem?.relation === 'oneToMany') {
-      query.whereIn(linkedItem.targetTableForeignKeyColumn, input.foreignKeyValues);
-      countQuery.whereIn(linkedItem.targetTableForeignKeyColumn, input.foreignKeyValues);
+    // Selecting records by a specific foreign record
+    if (input.getByForeignRecord) {
+      const { linkedItem, recordPrimaryKeyValue } = input.getByForeignRecord;
+      if (linkedItem.relation === 'oneToMany') {
+        query.where(linkedItem.targetTableForeignKeyColumn, recordPrimaryKeyValue);
+        countQuery.where(linkedItem.targetTableForeignKeyColumn, recordPrimaryKeyValue);
+      }
     }
 
     // Select specific columns
@@ -203,6 +264,15 @@ export abstract class DataSourceAdapter {
       countQuery
     ]);
 
+    // If excluded columns are provided, remove them from all records
+    if (this.tablesConfig[table]?.excludedColumns) {
+      records.forEach(record => {
+        this.tablesConfig[table].excludedColumns?.forEach(column => {
+          delete record[column];
+        });
+      });
+    }
+
     const linkedOneToOne = Object.fromEntries(
       Object.entries(linked ?? {})
         .filter(([, linkedItem]) => linkedItem.relation === 'oneToOne')
@@ -250,6 +320,15 @@ export abstract class DataSourceAdapter {
           .client(linkedItem.targetTable)
           .select(linkedItem.previewColumns ? [linkedItem.targetTableKeyColumn, ...linkedItem.previewColumns] : [linkedItem.targetTableKeyColumn])
           .whereIn(linkedItem.targetTableKeyColumn, values);
+
+        // If excluded columns are provided, remove them from all records
+        if (this.tablesConfig[linkedItem.targetTable]?.excludedColumns) {
+          foreignRecords.forEach(record => {
+            this.tablesConfig[linkedItem.targetTable].excludedColumns?.forEach(column => {
+              delete record[column];
+            });
+          });
+        }
 
         linkedTableRecords[linkedItem.targetTable] = foreignRecords;
       }));
@@ -380,19 +459,28 @@ export abstract class DataSourceAdapter {
    * @description Used for one-to-one RecordSelect fields
    * @returns The table record
    */
-  async getOneTableRecord(tableRpc: TableRpc, input: TableRpcInputSelectSingle): Promise<TableRpcResultSelectSingleDTO> {
-    const { linkedItemKey, primaryKeyValues, forPreview, tableSchema } = input;
-    const linkedItem = linkedItemKey ? findLinkedItem(linkedItemKey, tableRpc.linked) : null;
-    
-    if ((linkedItemKey && !linkedItem) || !primaryKeyValues?.length) {
+  async getOneTableRecord(input: TableRpcInputSelectSingle, databaseSchema: RelationalDatabaseSchema): Promise<TableRpcResultSelectSingleDTO> {
+    const { linkedItemKey, primaryKeyValues, forPreview, tableRpc } = input;
+    const { linked, tableSchema, primaryKeyColumn: tableRpcPrimaryKeyColumn } = getTableData({ tableRpc, databaseSchema });
+    if (!tableSchema) {
+      throw new Error('Table schema not provided');
+    }
+
+    const linkedItem = linkedItemKey ? findLinkedItem(linkedItemKey, linked) : null;
+    if ((linkedItemKey && !linkedItem) || (linkedItem && linkedItem.relation !== 'oneToOne') || !primaryKeyValues?.length) {
       throw new Error('Invalid primary key values or linked item key');
     }
     
-    const columns = linkedItem ? linkedItem.columns : tableRpc.select.columns;
+    const columns = tableRpc.columns;
     const table = linkedItem ? linkedItem.targetTable : tableRpc.table;
-    const primaryKeyColumn = linkedItem ? linkedItem.targetTableKeyColumn : tableRpc.primaryKeyColumn;
+    const primaryKeyColumn = linkedItem ? linkedItem.targetTableKeyColumn : tableRpcPrimaryKeyColumn;
+    
     if (!table || !primaryKeyColumn) {
       throw new Error('Table name or primary key column not provided');
+    }
+
+    if (this.tablesConfig[table]?.excluded) {
+      throw new Error(`Access to the table "${table}" is restricted`);
     }
 
     const query = this.client(table);
@@ -418,6 +506,17 @@ export abstract class DataSourceAdapter {
     }
 
     const record = await query.first();
+    if (!record) {
+      throw new Error('Record not found');
+    }
+
+    // If excluded columns are provided, remove them from the record
+    if (this.tablesConfig[table]?.excludedColumns) {
+      this.tablesConfig[table].excludedColumns.forEach(column => {
+        delete record[column];
+      });
+    }
+
     const [preparedRecord] = await this.prepareRecords([record], tableSchema);
     
     return {
@@ -429,34 +528,42 @@ export abstract class DataSourceAdapter {
    * Insert the table records (Table RPC)
    * @returns The table records
    */
-  async insertTableRecord(tableRpc: TableRpc, input: TableRpcInputInsert): Promise<TableRpcResultInsertDTO> {
-    const { tableSchema } = input;
+  async insertTableRecord(input: TableRpcInputInsert, databaseSchema: RelationalDatabaseSchema): Promise<TableRpcResultInsertDTO> {
+    const { tableRpc } = input;
+    const { tableSchema, allowInsert, primaryKeyColumn } = getTableData({ tableRpc, databaseSchema });
+    const table = tableRpc.table;
 
+    if (!table || !primaryKeyColumn) {
+      throw new Error('Table name or primary key column not provided');
+    }
+    if (this.tablesConfig[table]?.excluded || this.tablesConfig[table]?.preventInsert) {
+      throw new Error(`Access to the table "${table}" is restricted`);
+    }
     if (this.app.readOnlyMode) {
       throw new Error('Insert operation not permitted in read-only mode');
     }
-    if (!tableRpc.insert) {
+    if (!allowInsert) {
       throw new Error('Insert operation not permitted on this table');
     }
 
     // Check if the record can be inserted
-    if (tableRpc.insert.canBeInserted && !tableRpc.insert.canBeInserted(input.values)) {
+    if (tableRpc.canBeInserted && !tableRpc.canBeInserted(input.values)) {
       throw new Error('Record cannot be inserted');
     }
 
     // Pre-process the input values
-    if (tableRpc.insert.beforeInsert) {
-      input.values = await tableRpc.insert.beforeInsert(input.values);
+    if (tableRpc.beforeInsert) {
+      input.values = await tableRpc.beforeInsert(input.values);
     } else {
       for (const key in input.values) {
-        const columnSchema = tableSchema.columns.find(column => column.name === key);
+        const columnSchema = tableSchema?.columns.find(column => column.name === key);
         if (columnSchema) {
           input.values[key] = await this.prepareRecordValueBeforeUpsert(input.values[key], columnSchema);
         }
       }
     }
 
-    await this.client(tableRpc.table).insert(input.values);
+    await this.client(table).insert(input.values);
 
     return {};
   }
@@ -465,39 +572,43 @@ export abstract class DataSourceAdapter {
    * Update the table records (Table RPC)
    * @returns The table records
    */
-  async updateTableRecords(tableRpc: TableRpc, input: TableRpcInputUpdate): Promise<TableRpcResultUpdateDTO> {
-    if (!tableRpc.table || !tableRpc.primaryKeyColumn) {
+  async updateTableRecords(input: TableRpcInputUpdate, databaseSchema: RelationalDatabaseSchema): Promise<TableRpcResultUpdateDTO> {
+    const { tableRpc } = input;
+    const { tableSchema, allowUpdate, primaryKeyColumn } = getTableData({ tableRpc, databaseSchema });
+    const table = tableRpc.table;
+
+    if (!table || !primaryKeyColumn) {
       throw new Error('Table name or primary key column not provided');
     }
-
-    const { tableSchema } = input;
-
+    if (this.tablesConfig[table]?.excluded || this.tablesConfig[table]?.preventUpdate) {
+      throw new Error(`Access to the table "${table}" is restricted`);
+    }
     if (this.app.readOnlyMode) {
       throw new Error('Update operation not permitted in read-only mode');
     }
-    if (!tableRpc.update) {
+    if (!allowUpdate) {
       throw new Error('Update operation not permitted on this table');
     }
 
     // Check if the record can be updated
-    if (tableRpc.update.canBeUpdated && !tableRpc.update.canBeUpdated(input.values)) {
+    if (tableRpc.canBeUpdated && !tableRpc.canBeUpdated(input.values)) {
       throw new Error('Record cannot be updated');
     }
 
     // Pre-process the input values
-    if (tableRpc.update.beforeUpdate) {
-      input.values = await tableRpc.update.beforeUpdate(input.values);
+    if (tableRpc.beforeUpdate) {
+      input.values = await tableRpc.beforeUpdate(input.values);
     } else {
       for (const key in input.values) {
-        const columnSchema = tableSchema.columns.find(column => column.name === key);
+        const columnSchema = tableSchema?.columns.find(column => column.name === key);
         if (columnSchema) {
           input.values[key] = await this.prepareRecordValueBeforeUpsert(input.values[key], columnSchema);
         }
       }
     }
 
-    await this.client(tableRpc.table)
-      .whereIn(tableRpc.primaryKeyColumn, input.primaryKeys)
+    await this.client(table)
+      .whereIn(primaryKeyColumn, input.primaryKeys)
       .update(input.values);
 
     return {};
@@ -507,25 +618,31 @@ export abstract class DataSourceAdapter {
    * Delete the table records (Table RPC)
    * @returns The table records
    */
-  async deleteTableRecords(tableRpc: TableRpc, input: TableRpcInputDelete): Promise<true> {
-    if (!tableRpc.table || !tableRpc.primaryKeyColumn) {
+  async deleteTableRecords(input: TableRpcInputDelete, databaseSchema: RelationalDatabaseSchema): Promise<true> {
+    const { tableRpc } = input;
+    const { allowDelete, primaryKeyColumn } = getTableData({ tableRpc, databaseSchema });
+    const table = tableRpc.table;
+
+    if (!table || !primaryKeyColumn) {
       throw new Error('Table name or primary key column not provided');
     }
-
+    if (this.tablesConfig[table]?.excluded || this.tablesConfig[table]?.preventDelete) {
+      throw new Error(`Access to the table "${table}" is restricted`);
+    }
     if (this.app.readOnlyMode) {
       throw new Error('Delete operation not permitted in read-only mode');
     }
-    if (!tableRpc.delete) {
+    if (!allowDelete) {
       throw new Error('Delete operation not permitted on this table');
     }
 
     // Check if the record can be deleted
-    if (tableRpc.delete.canBeDeleted && !tableRpc.delete.canBeDeleted(input.primaryKeys)) {
+    if (tableRpc.canBeDeleted && !tableRpc.canBeDeleted(input.primaryKeys)) {
       throw new Error('Record cannot be deleted');
     }
 
-    await this.client.table(tableRpc.table)
-      .whereIn(tableRpc.primaryKeyColumn, input.primaryKeys)
+    await this.client.table(table)
+      .whereIn(primaryKeyColumn, input.primaryKeys)
       .del();
 
     return true;

@@ -172,7 +172,8 @@ export class FileTemplateManager {
           });
 
           return new KnexPgAdapter(client);
-        }
+        },
+        tablesConfig: {}
       });
 
       export default dataSource;
@@ -202,6 +203,7 @@ export class FileTemplateManager {
 
           return new KnexMysql2Adapter(client);
         },
+        tablesConfig: {}
       });
 
       export default dataSource;
@@ -231,6 +233,7 @@ export class FileTemplateManager {
 
           return new KnexMysql2Adapter(client);
         },
+        tablesConfig: {}
       });
 
       export default dataSource;
@@ -260,7 +263,8 @@ export class FileTemplateManager {
           });
 
           return new KnexTediousAdapter(client);
-        }
+        },
+        tablesConfig: {}
       });
 
       export default dataSource;
@@ -286,6 +290,7 @@ export class FileTemplateManager {
 
           return new KnexBetterSqlite3Adapter(client);
         },
+        tablesConfig: {}
       });
 
       export default dataSource;

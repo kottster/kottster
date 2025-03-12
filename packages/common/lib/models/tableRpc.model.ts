@@ -1,4 +1,4 @@
-import { RelationalDatabaseSchemaTable } from "./databaseSchema.model";
+import { FormField } from "./formField.model";
 import { ManyToManyRelationConfig } from "./manyToManyRelation";
 import { OneToManyRelationConfig } from "./oneToManyRelation";
 import { OneToOneRelationConfig } from "./oneToOneRelation";
@@ -13,6 +13,8 @@ export enum TableRpcInputSelectOperator {
 }
 
 export interface TableRpcInputSelect extends TableRpcInputBase {
+  tableRpc: TableRpc;
+
   page: number;
   search?: string;
   sorting?: {
@@ -24,17 +26,12 @@ export interface TableRpcInputSelect extends TableRpcInputBase {
     operator: keyof typeof TableRpcInputSelectOperator;
     value: any;
   }[];
-
-  /** Table schema of the table to select from */
-  tableSchema: RelationalDatabaseSchemaTable;
   
-  /** If selecting records from linked table */
-  linkedItemKey?: string;
-
-  /** For selecting particular records */
-  primaryKeyValues?: (string | number)[];
-
-  foreignKeyValues?: (string | number)[];
+  // TODO: Add many-to-many relation support
+  getByForeignRecord?: {
+    linkedItem: LinkedItem & { relation: 'oneToMany' };
+    recordPrimaryKeyValue: string | number;
+  };
 }
 
 export interface TableRpcInputSelectUsingExecuteQuery extends TableRpcInputBase {
@@ -43,39 +40,51 @@ export interface TableRpcInputSelectUsingExecuteQuery extends TableRpcInputBase 
 }
 
 export interface TableRpcInputSelectSingle extends TableRpcInputBase {
+  tableRpc: TableRpc;
+
   /** If selecting records from linked table */
   linkedItemKey?: string;
 
   /** For selecting particular records */
   primaryKeyValues?: (string | number)[];
 
-  /** Table schema of the table to select from */
-  tableSchema: RelationalDatabaseSchemaTable;
-
   forPreview?: boolean;
 }
 
 export interface TableRpcInputInsert extends TableRpcInputBase {
-  values: Record<string, any>;
+  tableRpc: TableRpc;
 
-  tableSchema: RelationalDatabaseSchemaTable;
+  values: Record<string, any>;
 }
 
 export interface TableRpcInputUpdate extends TableRpcInputBase {
+  tableRpc: TableRpc;
+
   primaryKeys: (string | number)[];
   values: Record<string, any>;
-
-  tableSchema: RelationalDatabaseSchemaTable;
 }
 
 export interface TableRpcInputDelete extends TableRpcInputBase {
+  tableRpc: TableRpc;
   primaryKeys: any[];
 }
 
-export interface TableRpcSelect {
+export type LinkedItem = OneToOneRelationConfig | OneToManyRelationConfig | ManyToManyRelationConfig;
+
+export enum TableRpcFormColumnRequirementRule {
+  none = 'none',
+  notEmpty = 'notEmpty',
+  notZero = 'notZero',
+}
+
+export interface TableRpc {
+  table?: string;
+  primaryKeyColumn?: string;
   pageSize?: number;
+
   columns?: string[];
-  excludeColumns?: string[];
+  columnsOrder?: string[];
+  hiddenColumns?: string[];
   sortableColumns?: string[];
   searchableColumns?: string[];
   filterableColumns?: string[];
@@ -88,44 +97,40 @@ export interface TableRpcSelect {
     column: string;
     direction: 'asc' | 'desc';
   }[];
+
   executeQuery?: (input: TableRpcInputSelectUsingExecuteQuery) => Promise<TableRpcResultSelectDTO>;
-}
 
-export interface TableRpcInsert {
-  columns?: string[];
-  excludeColumns?: string[];
+  hiddenLinkedItems?: string[];
+  linkedItemsOrder?: string[];
+
+  allowInsert?: boolean;
   beforeInsert?: (record: Record<string, any>) => Record<string, any>;
-  // getDefaultValues?: (record: Record<string, any>) => Record<string, any>;
   canBeInserted?: (record: Record<string, any>) => boolean;
-}
 
-export interface TableRpcUpdate extends Omit<TableRpcInsert, 'canBeInserted' | 'beforeInsert'> {
-  canBeUpdated?: (record: Record<string, any>) => boolean;
+  allowUpdate?: boolean;
   beforeUpdate?: (record: Record<string, any>) => Record<string, any>;
-}
+  canBeUpdated?: (record: Record<string, any>) => boolean;
 
-export interface TableRpcDelete {
+  allowDelete?: boolean;
   canBeDeleted?: (record: Record<string, any>) => boolean;
-}
 
-export type LinkedItem = OneToOneRelationConfig | OneToManyRelationConfig | ManyToManyRelationConfig;
+  formHiddenColumns?: string[];
+  formColumnsOrder?: string[];
 
-export interface TableRpc {
-  primaryKeyColumn?: string;
-  table?: string;
-  select: TableRpcSelect;
-  insert?: TableRpcInsert;
-  update?: TableRpcUpdate;
-  delete?: TableRpcDelete;
+  formColumnsFormFields?: {
+    column: string;
+    type?: FormField['type'];
+  }[];
+
+  formColumnsRequirements?: {
+    column: string;
+    rule: keyof typeof TableRpcFormColumnRequirementRule;
+  }[];
+
+  linkedItemPreviewColumns?: Record<string, string[]>;
 
   /** Optional object to specify linked tables */
   linked?: Record<string, LinkedItem>;
-}
-
-export interface TableRpcSimplified extends Omit<TableRpc, 'insert' | 'update' | 'delete'> {
-  insert?: boolean | TableRpc['insert'];
-  update?: boolean | TableRpc['update'];
-  delete?: boolean | TableRpc['delete'];
 }
 
 export type TableRpcResultSelectRecord = Record<string, any>;

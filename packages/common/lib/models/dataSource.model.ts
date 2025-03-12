@@ -1,3 +1,5 @@
+import { RelationalDatabaseSchema } from "./databaseSchema.model";
+
 export enum DataSourceType {
   postgres = 'postgres',
   mysql = 'mysql',
@@ -26,6 +28,7 @@ export interface DataSource<T = any> {
   type: DataSourceType;
   name: string;
   adapter: T;
+  tablesConfig: DataSourceTablesConfig;
 
   // Only for database data sources
   databaseSchemas?: string[];
@@ -34,4 +37,24 @@ export interface DataSource<T = any> {
 // Available in the public API
 export interface PublicDataSource extends Omit<DataSource, 'adapter'> {
   adapterType: DataSourceAdapterType;
+  databaseSchema: RelationalDatabaseSchema;
 }
+
+export type DataSourceTablesConfig = Record<string, DataSourceTableConfig>;
+
+export type DataSourceTableConfig = {
+  /** Exclude the table */
+  excluded?: boolean;
+
+  /** Exclude the columns */
+  excludedColumns?: string[];
+
+  /** Forbid insertions on the table */
+  preventInsert?: boolean;
+
+  /** Forbid updates on the table */
+  preventUpdate?: boolean;
+
+  /** Forbid deletions on the table */
+  preventDelete?: boolean;
+};

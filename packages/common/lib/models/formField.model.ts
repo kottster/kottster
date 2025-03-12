@@ -53,7 +53,10 @@ interface RecordSelectField extends BaseFormField {
 
 interface DatePickerField extends BaseFormField {
   type: 'datePicker';
-  withTime?: boolean;
+}
+
+interface DateTimePickerField extends BaseFormField {
+  type: 'dateTimePicker';
   timeWithSeconds?: boolean;
 }
 
@@ -66,6 +69,7 @@ export type FormField =
   | InputField
   | NumberInputField
   | DatePickerField
+  | DateTimePickerField
   | TimePickerField
   | TextareaField
   | SelectField

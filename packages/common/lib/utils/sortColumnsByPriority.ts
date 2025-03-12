@@ -1,13 +1,16 @@
 import { RelationalDatabaseSchemaColumn } from "../models/databaseSchema.model";
+import { TableRpc } from "../models/tableRpc.model";
 import { findNameLikeColumns } from "./findNameLikeColumns";
 
+// TODO: rename to sortColumnsByOrder
 /**
  * Sorts columns by priority
  * @param columns The columns to sort
  * @returns The sorted columns
  */
-export function sortColumnsByPriority(columns: RelationalDatabaseSchemaColumn[]): RelationalDatabaseSchemaColumn[] {
-  return [...columns].sort((a, b) => {
+export function sortColumnsByPriority(columns: RelationalDatabaseSchemaColumn[], columnsOrder?: TableRpc['columnsOrder']): RelationalDatabaseSchemaColumn[] {
+  // Sort by column name
+  columns = [...columns].sort((a, b) => {
     const getPriority = (column: RelationalDatabaseSchemaColumn): number => {
       if (column.primaryKey) {
         return 1;
@@ -45,4 +48,20 @@ export function sortColumnsByPriority(columns: RelationalDatabaseSchemaColumn[])
 
     return a.name.localeCompare(b.name);
   });
+  
+  // Sort columns based on columnsOrder
+  return columnsOrder ? [...columns].sort((a, b) => {
+    const aIndex = columnsOrder.indexOf(a.name) ?? -1;
+    const bIndex = columnsOrder.indexOf(b.name) ?? -1;
+
+    if (aIndex === -1 && bIndex === -1) {
+      return 0;
+    } else if (aIndex === -1) {
+      return 1;
+    } else if (bIndex === -1) {
+      return -1;
+    } else {
+      return aIndex - bIndex;
+    }
+  }) : columns;
 }

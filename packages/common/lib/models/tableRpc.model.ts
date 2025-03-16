@@ -16,6 +16,7 @@ export interface TableRpcInputSelect extends TableRpcInputBase {
   tableRpc: TableRpc;
 
   page: number;
+  pageSize: number;
   search?: string;
   sorting?: {
     column: string;

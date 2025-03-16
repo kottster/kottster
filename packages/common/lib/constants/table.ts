@@ -1,1 +1,1 @@
-export const defaultTablePageSize = 30;
+export const defaultTablePageSize = 15;

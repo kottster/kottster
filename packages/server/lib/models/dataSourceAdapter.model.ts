@@ -91,7 +91,11 @@ export abstract class DataSourceAdapter {
       databaseSchema = this.cachedFullDatabaseSchemaSchema;
     } else {
       databaseSchema = await this.getDatabaseSchemaRaw();
+      
+      // Save the full database schema in the cache
       this.cachedFullDatabaseSchemaSchema = this.removeExcludedTablesAndColumns(databaseSchema);
+      console.log('Database schema cached');
+      
       return this.cachedFullDatabaseSchemaSchema;
     }
     
@@ -166,7 +170,9 @@ export abstract class DataSourceAdapter {
     const columns = tableRpc.columns;
     const where = tableRpc.where;
     const orderBy = tableRpc.orderBy;
-    const pageSize = (tableRpc.pageSize || defaultTablePageSize);
+    const hiddenColumns = tableRpc.hiddenColumns;
+    const hiddenLinkedItems = tableRpc.hiddenLinkedItems;
+    const pageSize = ((input.pageSize > 1000 ? 1000 : input.pageSize) || tableRpc.pageSize || defaultTablePageSize);
     
     // If a custom query is provided, execute it and return the result directly
     if (executeQuery) {
@@ -275,17 +281,17 @@ export abstract class DataSourceAdapter {
 
     const linkedOneToOne = Object.fromEntries(
       Object.entries(linked ?? {})
-        .filter(([, linkedItem]) => linkedItem.relation === 'oneToOne')
+        .filter(([, linkedItem]) => linkedItem.relation === 'oneToOne' && !hiddenColumns?.includes(linkedItem.foreignKeyColumn))
     ) as Record<string, OneToOneRelation>;
     
     const linkedOneToMany = Object.fromEntries(
       Object.entries(linked ?? {})
-        .filter(([, linkedItem]) => linkedItem.relation === 'oneToMany')
+        .filter(([linkedItemKey, linkedItem]) => linkedItem.relation === 'oneToMany' && !hiddenLinkedItems?.includes(linkedItemKey))
     ) as Record<string, OneToManyRelation>;
 
     const linkedManyToMany = Object.fromEntries(
       Object.entries(linked ?? {})
-        .filter(([, linkedItem]) => linkedItem.relation === 'manyToMany')
+        .filter(([linkedItemKey, linkedItem]) => linkedItem.relation === 'manyToMany' && !hiddenLinkedItems?.includes(linkedItemKey))
     ) as Record<string, ManyToManyRelation>;
     
     // Preload linked one-to-one records

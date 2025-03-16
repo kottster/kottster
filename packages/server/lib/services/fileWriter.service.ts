@@ -26,7 +26,7 @@ export class FileWriter {
     
     // Check if the directory exists
     if (fs.existsSync(dir)) {
-      fs.rmdirSync(dir, { recursive: true });
+      fs.rmSync(dir, { recursive: true, force: true });
       return;
     }
 
@@ -166,7 +166,7 @@ export class FileWriter {
   
       if (entry.isDirectory()) {
         this.deleteFilesInDirectory(fullPath);
-        fs.rmdirSync(fullPath);
+        fs.rmSync(fullPath, { recursive: true, force: true });
       } else {
         fs.unlinkSync(fullPath);
       }

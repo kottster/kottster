@@ -262,8 +262,6 @@ export class KottsterApp {
     }
 
     const body = await newRequest.json() as RPCActionBody<'page_settings' | 'table_spec' | 'table_select' | 'table_selectOne' | 'table_insert' | 'table_update' | 'table_delete'>;
-    const dataSourceAdapter = dataSource.adapter as DataSourceAdapter;
-    const databaseSchema = await dataSourceAdapter.getDatabaseSchema();
 
     try {
       if (body.action === 'page_settings') {
@@ -272,22 +270,27 @@ export class KottsterApp {
         return {
           tableRpc,
         } as TableSpec;
-      } else if (body.action === 'table_select') {
-        const result = await dataSourceAdapter.getTableRecords(body.input as TableRpcInputSelect, databaseSchema);
-        return result;
-      } else if (body.action === 'table_selectOne') {
-        const result = await dataSourceAdapter.getOneTableRecord(body.input as TableRpcInputSelectSingle, databaseSchema);
-        return result;
-      } else if (body.action === 'table_insert') {
-        const result = await dataSourceAdapter.insertTableRecord(body.input as TableRpcInputInsert, databaseSchema);
-        return result;
-      } else if (body.action === 'table_update') {
-        const result = await dataSourceAdapter.updateTableRecords(body.input as TableRpcInputUpdate, databaseSchema);
-        return result;
-      } else if (body.action === 'table_delete') {
-        const result = await dataSourceAdapter.deleteTableRecords(body.input as TableRpcInputDelete, databaseSchema);
-        return result;
-      };
+      } else {
+        const dataSourceAdapter = dataSource.adapter as DataSourceAdapter;
+        const databaseSchema = await dataSourceAdapter.getDatabaseSchema();
+
+        if (body.action === 'table_select') {
+          const result = await dataSourceAdapter.getTableRecords(body.input as TableRpcInputSelect, databaseSchema);
+          return result;
+        } else if (body.action === 'table_selectOne') {
+          const result = await dataSourceAdapter.getOneTableRecord(body.input as TableRpcInputSelectSingle, databaseSchema);
+          return result;
+        } else if (body.action === 'table_insert') {
+          const result = await dataSourceAdapter.insertTableRecord(body.input as TableRpcInputInsert, databaseSchema);
+          return result;
+        } else if (body.action === 'table_update') {
+          const result = await dataSourceAdapter.updateTableRecords(body.input as TableRpcInputUpdate, databaseSchema);
+          return result;
+        } else if (body.action === 'table_delete') {
+          const result = await dataSourceAdapter.deleteTableRecords(body.input as TableRpcInputDelete, databaseSchema);
+          return result;
+        };
+      }
     } catch (error) {
       throw new Error(error);
     }

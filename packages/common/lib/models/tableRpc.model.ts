@@ -1,3 +1,4 @@
+import { FilterItem } from "./filter.model";
 import { FormField } from "./formField.model";
 import { ManyToManyRelationConfig } from "./manyToManyRelation";
 import { OneToManyRelationConfig } from "./oneToManyRelation";
@@ -6,14 +7,10 @@ import { OneToOneRelationConfig } from "./oneToOneRelation";
 export interface TableRpcInputBase {}
 
 export interface TableRpcInputSpec extends TableRpcInputBase {}
-
-export enum TableRpcInputSelectOperator {
-  equal = 'equal',
-  notEqual = 'not equal',
-}
-
 export interface TableRpcInputSelect extends TableRpcInputBase {
-  tableRpc: TableRpc;
+  // Specify table RPC only if this is not a root table
+  // TODO: Pass page settings key instead of tableRpc
+  tableRpc?: TableRpc;
 
   page: number;
   pageSize: number;
@@ -22,11 +19,7 @@ export interface TableRpcInputSelect extends TableRpcInputBase {
     column: string;
     direction: 'asc' | 'desc';
   };
-  filters?: {
-    column: string;
-    operator: keyof typeof TableRpcInputSelectOperator;
-    value: any;
-  }[];
+  filters?: FilterItem[];
   
   // TODO: Add many-to-many relation support
   getByForeignRecord?: {
@@ -89,6 +82,7 @@ export interface TableRpc {
   sortableColumns?: string[];
   searchableColumns?: string[];
   filterableColumns?: string[];
+  
   where?: {
     column: string;
     operator: '=' | '>' | '>=' | '<' | '<=' | '<>';

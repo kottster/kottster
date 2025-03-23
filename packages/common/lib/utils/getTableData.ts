@@ -61,12 +61,11 @@ export function getTableData(params: {
 
   const formSortedTableSchemaColumns = sortColumnsByPriority(tableSchema?.columns ?? [], tableRpc.formColumnsOrder);
 
-  // Add string-like columns to searchableColumns
   const hiddenColumns = tableRpc?.hiddenColumns ?? [];
   const formHiddenColumns = tableRpc?.formHiddenColumns ?? sortedTableSchemaColumns.filter(c => c.primaryKey).map(c => c.name);
+  const filterableColumns = tableRpc?.filterableColumns ?? sortedTableSchemaColumns?.map(c => c.name);
+  const sortableColumns = tableRpc?.sortableColumns ?? sortedTableSchemaColumns?.filter((column) => column.contentHint && ['number', 'boolean', 'date'].includes(column.contentHint)).map(c => c.name);
   const searchableColumns = tableRpc?.searchableColumns ?? sortedTableSchemaColumns?.filter((column) => !column.foreignKey && column.contentHint === 'string').map(c => c.name);
-  const sortableColumns = tableRpc?.sortableColumns ?? sortedTableSchemaColumns?.filter((column) => !column.foreignKey && (column.contentHint === 'number' || column.contentHint === 'boolean')).map(c => c.name);
-  const filterableColumns = tableRpc?.filterableColumns ?? sortedTableSchemaColumns?.filter((column) => !column.foreignKey && (column.contentHint === 'number' || column.contentHint === 'boolean')).map(c => c.name);
 
   const primaryKeyColumn = tableRpc?.primaryKeyColumn ?? sortedTableSchemaColumns.filter(c => c.primaryKey)[0]?.name;
   const allowInsert = tableRpc?.allowInsert ?? true;

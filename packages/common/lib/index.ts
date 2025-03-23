@@ -18,6 +18,7 @@ export * from './models/oneToOneRelation';
 export * from './models/oneToManyRelation';
 export * from './models/manyToManyRelation';
 export * from './models/pageSettings.model';
+export * from './models/filter.model';
 
 // Utils
 export * from './utils/getEnvOrThrow';

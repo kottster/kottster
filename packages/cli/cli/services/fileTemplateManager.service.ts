@@ -44,9 +44,7 @@ type TemplateVars = {
   'app/root.jsx': undefined;
   'app/service-route.js': undefined;
   'app/entry.client.jsx': undefined;
-  'postcss.config.js': undefined;
-  'tailwind.config.ts': undefined;
-  'app/tailwind.css': undefined;
+  'app/main.css': undefined;
 };
 
 /**
@@ -63,10 +61,11 @@ export class FileTemplateManager {
       : (usingTsc: boolean, vars: TemplateVars[K]) => string;
   } = {
     'vite.config.ts': (usingTsc) => stripIndent(`
-      import { vitePlugin as remix } from '@remix-run/dev';
       import { defineConfig } from 'vite';
-      import tsconfigPaths from 'vite-tsconfig-paths';
+      import { vitePlugin as remix } from '@remix-run/dev';
       import { viteCommonjs } from '@originjs/vite-plugin-commonjs';
+      import tsconfigPaths from 'vite-tsconfig-paths';
+      import tailwindcss from '@tailwindcss/vite';
 
       export default defineConfig({
         plugins: [
@@ -85,6 +84,7 @@ export class FileTemplateManager {
               });
             },
           }),
+          tailwindcss(),
           tsconfigPaths(),
           viteCommonjs({
             include: ['util'],
@@ -125,8 +125,6 @@ export class FileTemplateManager {
           "paths": {
             "@/*": ["./app/*"]
           },
-
-          // Vite takes care of building everything, not tsc.
           "noEmit": true
         }
       }
@@ -308,7 +306,7 @@ export class FileTemplateManager {
       import { KottsterApp, ClientOnly, getRootLayout } from '@kottster/react';
       import '@kottster/react/dist/style.css';
       import schema from '../app-schema.json';
-      import './tailwind.css';
+      import './main.css';
 
       function ClientApp() {
         return (
@@ -365,36 +363,9 @@ export class FileTemplateManager {
       });
     `),
 
-    'postcss.config.js': stripIndent(`
-      export default {
-        plugins: {
-          tailwindcss: {},
-          autoprefixer: {},
-        },
-      };
+    'app/main.css': stripIndent(`
+      @import "tailwindcss";
     `),
-
-    'tailwind.config.ts': stripIndent(`
-      import type { Config } from "tailwindcss";
-
-      export default {
-        content: ["./app/**/{**,.client,.server}/**/*.{js,jsx,ts,tsx}"],
-        theme: {},
-        plugins: [],
-      } satisfies Config;
-    `),
-
-    'app/tailwind.css': stripIndent(`
-      @tailwind base;
-      @tailwind components;
-      @tailwind utilities;
-
-      html,
-      body {
-        @apply bg-white;
-      }
-    `),
-
   };
 
   /**

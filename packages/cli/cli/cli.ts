@@ -13,6 +13,7 @@ export const program = new Command()
 program
   .command('dev')
   .description('Start a Next app in development mode')
+  .option('--debug', 'Start the server in debug mode')
   .allowUnknownOption()
   .action(startProjectDev);
 

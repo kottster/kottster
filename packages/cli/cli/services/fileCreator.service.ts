@@ -75,13 +75,11 @@ export class FileCreator {
     
     // Create files
     this.createFileFromTemplate('vite.config.ts', path.join(this.projectDir, 'vite.config.ts'));
-    this.createFileFromTemplate('postcss.config.js', path.join(this.projectDir, 'postcss.config.js'));
-    this.createFileFromTemplate('tailwind.config.ts', path.join(this.projectDir, 'tailwind.config.ts'));
     this.createFileFromTemplate('app/root.jsx', path.join(this.projectDir, `app/root.${this.jsxExt}`));
     this.createFileFromTemplate('app/entry.client.jsx', path.join(this.projectDir, `app/entry.client.${this.jsxExt}`));
     this.createFileFromTemplate('app/service-route.js', path.join(this.projectDir, `app/service-route.${this.jsExt}`));
     this.createFileFromTemplate('app/.server/app.js', path.join(this.projectDir, `app/.server/app.${this.jsExt}`));
-    this.createFileFromTemplate('app/tailwind.css', path.join(this.projectDir, `app/tailwind.css`));
+    this.createFileFromTemplate('app/main.css', path.join(this.projectDir, `app/main.css`));
     this.createFileFromTemplate('app/.server/data-sources/registry.js', path.join(this.projectDir, `app/.server/data-sources/registry.${this.jsExt}`));
     if (this.usingTsc) {
       this.createFileFromTemplate('tsconfig.json', path.join(this.projectDir, 'tsconfig.json'));
@@ -98,8 +96,8 @@ export class FileCreator {
     return {
       'typescript': '^5.x',
       '@types/node': '^20.x',
-      '@types/react': '^18.x',
-      '@types/react-dom': "^18.x",
+      '@types/react': '^19.x',
+      '@types/react-dom': "^19.x",
     };
   }
 
@@ -155,8 +153,8 @@ export class FileCreator {
         'start': 'remix-serve ./build/server/index.js'
       },
       dependencies: {
-        'react': '^18.x',
-        'react-dom': '^18.x',
+        'react': '^19.x',
+        'react-dom': '^19.x',
 
         '@remix-run/node': "^2.x",
         '@remix-run/react': "^2.x",
@@ -175,9 +173,9 @@ export class FileCreator {
         '@remix-run/dev': "^2.x",
         'vite': "^5.x",
         'vite-tsconfig-paths': "^4.x",
-        'esbuild': '0.23.1',
-        'tailwindcss': '^3.x',
-        'postcss': '^8.x',
+        'esbuild': '^0.x',
+        'tailwindcss': '^4.x',
+        '@tailwindcss/vite': '^4.x',
         'autoprefixer': '^10.x',
         "@originjs/vite-plugin-commonjs": "^1.x",
         ...(options.devDependencies ?? {}),

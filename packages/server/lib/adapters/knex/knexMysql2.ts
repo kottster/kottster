@@ -1,11 +1,10 @@
-import { DataSourceAdapterType, FormField, isIsoString, JsType, MysqlBaseType, mysqlBaseTypesByContentHint, mysqlBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, removeTrailingZeros } from "@kottster/common";
+import { DataSourceAdapterType, FilterItem, FilterItemOperator, FormField, isIsoString, JsType, MysqlBaseType, mysqlBaseTypesByContentHint, mysqlBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, removeTrailingZeros } from "@kottster/common";
 import { DataSourceAdapter } from "../../models/dataSourceAdapter.model";
 import { Knex } from "knex";
 import { ContentHint } from "@kottster/common/dist/models/contentHint.model";
 
 export class KnexMysql2 extends DataSourceAdapter {
   type = DataSourceAdapterType.knex_mysql2;
-  
 
   constructor(protected client: Knex) {
     super(client);
@@ -193,7 +192,79 @@ export class KnexMysql2 extends DataSourceAdapter {
     };
   }
 
-  async getDatabaseSchemaRaw(tableNames?: string[]): Promise<RelationalDatabaseSchema> {
+  getFilterBuilder(filterItems: FilterItem[]) {
+    return (builder: Knex.QueryBuilder) => {
+      filterItems.forEach(filterItem => {
+        if (filterItem.value === undefined || filterItem.value === null || filterItem.value === '') {
+          return;
+        }
+  
+        switch (filterItem.operator) {
+          case FilterItemOperator.equal:
+            builder.where(filterItem.column, filterItem.value);
+            break;
+          case FilterItemOperator.notEqual:
+            builder.whereNot(filterItem.column, filterItem.value);
+            break;
+          case FilterItemOperator.greaterThan:
+            builder.where(filterItem.column, '>', filterItem.value);
+            break;
+          case FilterItemOperator.lessThan:
+            builder.where(filterItem.column, '<', filterItem.value);
+            break;
+          case FilterItemOperator.between:
+            builder.whereBetween(filterItem.column, filterItem.value);
+            break;
+          case FilterItemOperator.notBetween:
+            builder.whereNotBetween(filterItem.column, filterItem.value);
+            break;
+          case FilterItemOperator.isNull:
+            builder.whereNull(filterItem.column);
+            break;
+          case FilterItemOperator.isNotNull:
+            builder.whereNotNull(filterItem.column);
+            break;
+          case FilterItemOperator.isTrue:
+            builder.where(filterItem.column, true);
+            break;
+          case FilterItemOperator.isFalse:
+            builder.where(filterItem.column, false);
+            break;
+          case FilterItemOperator.contains:
+            builder.whereRaw(`${filterItem.column} LIKE LOWER(?)`, [`%${filterItem.value}%`]);
+            break;
+          case FilterItemOperator.notContains:
+            builder.whereRaw(`${filterItem.column} NOT LIKE LOWER(?)`, [`%${filterItem.value}%`]);
+            break;
+          case FilterItemOperator.startsWith:
+            builder.whereRaw(`${filterItem.column} LIKE LOWER(?)`, [`${filterItem.value}%`]);
+            break;
+          case FilterItemOperator.endsWith:
+            builder.whereRaw(`${filterItem.column} LIKE LOWER(?)`, [`%${filterItem.value}`]);
+            break;
+          case FilterItemOperator.dateEquals:
+            builder.whereRaw(`DATE(${filterItem.column}) = ?`, [filterItem.value]);
+            break;
+          case FilterItemOperator.dateAfter:
+            builder.where(filterItem.column, '>', filterItem.value);
+            break;
+          case FilterItemOperator.dateBefore:
+            builder.where(filterItem.column, '<', filterItem.value);
+            break;
+          case FilterItemOperator.dateBetween:
+            builder.whereBetween(filterItem.column, filterItem.value);
+            break;
+          case FilterItemOperator.dateNotBetween:
+            builder.whereNotBetween(filterItem.column, filterItem.value);
+            break;
+          default:
+            throw new Error(`Unsupported filter operator: ${filterItem.operator}`);
+        }
+      });
+    };
+  }
+
+  async getDatabaseSchemaRaw(): Promise<RelationalDatabaseSchema> {
     const schemaName = this.databaseSchemas[0];
 
     const tablesResult = await this.client!.raw(`
@@ -211,11 +282,6 @@ export class KnexMysql2 extends DataSourceAdapter {
 
     for (const table of tables) {
       const tableName = table.table_name;
-
-      // Skip if tableNames is provided and the current table is not in the list
-      if (tableNames && !tableNames.includes(tableName)) {
-        continue;
-      }
 
       // Get column info including primary key
       const columnsResult = await this.client!.raw(`

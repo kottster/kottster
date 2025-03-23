@@ -275,7 +275,7 @@ export class KottsterApp {
         const databaseSchema = await dataSourceAdapter.getDatabaseSchema();
 
         if (body.action === 'table_select') {
-          const result = await dataSourceAdapter.getTableRecords(body.input as TableRpcInputSelect, databaseSchema);
+          const result = await dataSourceAdapter.getTableRecords(body.input as TableRpcInputSelect, databaseSchema, tableRpc);
           return result;
         } else if (body.action === 'table_selectOne') {
           const result = await dataSourceAdapter.getOneTableRecord(body.input as TableRpcInputSelectSingle, databaseSchema);

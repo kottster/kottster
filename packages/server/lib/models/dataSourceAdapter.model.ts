@@ -1,5 +1,5 @@
 import { Knex } from "knex";
-import { DataSourceAdapterType, FormField, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TableRpcInputDelete, TableRpcInputInsert, TableRpcInputSelect, TableRpcInputSelectOperator, TableRpcInputUpdate, TableRpcResultInsertDTO, TableRpcResultSelectDTO, TableRpcResultSelectRecord, TableRpcResultUpdateDTO, TableRpcResultSelectRecordLinkedDTO, defaultTablePageSize, TableRpcInputSelectUsingExecuteQuery, TableRpcInputSelectSingle, TableRpcResultSelectSingleDTO, findLinkedItem, DataSourceTablesConfig, getTableData } from "@kottster/common";
+import { DataSourceAdapterType, FormField, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TableRpcInputDelete, TableRpcInputInsert, TableRpcInputSelect, TableRpcInputUpdate, TableRpcResultInsertDTO, TableRpcResultSelectDTO, TableRpcResultSelectRecord, TableRpcResultUpdateDTO, TableRpcResultSelectRecordLinkedDTO, defaultTablePageSize, TableRpcInputSelectUsingExecuteQuery, TableRpcInputSelectSingle, TableRpcResultSelectSingleDTO, findLinkedItem, DataSourceTablesConfig, getTableData, TableRpc, FilterItem } from "@kottster/common";
 import { KottsterApp } from "../core/app";
 import { OneToOneRelation } from "./oneToOneRelation";
 import { OneToManyRelation } from "./oneToManyRelation";
@@ -76,18 +76,16 @@ export abstract class DataSourceAdapter {
     };
   }
 
-  abstract getDatabaseSchemaRaw(tableNames?: string[]): Promise<RelationalDatabaseSchema>;
+  abstract getDatabaseSchemaRaw(): Promise<RelationalDatabaseSchema>;
   
   /**
    * Get the database schema
    * @returns The database schema
    */
-  async getDatabaseSchema(tableNames?: string[]): Promise<RelationalDatabaseSchema> {
+  async getDatabaseSchema(): Promise<RelationalDatabaseSchema> {
     let databaseSchema: RelationalDatabaseSchema;
   
-    if (tableNames && tableNames.length > 0) {
-      databaseSchema = await this.getDatabaseSchemaRaw(tableNames);
-    } else if (this.cachedFullDatabaseSchemaSchema) {
+    if (this.cachedFullDatabaseSchemaSchema) {
       databaseSchema = this.cachedFullDatabaseSchemaSchema;
     } else {
       databaseSchema = await this.getDatabaseSchemaRaw();
@@ -134,37 +132,24 @@ export abstract class DataSourceAdapter {
   abstract getSearchBuilder(searchableColumns: string[], searchValue: string): (builder: Knex.QueryBuilder) => void;
 
   /**
-   * Get the table schema
-   * @returns The table schema
+   * Get the filter builder that will apply the filter query
+   * @returns The filter builder
    */
-  async getTableSchemas(tableNames: string[]): Promise<RelationalDatabaseSchemaTable[]> {
-    const schema = await this.getDatabaseSchema(tableNames);
-    const tableSchemas = schema.tables.filter(table => tableNames.includes(table.name)) ?? null;
-    
-    return tableSchemas.map(tableSchema => ({
-      ...tableSchema,
-      columns: tableSchema.columns
-    }));
-  }
+  abstract getFilterBuilder(filterItems: FilterItem[]): (builder: Knex.QueryBuilder) => void;
 
   /**
    * Get the table records (Table RPC)
    * @returns The table records
    */
-  async getTableRecords(input: TableRpcInputSelect, databaseSchema: RelationalDatabaseSchema): Promise<TableRpcResultSelectDTO> {
-    const { tableRpc } = input;
+  async getTableRecords(input: TableRpcInputSelect, databaseSchema: RelationalDatabaseSchema, tableRpcDefault: TableRpc): Promise<TableRpcResultSelectDTO> {
+    const tableRpc = input.tableRpc ?? tableRpcDefault;
     const { 
       linked, 
       tableSchema, 
       searchableColumns, 
       sortableColumns, 
-      filterableColumns,
       primaryKeyColumn,
     } = getTableData({ tableRpc, databaseSchema });
-    if (!tableSchema) {
-      throw new Error('Table schema not provided');
-    }
-
     const executeQuery = tableRpc.executeQuery;
     const table = tableRpc.table;
     const columns = tableRpc.columns;
@@ -173,12 +158,16 @@ export abstract class DataSourceAdapter {
     const hiddenColumns = tableRpc.hiddenColumns;
     const hiddenLinkedItems = tableRpc.hiddenLinkedItems;
     const pageSize = ((input.pageSize > 1000 ? 1000 : input.pageSize) || tableRpc.pageSize || defaultTablePageSize);
-    
+
     // If a custom query is provided, execute it and return the result directly
     if (executeQuery) {
       return executeQuery(input as TableRpcInputSelectUsingExecuteQuery);
     }
 
+    if (!tableSchema) {
+      throw new Error('Table schema not provided');
+    }
+    
     if (!table || !primaryKeyColumn) {
       throw new Error('Table name or primary key column not provided');
     }
@@ -245,19 +234,10 @@ export abstract class DataSourceAdapter {
     }
 
     // Apply filters
-    if (input.filters) {
-      input.filters.forEach(filter => {
-        if (filterableColumns && filterableColumns.includes(filter.column)) {
-          const operator: string = {
-            equal: '=',
-            notEqual: '<>',
-          }[filter.operator as keyof typeof TableRpcInputSelectOperator];
-          
-          query.where(filter.column, operator, filter.value);
-          countQuery.where(filter.column, operator, filter.value);
-        }
-      })
-    };
+    if (input.filters?.length) {
+      query.where(this.getFilterBuilder(input.filters));
+      countQuery.where(this.getFilterBuilder(input.filters));
+    }
 
     // Apply pagination
     const offset = (input.page - 1) * pageSize;

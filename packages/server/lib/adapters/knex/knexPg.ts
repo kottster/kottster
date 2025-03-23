@@ -1,11 +1,13 @@
-import { DataSourceAdapterType, FormField, JsType, PostgresBaseType, postgresBaseTypesByContentHint, postgresBaseTypeToArrayReturn, postgresBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn } from "@kottster/common";
+import { DataSourceAdapterType, FilterItem, FilterItemOperator, FormField, JsType, PostgresBaseType, postgresBaseTypesByContentHint, postgresBaseTypeToArrayReturn, postgresBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn } from "@kottster/common";
 import { DataSourceAdapter } from "../../models/dataSourceAdapter.model";
 import { Knex } from "knex";
 import { parse as parsePostgresArray } from 'postgres-array';
 import { ContentHint } from "@kottster/common/dist/models/contentHint.model";
+import { DebugLogger } from "../../services/debugLogger.service";
 
 export class KnexPg extends DataSourceAdapter {
   type = DataSourceAdapterType.knex_pg;
+  defaultDatabaseSchema = 'public';
 
   constructor(protected client: Knex) {
     super(client);
@@ -154,9 +156,84 @@ export class KnexPg extends DataSourceAdapter {
       });
     };
   }
+
+  getFilterBuilder(filterItems: FilterItem[]) {
+    return (builder: Knex.QueryBuilder) => {
+      filterItems.forEach(filterItem => {
+        if (filterItem.value === undefined || filterItem.value === null || filterItem.value === '') {
+          return;
+        }
+
+        switch (filterItem.operator) {
+          case FilterItemOperator.equal:
+            builder.where(filterItem.column, filterItem.value);
+            break;
+          case FilterItemOperator.notEqual:
+            builder.whereNot(filterItem.column, filterItem.value);
+            break;
+          case FilterItemOperator.greaterThan:
+            builder.where(filterItem.column, '>', filterItem.value);
+            break;
+          case FilterItemOperator.lessThan:
+            builder.where(filterItem.column, '<', filterItem.value);
+            break;
+          case FilterItemOperator.between:
+            builder.whereBetween(filterItem.column, filterItem.value);
+            break;
+          case FilterItemOperator.notBetween:
+            builder.whereNotBetween(filterItem.column, filterItem.value);
+            break;
+          case FilterItemOperator.isNull:
+            builder.whereNull(filterItem.column);
+            break;
+          case FilterItemOperator.isNotNull:
+            builder.whereNotNull(filterItem.column);
+            break;
+          case FilterItemOperator.isTrue:
+            builder.where(filterItem.column, true);
+            break;
+          case FilterItemOperator.isFalse:
+            builder.where(filterItem.column, false);
+            break;
+          case FilterItemOperator.contains:
+            builder.where(filterItem.column, 'ilike', `%${filterItem.value}%`);
+            break;
+          case FilterItemOperator.notContains:
+            builder.whereNot(filterItem.column, 'ilike', `%${filterItem.value}%`);
+            break;
+          case FilterItemOperator.startsWith:
+            builder.where(filterItem.column, 'ilike', `${filterItem.value}%`);
+            break;
+          case FilterItemOperator.endsWith:
+            builder.where(filterItem.column, 'ilike', `%${filterItem.value}`);
+            break;
+          case FilterItemOperator.dateEquals:
+            builder.whereRaw(`DATE(${filterItem.column}) = ?`, [filterItem.value]);
+            break;
+          case FilterItemOperator.dateAfter:
+            builder.where(filterItem.column, '>', filterItem.value);
+            break;
+          case FilterItemOperator.dateBefore:
+            builder.where(filterItem.column, '<', filterItem.value);
+            break;
+          case FilterItemOperator.dateBetween:
+            builder.whereBetween(filterItem.column, filterItem.value);
+            break;
+          case FilterItemOperator.dateNotBetween:
+            builder.whereNotBetween(filterItem.column, filterItem.value);
+            break;
+          default:
+            throw new Error(`Unsupported filter operator: ${filterItem.operator}`);
+        }
+      });
+    };
+  }
   
-  async getDatabaseSchemaRaw(tableNames?: string[]): Promise<RelationalDatabaseSchema> {
+  async getDatabaseSchemaRaw(): Promise<RelationalDatabaseSchema> {
     const schemaName = this.databaseSchemas[0];
+    const debugLogger = new DebugLogger('adapter-knexpg-getDatabaseSchema', {
+      schemaName,
+    });
 
     // Query to get all tables and their columns with enum values, primary keys, and foreign keys
     const tablesQueryResult = await this.client!.raw(`
@@ -230,7 +307,8 @@ export class KnexPg extends DataSourceAdapter {
         c.is_nullable = 'YES' AS nullable,
         pk.is_auto_increment,
         fk.foreign_table_name,
-        fk.foreign_column_name
+        fk.foreign_column_name,
+        current_schema() as schema_name
       FROM
         information_schema.tables t
         JOIN information_schema.columns c 
@@ -243,20 +321,14 @@ export class KnexPg extends DataSourceAdapter {
           ON t.table_name = fk.table_name
           AND c.column_name = fk.column_name
       WHERE
-        t.table_schema = COALESCE(?, current_schema())
-        AND (
-          CARDINALITY(?::text[]) = 0
-          OR t.table_name = ANY(?::text[])
-        );
+        t.table_schema = COALESCE(?, current_schema());
     `, [
       schemaName ?? null,
       schemaName ?? null,
       schemaName ?? null,
-      tableNames ?? [],
-      tableNames ?? [],
     ]);
-
     const tablesData = tablesQueryResult.rows;
+    debugLogger.log('tablesQueryResult', tablesData);
 
     // Building the schema object
     const schema: RelationalDatabaseSchema = {
@@ -308,6 +380,8 @@ export class KnexPg extends DataSourceAdapter {
         returnedAsArray,
       });
     }
+    debugLogger.log('schema', schema);
+    debugLogger.write();
 
     return schema;
   }

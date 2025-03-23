@@ -1,10 +1,10 @@
 import fs from "fs";
-import { PROJECT_DIR } from "../constants/projectDir";
 import path from "path";
 import { AppSchema, getDefaultPage, PageFileStructure, stripIndent } from "@kottster/common";
+import { PROJECT_DIR } from "../constants/projectDir";
 
 interface FileWriterOptions {
-  usingTsc: boolean;
+  usingTsc?: boolean;
 }
 
 /**
@@ -14,7 +14,7 @@ export class FileWriter {
   private readonly usingTsc: boolean;
   
   constructor(options: FileWriterOptions) {
-    this.usingTsc = options.usingTsc;
+    this.usingTsc = options.usingTsc ?? false;
   }
 
   /**
@@ -187,5 +187,24 @@ export class FileWriter {
     }
 
     fs.writeFileSync(filePath, content);
+  }
+
+  /**
+   * Write the content to the debug file
+   * @param content The content
+   */
+  public writeDebugJsonFile(prefix: string, content: string): void {
+    const fileDirPath = `${PROJECT_DIR}/debug`;
+
+    // Create directory if it doesn't exist
+    if (!fs.existsSync(fileDirPath)) {
+      fs.mkdirSync(fileDirPath, { recursive: true });
+    }
+
+    // Save the debug info to a file
+    const fileName = `${prefix}-${new Date().toISOString().replace(/:/g, '-')}.json`;
+    fs.writeFileSync(`${fileDirPath}/${fileName}`, content);
+
+    console.log(`Debug info saved: ${fileDirPath}/${fileName}`);
   }
 }

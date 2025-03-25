@@ -44,7 +44,6 @@ type TemplateVars = {
   'app/root.jsx': undefined;
   'app/service-route.js': undefined;
   'app/entry.client.jsx': undefined;
-  'app/main.css': undefined;
 };
 
 /**
@@ -65,7 +64,6 @@ export class FileTemplateManager {
       import { vitePlugin as remix } from '@remix-run/dev';
       import { viteCommonjs } from '@originjs/vite-plugin-commonjs';
       import tsconfigPaths from 'vite-tsconfig-paths';
-      import tailwindcss from '@tailwindcss/vite';
 
       export default defineConfig({
         plugins: [
@@ -84,7 +82,6 @@ export class FileTemplateManager {
               });
             },
           }),
-          tailwindcss(),
           tsconfigPaths(),
           viteCommonjs({
             include: ['util'],
@@ -306,7 +303,6 @@ export class FileTemplateManager {
       import { KottsterApp, ClientOnly, getRootLayout } from '@kottster/react';
       import '@kottster/react/dist/style.css';
       import schema from '../app-schema.json';
-      import './main.css';
 
       function ClientApp() {
         return (
@@ -362,10 +358,7 @@ export class FileTemplateManager {
         );
       });
     `),
-
-    'app/main.css': stripIndent(`
-      @import "tailwindcss";
-    `),
+    
   };
 
   /**

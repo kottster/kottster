@@ -79,7 +79,6 @@ export class FileCreator {
     this.createFileFromTemplate('app/entry.client.jsx', path.join(this.projectDir, `app/entry.client.${this.jsxExt}`));
     this.createFileFromTemplate('app/service-route.js', path.join(this.projectDir, `app/service-route.${this.jsExt}`));
     this.createFileFromTemplate('app/.server/app.js', path.join(this.projectDir, `app/.server/app.${this.jsExt}`));
-    this.createFileFromTemplate('app/main.css', path.join(this.projectDir, `app/main.css`));
     this.createFileFromTemplate('app/.server/data-sources/registry.js', path.join(this.projectDir, `app/.server/data-sources/registry.${this.jsExt}`));
     if (this.usingTsc) {
       this.createFileFromTemplate('tsconfig.json', path.join(this.projectDir, 'tsconfig.json'));
@@ -96,8 +95,8 @@ export class FileCreator {
     return {
       'typescript': '^5.x',
       '@types/node': '^20.x',
-      '@types/react': '^19.x',
-      '@types/react-dom': "^19.x",
+      '@types/react': '^18.x',
+      '@types/react-dom': "^18.x",
     };
   }
 
@@ -153,8 +152,8 @@ export class FileCreator {
         'start': 'remix-serve ./build/server/index.js'
       },
       dependencies: {
-        'react': '^19.x',
-        'react-dom': '^19.x',
+        'react': '^18.x',
+        'react-dom': '^18.x',
 
         '@remix-run/node': "^2.x",
         '@remix-run/react': "^2.x",
@@ -164,7 +163,7 @@ export class FileCreator {
         '@kottster/cli': KOTTSTER_CLI_DEP_VER ?? '^2.x',
         '@kottster/server': KOTTSTER_SERVER_DEP_VER ?? '^1.x',
         '@kottster/react': KOTTSTER_REACT_DEP_VER ?? '^1.x',
-        
+
         'isbot': '^4.x',
         
         ...(options.dependencies ?? {}),
@@ -174,9 +173,6 @@ export class FileCreator {
         'vite': "^5.x",
         'vite-tsconfig-paths': "^4.x",
         'esbuild': '^0.x',
-        'tailwindcss': '^4.x',
-        '@tailwindcss/vite': '^4.x',
-        'autoprefixer': '^10.x',
         "@originjs/vite-plugin-commonjs": "^1.x",
         ...(options.devDependencies ?? {}),
       },

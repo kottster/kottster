@@ -1,6 +1,6 @@
 {
   "name": "@kottster/cli",
-  "version": "2.5.10",
+  "version": "2.5.13",
   "description": "CLI for Kottster",
   "main": "dist/index.js",
   "license": "Apache-2.0",

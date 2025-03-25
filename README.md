@@ -16,7 +16,7 @@ Instant admin panel for your project ⚡
 #### To create a new project, run:
 
 ```bash
-npx @kottster/cli new
+npx @kottster/cli@latest new
 ```
 
 Make sure you have **Node.js (v20 or above)** installed on your system.
@@ -46,6 +46,7 @@ After running the project, you'll need to log in to your account or create a new
 
 - [Docs](https://docs.kottster.app/)
   - [Quickstart](https://docs.kottster.app/)
+  - [Quickstart with Docker](https://docs.kottster.app/quickstart-docker)
   - [Tutorial (5 min)](https://docs.kottster.app/tutorial/)
   - [Deploy to production](https://docs.kottster.app/deploying)
  

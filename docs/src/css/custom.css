@@ -1,0 +1,42 @@
+/* Font imports */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+
+body {
+  font-family: "Inter", sans-serif;
+}
+
+:root {
+  --ifm-color-primary: #265cff;
+  --ifm-color-primary-dark: #0038e5;
+  --ifm-color-primary-darker: #0031ce;
+  --ifm-color-primary-darkest: #002ab6;
+  --ifm-color-primary-light: #3668ff;
+  --ifm-color-primary-lighter: #638bff;
+  --ifm-color-primary-lightest: #9ab4ff;
+  --ifm-code-font-size: 95%;
+  --ifm-font-family-base: "Inter", sans-serif;
+  --ifm-line-height-base: 1.8;
+  --ifm-container-width: 1000px;
+  --ifm-container-width-xl: 1120px;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+nav {
+  font-size: 15px;
+}
+
+/* article {
+  max-width: 850px;
+  margin: 0 auto;
+} */
+
+[data-theme='dark'] {
+  --ifm-color-primary: #789aff;
+  /* --ifm-color-primary-dark: #21af90;
+  --ifm-color-primary-darker: #1fa588;
+  --ifm-color-primary-darkest: #1a8870;
+  --ifm-color-primary-light: #29d5b0;
+  --ifm-color-primary-lighter: #32d8b4;
+  --ifm-color-primary-lightest: #4fddbf;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3); */
+}

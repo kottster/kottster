@@ -1,0 +1,80 @@
+---
+sidebar_position: 2
+---
+
+# Project structure
+
+This section explains the purpose of each file and folder in your project. Here's the breakdown:
+
+- ## `app/`
+
+    The main directory where your Remix app's core logic resides.
+
+  - ### `entry.client.jsx`
+
+        The entry point for client-side rendering. It initializes the Remix app in the browser. [Learn more](https://remix.run/docs/en/main/file-conventions/entry.client)
+
+  - ### `root.jsx`
+
+        The root component of your app. It defines the app’s layout, handles global styles, and manages shared logic like error boundaries. [Learn more](https://remix.run/docs/en/main/file-conventions/root)
+
+  - ### `service-route.js`
+
+        A special route file that handles internal API requests. **Please avoid modifying this file since it can break the app's functionality.**
+
+
+  - ### `tailwind.css`
+
+      The global CSS file for your app. It includes Tailwind directives and custom styles, if any.
+  
+  - ### `routes/`
+
+      Contains all your app’s routes (pages). Each file or folder corresponds to a route or a nested route in the app. [Learn more](https://remix.run/docs/en/main/file-conventions/routes)
+  
+  - ### `server/`
+
+      Contains server-side files.
+
+      - #### `app.js`
+
+          The file with app initialization logic. It creates a new Kottster app instance and sets up data sources.
+
+      - #### `data-sources/`
+
+          Contains data source files. Each folder corresponds to a data source in the app. [Learn more](/data-sources)
+
+- ## `public/`
+
+    The optonal directory where you store static assets like images, fonts, and other files.
+
+- ## `app-schema.json`
+
+    A JSON file that contains the Kottster app schema.
+
+- ## `vite.config.js`
+
+    The configuration file for Vite, the build tool used by Remix. [Learn more](https://remix.run/docs/en/main/file-conventions/vite-config)
+
+- ## `package.json`
+
+    Defines the app’s dependencies, scripts, and metadata. Essential for managing npm tasks and project setup.
+
+- ## `tsconfig.json`
+
+    Specifies TypeScript configuration options, such as type-checking rules, paths, and compiler settings. You only need this file if you're using TypeScript.
+
+- ## `tailwind.config.js`
+
+    Customizes the Tailwind CSS setup for your app. This includes themes, colors, and utilities. [Learn more](https://tailwindcss.com/docs/configuration)
+
+
+
+
+
+
+
+
+
+
+
+

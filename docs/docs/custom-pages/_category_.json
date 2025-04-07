@@ -1,0 +1,8 @@
+{
+  "label": "Custom pages",
+  "position": 7,
+  "link": {
+    "type": "generated-index",
+    "description": "Kottster lets you create pages with custom content and business logic."
+  }
+}

@@ -32,14 +32,25 @@ interface SelectField extends BaseFormField {
 
 interface CustomField extends BaseFormField {
   type: 'custom';
-  renderComponent: (
-    value: any, 
-    onChange: (value: any) => void,
-    params: {
+
+  /**
+   * Render function for the custom field.
+   * @param values - The current values of the form.
+   * @param record - The current record being edited.
+   * @param updateFieldValue - Function to call when the value changes.
+   * @param meta - Additional metadata about the field.
+   * @returns A React component.
+   */
+  renderComponent: (params: {
+    value: any;
+    values: Record<string, any>, 
+    record: Record<string, any> | null,
+    updateFieldValue: (key: string, value: any) => void,
+    meta: {
       hasError: boolean;
       readOnly: boolean;
     }
-  ) => any;
+  }) => any;
 }
 
 interface CheckboxField extends BaseFormField {

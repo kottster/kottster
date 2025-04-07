@@ -19,10 +19,10 @@ export class DevSyncRunner {
   public async run(): Promise<[number, ChildProcess]> {
     // Look for a free port
     const httpFreePortFinder = new HttpFreePortFinder(...this.portRange);
-    const devSyncPort = await httpFreePortFinder.findFreePort();
+    const devSyncPort = process.env.DEV_SYNC_SERVER_PORT ? +process.env.DEV_SYNC_SERVER_PORT : await httpFreePortFinder.findFreePort();
     
     // Run the executable code
-    const process = spawn('node', [
+    const newProcess = spawn('node', [
       '--no-warnings',
       '--max-http-header-size=10485760', // 10MB
       '--input-type=module',
@@ -36,7 +36,7 @@ export class DevSyncRunner {
       }
     });
 
-    return [devSyncPort, process];
+    return [devSyncPort, newProcess];
   }
 
   private getExecutableCode(): string {

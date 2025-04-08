@@ -23,15 +23,18 @@ export class CreatePage extends DSAction {
       fileWriter.writePageToFile(data.file);
     } else {
       fileWriter.createNewEmptyPage(id);
-    }
+    }  
 
-    // Add new nav item to app schema
-    appSchema.navItems.push({
-      id: id,
-      name: name || id,
-      icon: 'file',
-    });
-    fileWriter.writeSchemaJsonFile(appSchema);
+    // Timeout to avoid making multiple changes at the same time
+    setTimeout(() => {
+      // Add new nav item to app schema
+      appSchema.navItems.push({
+        id: id,
+        name: name || id,
+        icon: 'file',
+      });
+      fileWriter.writeSchemaJsonFile(appSchema);
+    }, 400);
 
     return null;
   }

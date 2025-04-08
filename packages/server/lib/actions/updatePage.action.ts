@@ -33,10 +33,15 @@ export class UpdatePage extends DSAction {
       return p;
     });
     
+    // Remove page directory or file
+    fileWriter.renamePage(id, page.id);
+    
     if (id !== page.id) {
-      fileWriter.renamePage(id, page.id);
+      // Timeout to avoid making multiple changes at the same time
+      setTimeout(() => {
+        fileWriter.writeSchemaJsonFile(appSchema);
+      }, 400);
     }
-    fileWriter.writeSchemaJsonFile(appSchema);
 
     return {};
   }

@@ -1,6 +1,6 @@
 {
   "name": "@kottster/server",
-  "version": "1.7.5",
+  "version": "1.7.8",
   "description": "Instant admin panel for your project",
   "keywords": [
     "admin",
@@ -27,11 +27,12 @@
     "chalk": "4",
     "jose": "^5.8.0",
     "postgres-array": "^3.0.2",
-    "randomstring": "^1.3.0"
+    "randomstring": "^1.3.0",
+    "rimraf": "^6.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.2.0",
-    "@kottster/common": "^1.7.4",
+    "@kottster/common": "^1.7.6",
     "@remix-run/node": "^2.14.0",
     "@trpc/server": "^10.45.2",
     "@types/dotenv": "^8.2.0",
@@ -45,7 +46,6 @@
     "knex": "^3.1.0",
     "mock-fs": "^5.2.0",
     "nodemon": "^3.1.0",
-    "rimraf": "^5.0.5",
     "supertest": "^7.0.0",
     "synp": "^1.9.13",
     "ts-jest": "^29.1.2",

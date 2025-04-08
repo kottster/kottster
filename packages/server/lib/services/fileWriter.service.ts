@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import { AppSchema, getDefaultPage, PageFileStructure, stripIndent } from "@kottster/common";
+import { rimrafSync } from 'rimraf';
 import { PROJECT_DIR } from "../constants/projectDir";
 
 interface FileWriterOptions {
@@ -23,17 +24,18 @@ export class FileWriter {
    */
   public removePage(pageId: string): void {
     const dir = `${PROJECT_DIR}/app/routes/${pageId}`;
-    
+
     // Check if the directory exists
     if (fs.existsSync(dir)) {
-      fs.rmSync(dir, { recursive: true, force: true });
+      rimrafSync(dir);
       return;
     }
 
     // Otherwise, check if the file with the same name exists
     ['jsx', 'tsx', 'js', 'ts'].forEach(ext => {
-      if (fs.existsSync(`${dir}.${ext}`)) {
-        fs.unlinkSync(`${dir}.${ext}`);
+      const filePath = `${dir}.${ext}`;
+      if (fs.existsSync(filePath)) {
+        rimrafSync(filePath);
       }
     });
   }

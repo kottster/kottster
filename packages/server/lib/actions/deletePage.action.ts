@@ -16,12 +16,15 @@ export class DeletePage extends DSAction {
     const { id } = data;
     const appSchema = fileReader.readSchemaJsonFile();
     
-    // Remove page file
-    fileWriter.removePage(id);
-
     // Remove nav item from app schema
     appSchema.navItems = appSchema.navItems.filter(item => item.id !== id);
     fileWriter.writeSchemaJsonFile(appSchema);
+    
+    // Timeout to avoid making multiple changes at the same time
+    setTimeout(() => {
+      // Remove page directory or file
+      fileWriter.removePage(id);
+    }, 400);
 
     return null;
   }

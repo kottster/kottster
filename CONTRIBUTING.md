@@ -8,9 +8,78 @@ Kottster is a project by developers for developers and there are a lot of ways y
 
 By participating in this project, you agree to abide by our [Code of Conduct](CODE_OF_CONDUCT.md).
 
+## Git Workflow
+
+Kottster follows these Git management practices:
+
+### Conventional Commits
+
+We use the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification for commit messages to provide a consistent format:
+
+```
+<type>: <description>
+```
+
+Types include:
+- `feat`: A new feature
+- `fix`: A bug fix
+- `docs`: Documentation changes
+- `style`: Code style changes (formatting, missing semicolons, etc)
+- `refactor`: Code changes that neither fix bugs nor add features
+- `perf`: Performance improvements
+- `test`: Adding or correcting tests
+- `chore`: Changes to the build process, tooling, etc.
+
+Examples:
+```
+feat: Add mongodb adapter
+fix: Resolve token validation issue
+docs: Update API documentation
+```
+
+### Branching Strategy
+
+We follow Trunk-Based Development:
+- `main` is the primary branch and source of truth
+- Create short-lived feature branches for development
+- Branch names should be descriptive and include issue numbers when applicable
+- Example: `feature/mongodb-adapter`, `fix/token-validation` or `docs/api-docs`
+
+### Versioning
+
+Each package in our monorepo follows independent versioning. Version numbers follow semantic versioning (MAJOR.MINOR.PATCH).
+
+### Tagging
+
+We use package-specific tags in the format:
+```
+package-name@vX.Y.Z
+```
+
+Example: `@kottster/server@v1.2.3`
+
+Tags are applied to the `main` branch after changes are merged.
+
 ## How Can I Contribute?
 
-There are many ways in which you can contribute to Kottster.
+### Development Workflow
+
+1. Fork the repository
+2. Create a feature branch from `main` 
+   ```bash
+   git checkout -b feature/your-feature main
+   ```
+3. Make changes to any needed packages
+4. Commit using conventional commit format
+   ```bash
+   git commit -m "feat: Implement new feature"
+   ```
+5. Push your branch and create a Pull Request
+   ```bash
+   git push origin feature/your-feature
+   ```
+6. After review and approval, your PR will be merged to `main`
+7. Once in `main`, package versioning and tagging will be handled by the project maintainers
 
 ### 🐛 Reporting Bugs
 
@@ -37,17 +106,9 @@ Feature suggestions are tracked as GitHub issues. Create an issue using the [fea
 
 Documentation is crucial for any project. If you find any typos, unclear instructions, or missing information, please submit a pull request with your changes.
 You can also help by:
-- Reviewing existing documentation for clarity
+- Reviewing [existing documentation](https://docs.kottster.app/) for clarity
 - Adding examples or use cases
 - Creating tutorials or guides
-
-### ⚙️ Pull Requests
-
-1. Fork the repository
-2. Create a branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
 
 ## License
 

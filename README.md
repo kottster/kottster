@@ -9,7 +9,7 @@ Instant admin panel for your project ⚡
 
 [Get Started](https://docs.kottster.app/) • [Live Demo](https://demo.kottster.app) • [Our Website](https://kottster.app) • [Docs](https://docs.kottster.app/)
 
-![Intro](/assets/intro-3.png)
+[![Kottster](/assets/intro-4.png)](https://youtu.be/JBpLVgkoj-k?si=GJ3IIBmzlgrCLKWs)
 
 ## Getting started
 
@@ -19,7 +19,7 @@ Instant admin panel for your project ⚡
 npx @kottster/cli@latest new
 ```
 
-Make sure you have **Node.js (v20 or above)** installed on your system.
+> Make sure you have **Node.js (v20 or above)** installed on your system.
 
 Alternatively, you can use Docker to run Kottster. For more details, check out the [Docker Quickstart](https://docs.kottster.app/quickstart-docker).
 
@@ -41,8 +41,8 @@ After running the project, you'll need to log in to your account or create a new
 
 #### 4. Start building your app:
 
-- Generate pages for viewing and managing data in your database.
-- Or, create and customize pages from scratch.
+- Add pages for viewing and managing data in your database.
+- Or, build fully custom pages from scratch.
 
 #### 5. [Deploy your app](https://docs.kottster.app/deploying) when it's ready.
 
@@ -52,7 +52,7 @@ After running the project, you'll need to log in to your account or create a new
   - [Quickstart](https://docs.kottster.app/)
   - [Quickstart with Docker](https://docs.kottster.app/quickstart-docker)
   - [Tutorial (5 min)](https://docs.kottster.app/tutorial/)
-  - [Deploy to production](https://docs.kottster.app/deploying)
+  - [Deploying](https://docs.kottster.app/deploying)
  
 ## Contribute
 

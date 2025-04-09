@@ -76,6 +76,8 @@ export abstract class DataSourceAdapter {
     };
   }
 
+  abstract getDatabaseTableCount(): Promise<number>;
+
   abstract getDatabaseSchemaRaw(): Promise<RelationalDatabaseSchema>;
   
   /**

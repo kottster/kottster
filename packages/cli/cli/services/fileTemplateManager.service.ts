@@ -1,7 +1,7 @@
 import { stripIndent } from "@kottster/common";
 
 type TemplateVars = {
-  'vite.config.ts': undefined;
+  'vite.config.js': undefined;
   'tsconfig.json': undefined;
   'app/.server/app.js': undefined;
   'app/.server/data-sources/postgres/index.js': {
@@ -59,7 +59,7 @@ export class FileTemplateManager {
       ? string | ((usingTsc: boolean) => string)
       : (usingTsc: boolean, vars: TemplateVars[K]) => string;
   } = {
-    'vite.config.ts': (usingTsc) => stripIndent(`
+    'vite.config.js': (usingTsc) => stripIndent(`
       import { defineConfig } from 'vite';
       import { vitePlugin as remix } from '@remix-run/dev';
       import { viteCommonjs } from '@originjs/vite-plugin-commonjs';

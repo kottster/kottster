@@ -676,10 +676,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@kottster/common@^1.7.6":
-  version "1.7.6"
-  resolved "https://registry.yarnpkg.com/@kottster/common/-/common-1.7.6.tgz#8a3ebf0e55f0946cd4b4b78d11fc43545dd6c7c8"
-  integrity sha512-jzQ6vGeXolz3JUSm0lXiB6fbQrHfVGH3GQPjxsDGOem+lltC1XRezHHPK/DtKp7gvrCm4uzPQVccbft9mVBAgQ==
+"@kottster/common@^1.7.7":
+  version "1.7.7"
+  resolved "https://registry.yarnpkg.com/@kottster/common/-/common-1.7.7.tgz#a5670ee18a5ada52684c2d5620c8554f983f0813"
+  integrity sha512-hPapqX2g4SUn53IBe7f1Or3pSL8VxzLjfipHGrEGJa4pSaARciN6wi4f6m+FEQ/yJx+YOxj9qAN1fdOZEK6y0g==
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
@@ -3552,6 +3552,7 @@ string-width@^5.0.1, string-width@^5.1.2:
     strip-ansi "^7.0.1"
 
 "strip-ansi-cjs@npm:strip-ansi@^6.0.1", strip-ansi@^6.0.0, strip-ansi@^6.0.1:
+  name strip-ansi-cjs
   version "6.0.1"
   resolved "https://registry.yarnpkg.com/strip-ansi/-/strip-ansi-6.0.1.tgz#9e26c63d30f53443e9489495b2105d37b67a85d9"
   integrity sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==

@@ -74,7 +74,7 @@ export class FileCreator {
     this.createGitIgnore()
     
     // Create files
-    this.createFileFromTemplate('vite.config.ts', path.join(this.projectDir, 'vite.config.ts'));
+    this.createFileFromTemplate('vite.config.js', path.join(this.projectDir, `vite.config.${this.jsExt}`));
     this.createFileFromTemplate('app/root.jsx', path.join(this.projectDir, `app/root.${this.jsxExt}`));
     this.createFileFromTemplate('app/entry.client.jsx', path.join(this.projectDir, `app/entry.client.${this.jsxExt}`));
     this.createFileFromTemplate('app/service-route.js', path.join(this.projectDir, `app/service-route.${this.jsExt}`));

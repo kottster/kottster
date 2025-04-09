@@ -264,6 +264,18 @@ export class KnexMysql2 extends DataSourceAdapter {
     };
   }
 
+  async getDatabaseTableCount(): Promise<number> {
+    const schemaName = this.databaseSchemas[0];
+    
+    const countQueryResult = await this.client!.raw(`
+      SELECT COUNT(*) as table_count
+      FROM information_schema.tables 
+      WHERE table_schema = COALESCE(?, DATABASE()) AND table_type = 'BASE TABLE'
+    `, [schemaName ?? null]);
+    
+    return parseInt(countQueryResult[0][0].table_count);
+  }
+
   async getDatabaseSchemaRaw(): Promise<RelationalDatabaseSchema> {
     const schemaName = this.databaseSchemas[0];
 

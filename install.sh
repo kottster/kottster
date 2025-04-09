@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# To run this script, use the command:
+# ./install.sh
+
 cd packages
 
 for dir in */ ; do

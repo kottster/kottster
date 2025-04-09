@@ -1,6 +1,6 @@
 # Kottster
 
-Instant admin panel for your project ⚡
+A simple Node.js admin panel for viewing and managing data in your database. Build admin panels for your apps in minutes, not weeks ⚡
 
 ![NPM Downloads](https://img.shields.io/npm/dm/%40kottster%2Fcli)
 [![@kottster/server.svg](https://img.shields.io/npm/v/@kottster/server.svg)](https://www.npmjs.com/package/@kottster/server)

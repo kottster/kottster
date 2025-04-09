@@ -220,6 +220,17 @@ export class KnexBetterSqlite3 extends DataSourceAdapter {
       });
     };
   }
+
+  async getDatabaseTableCount(): Promise<number> {
+    const countQueryResult = await this.client!.raw(`
+      SELECT COUNT(*) as table_count
+      FROM sqlite_master
+      WHERE type = 'table'
+      AND name NOT LIKE 'sqlite_%'
+    `);
+    
+    return parseInt(countQueryResult[0].table_count);
+  }
   
   async getDatabaseSchemaRaw(): Promise<RelationalDatabaseSchema> {
     const databaseSchema: RelationalDatabaseSchema = {

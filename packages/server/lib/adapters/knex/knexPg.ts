@@ -228,6 +228,18 @@ export class KnexPg extends DataSourceAdapter {
       });
     };
   }
+
+  async getDatabaseTableCount(): Promise<number> {
+    const schemaName = this.databaseSchemas[0];
+    
+    const countQueryResult = await this.client!.raw(`
+      SELECT COUNT(*) as table_count
+      FROM information_schema.tables
+      WHERE table_schema = COALESCE(?, current_schema())
+    `, [schemaName ?? null]);
+    
+    return parseInt(countQueryResult.rows[0].table_count);
+  }
   
   async getDatabaseSchemaRaw(): Promise<RelationalDatabaseSchema> {
     const schemaName = this.databaseSchemas[0];

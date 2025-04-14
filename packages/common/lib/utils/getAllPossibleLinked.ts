@@ -1,19 +1,18 @@
 import { RelationalDatabaseSchema } from "../models/databaseSchema.model";
-import { LinkedItem, TableRpc } from "../models/tableRpc.model";
-import { findNameLikeColumns } from "./findNameLikeColumns";
+import { Relationship, TablePageConfig } from "../models/tablePage.model";
 
 /**
- * Get all possible linked items for a given table
- * @param tableRpc
+ * Get all possible relationships for a given table
+ * @param tablePage
  * @param databaseSchema
- * @returns The list of all possible linked items
+ * @returns The list of all possible relationships
  */
-export function getAllPossibleLinked(tableRpc: TableRpc, databaseSchema: RelationalDatabaseSchema): TableRpc['linked'] {
-  const tableSchema = databaseSchema?.tables?.find(t => t.name === tableRpc.table);
-  const linked: TableRpc['linked'] = {};
+export function getAllPossibleRelationships(tablePageConfig: TablePageConfig, databaseSchema: RelationalDatabaseSchema): TablePageConfig['relationships'] {
+  const tableSchema = databaseSchema?.tables?.find(t => t.name === tablePageConfig.table);
+  const relationships: TablePageConfig['relationships'] = [];
 
   if (!tableSchema) {
-    return linked;
+    return relationships;
   }
 
   // Add possible one-to-one relations
@@ -22,42 +21,41 @@ export function getAllPossibleLinked(tableRpc: TableRpc, databaseSchema: Relatio
       return;
     }
 
-    const foreignTableSchema = col.foreignKey && databaseSchema.tables.find(t => t.name === col.foreignKey?.table);
-
-    const linkedItemKey = col.name;
-    const linkedItem: LinkedItem = {
+    const relationshipKey = col.name;
+    const relationship: Relationship = {
+      key: relationshipKey,
       relation: 'oneToOne',
       foreignKeyColumn: col.name,
       targetTable: col.foreignKey.table,
       targetTableKeyColumn: col.foreignKey.column,
-      previewColumns: tableRpc.linkedItemPreviewColumns?.[linkedItemKey] ?? findNameLikeColumns(foreignTableSchema?.columns ?? []),
     };
 
-    linked[linkedItemKey] = linkedItem;
+    relationships.push(relationship);
   });
 
   // Add possible one-to-many relations
-  const tablesThatHasThisTableAsForeignKey = databaseSchema?.tables.filter((foreignTableSchema) => foreignTableSchema.columns.some((column) => column.foreignKey?.table === tableRpc.table)) ?? [];
+  const tablesThatHasThisTableAsForeignKey = databaseSchema?.tables.filter((foreignTableSchema) => foreignTableSchema.columns.some((column) => column.foreignKey?.table === tablePageConfig.table)) ?? [];
   tablesThatHasThisTableAsForeignKey.map(foreignTable => {
     const targetTableKeyColumn = foreignTable.columns.find(column => column.primaryKey);
     const targetTableForeignColumn = foreignTable.columns.find(
-      column => column.foreignKey?.table === tableRpc.table
+      column => column.foreignKey?.table === tablePageConfig.table
     );
 
     if (!targetTableKeyColumn || !targetTableForeignColumn) {
       return;
     }
     
-    const linkedItemKey = `${foreignTable.name}_by_${targetTableForeignColumn.name}`;
-    const linkedItem: LinkedItem = {
+    const relationshipKey = `${foreignTable.name}_by_${targetTableForeignColumn.name}`;
+    const relationship: Relationship = {
+      key: relationshipKey,
       relation: 'oneToMany',
       targetTable: foreignTable.name,
       targetTableKeyColumn: targetTableKeyColumn.name,
       targetTableForeignKeyColumn: targetTableForeignColumn.name,
     };
 
-    linked[linkedItemKey] = linkedItem;
+    relationships.push(relationship);
   });
 
-  return linked;
+  return relationships;
 }

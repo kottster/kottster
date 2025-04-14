@@ -1,5 +1,5 @@
-import { TableRpc } from "./tableRpc.model";
+import { TablePageConfig } from "./tablePage.model";
 
 export interface TableSpec {
-  tableRpc: TableRpc;
+  tablePageConfig: TablePageConfig;
 }

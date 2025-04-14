@@ -1,1 +1,1 @@
-export const pageSettingsTableRpcKey = 'rootTable';
+export const pageSettingsTablePageKey = 'rootTable';

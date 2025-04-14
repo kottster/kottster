@@ -1,15 +1,15 @@
-import { pageSettingsTableRpcKey } from "../constants/pageSettings";
-import { TableRpc } from "./tableRpc.model";
+import { pageSettingsTablePageKey } from "../constants/pageSettings";
+import { TablePageConfig } from "./tablePage.model";
 
 export interface PageSettings {
-  [pageSettingsTableRpcKey]: TableRpc;
-  [key: string]: TableRpc;
+  [pageSettingsTablePageKey]: TablePageConfig;
+  [key: string]: TablePageConfig;
 };
 
 export interface PageSettingsWithVersion {
   /** The settings version */
   _version?: string;
 
-  [pageSettingsTableRpcKey]: TableRpc;
-  [key: `${typeof pageSettingsTableRpcKey}_${string}`]: TableRpc;
+  [pageSettingsTablePageKey]: TablePageConfig;
+  [key: `${typeof pageSettingsTablePageKey}_${string}`]: TablePageConfig;
 };

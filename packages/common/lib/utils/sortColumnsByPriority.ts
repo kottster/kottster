@@ -1,16 +1,19 @@
 import { RelationalDatabaseSchemaColumn } from "../models/databaseSchema.model";
-import { TableRpc } from "../models/tableRpc.model";
+import { TablePageConfig } from "../models/tablePage.model";
 import { findNameLikeColumns } from "./findNameLikeColumns";
 
-// TODO: rename to sortColumnsByOrder
 /**
- * Sorts columns by priority
+ * Sorts columns by priority and transforms them into TablePageConfig column format
  * @param columns The columns to sort
+ * @param tablePageConfigColumns Optional existing table page config columns
  * @returns The sorted columns
  */
-export function sortColumnsByPriority(columns: RelationalDatabaseSchemaColumn[], columnsOrder?: TableRpc['columnsOrder']): RelationalDatabaseSchemaColumn[] {
+export function sortColumnsByPriority(
+  columns: RelationalDatabaseSchemaColumn[], 
+  tablePageConfigColumns?: TablePageConfig['columns']
+): TablePageConfig['columns'] {
   // Sort by column name
-  columns = [...columns].sort((a, b) => {
+  const sortedColumns = [...columns].sort((a, b) => {
     const getPriority = (column: RelationalDatabaseSchemaColumn): number => {
       if (column.primaryKey) {
         return 1;
@@ -49,19 +52,29 @@ export function sortColumnsByPriority(columns: RelationalDatabaseSchemaColumn[],
     return a.name.localeCompare(b.name);
   });
   
-  // Sort columns based on columnsOrder
-  return columnsOrder ? [...columns].sort((a, b) => {
-    const aIndex = columnsOrder.indexOf(a.name) ?? -1;
-    const bIndex = columnsOrder.indexOf(b.name) ?? -1;
+  // Apply existing table config ordering if provided
+  const orderedColumns = tablePageConfigColumns 
+    ? [...sortedColumns].sort((a, b) => {
+        const aIndex = tablePageConfigColumns.find(c => c.column === a.name)?.position ?? -1;
+        const bIndex = tablePageConfigColumns.find(c => c.column === b.name)?.position ?? -1;
 
-    if (aIndex === -1 && bIndex === -1) {
-      return 0;
-    } else if (aIndex === -1) {
-      return 1;
-    } else if (bIndex === -1) {
-      return -1;
-    } else {
-      return aIndex - bIndex;
-    }
-  }) : columns;
+        if (aIndex === -1 && bIndex === -1) {
+          return 0;
+        } else if (aIndex === -1) {
+          return 1;
+        } else if (bIndex === -1) {
+          return -1;
+        } else {
+          return aIndex - bIndex;
+        }
+      })
+    : sortedColumns;
+  
+  return orderedColumns
+    .map(column => {
+      const existingConfig = tablePageConfigColumns?.find(c => c.column === column.name);
+      
+      return existingConfig;
+    })
+    .filter(c => !!c);
 }

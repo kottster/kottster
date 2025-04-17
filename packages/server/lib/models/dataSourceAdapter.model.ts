@@ -1,9 +1,6 @@
 import { Knex } from "knex";
-import { DataSourceAdapterType, FormField, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TableRpcInputDelete, TableRpcInputInsert, TableRpcInputSelect, TableRpcInputUpdate, TableRpcResultInsertDTO, TableRpcResultSelectDTO, TableRpcResultSelectRecord, TableRpcResultUpdateDTO, TableRpcResultSelectRecordLinkedDTO, defaultTablePageSize, TableRpcInputSelectUsingExecuteQuery, TableRpcInputSelectSingle, TableRpcResultSelectSingleDTO, findLinkedItem, DataSourceTablesConfig, getTableData, TableRpc, FilterItem } from "@kottster/common";
+import { DataSourceAdapterType, FormField, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TablePageInputDelete, TablePageInputInsert, TablePageInputSelect, TablePageInputUpdate, TablePageResultInsertDTO, TablePageResultSelectDTO, TablePageResultSelectRecord, TablePageResultUpdateDTO, TablePageResultSelectRecordLinkedDTO, defaultTablePageSize, TablePageInputSelectUsingExecuteQuery, TablePageInputSelectSingle, TablePageResultSelectSingleDTO, findRelationship, DataSourceTablesConfig, getTableData, TablePageConfig, FilterItem, Relationship } from "@kottster/common";
 import { KottsterApp } from "../core/app";
-import { OneToOneRelation } from "./oneToOneRelation";
-import { OneToManyRelation } from "./oneToManyRelation";
-import { ManyToManyRelation } from "./manyToManyRelation";
 
 /**
  * The base class for all data source adapters
@@ -143,34 +140,26 @@ export abstract class DataSourceAdapter {
    * Get the table records (Table RPC)
    * @returns The table records
    */
-  async getTableRecords(input: TableRpcInputSelect, databaseSchema: RelationalDatabaseSchema, tableRpcDefault: TableRpc): Promise<TableRpcResultSelectDTO> {
-    const tableRpc = input.tableRpc ?? tableRpcDefault;
+  async getTableRecords(input: TablePageInputSelect, databaseSchema: RelationalDatabaseSchema, tablePageConfigDefault: TablePageConfig): Promise<TablePageResultSelectDTO> {
+    const tablePageConfig = input.tablePageConfig ?? tablePageConfigDefault;
     const { 
-      linked, 
       tableSchema, 
-      searchableColumns, 
-      sortableColumns, 
-      primaryKeyColumn,
-    } = getTableData({ tableRpc, databaseSchema });
-    const executeQuery = tableRpc.executeQuery;
-    const table = tableRpc.table;
-    const columns = tableRpc.columns;
-    const where = tableRpc.where;
-    const orderBy = tableRpc.orderBy;
-    const hiddenColumns = tableRpc.hiddenColumns;
-    const hiddenLinkedItems = tableRpc.hiddenLinkedItems;
-    const pageSize = ((input.pageSize > 1000 ? 1000 : input.pageSize) || tableRpc.pageSize || defaultTablePageSize);
+      tablePageProcessedConfig,
+    } = getTableData({ tablePageConfig, databaseSchema });
+    const executeQuery = tablePageConfig.executeQuery;
+    const table = tablePageConfig.table;
+    const limit = ((input.pageSize > 1000 ? 1000 : input.pageSize) || tablePageProcessedConfig.pageSize || defaultTablePageSize);
 
     // If a custom query is provided, execute it and return the result directly
     if (executeQuery) {
-      return executeQuery(input as TableRpcInputSelectUsingExecuteQuery);
+      return executeQuery(input as TablePageInputSelectUsingExecuteQuery);
     }
 
     if (!tableSchema) {
       throw new Error('Table schema not provided');
     }
     
-    if (!table || !primaryKeyColumn) {
+    if (!table || !tablePageProcessedConfig.primaryKeyColumn) {
       throw new Error('Table name or primary key column not provided');
     }
 
@@ -183,56 +172,42 @@ export abstract class DataSourceAdapter {
 
     // Selecting records by a specific foreign record
     if (input.getByForeignRecord) {
-      const { linkedItem, recordPrimaryKeyValue } = input.getByForeignRecord;
-      if (linkedItem.relation === 'oneToMany') {
-        query.where(linkedItem.targetTableForeignKeyColumn, recordPrimaryKeyValue);
-        countQuery.where(linkedItem.targetTableForeignKeyColumn, recordPrimaryKeyValue);
+      const { relationship, recordPrimaryKeyValue } = input.getByForeignRecord;
+      if (relationship.relation === 'oneToMany' && relationship.targetTableForeignKeyColumn) {
+        query.where(relationship.targetTableForeignKeyColumn, recordPrimaryKeyValue);
+        countQuery.where(relationship.targetTableForeignKeyColumn, recordPrimaryKeyValue);
       }
     }
 
     // Select specific columns
-    if (columns && columns.length > 0) {
-      if (primaryKeyColumn && !columns.includes(primaryKeyColumn)) {
-        columns.push(primaryKeyColumn);
+    if (tablePageProcessedConfig.selectableColumns && tablePageProcessedConfig.selectableColumns.length > 0) {
+      if (tablePageProcessedConfig.primaryKeyColumn && !tablePageProcessedConfig.selectableColumns.includes(tablePageProcessedConfig.primaryKeyColumn)) {
+        tablePageProcessedConfig.selectableColumns.push(tablePageProcessedConfig.primaryKeyColumn);
       }
-      query.select(columns);
+      query.select(tablePageProcessedConfig.selectableColumns);
     } else {
       query.select('*');
     }
     countQuery.count({ count: '*' });
 
-    // Apply where conditions
-    if (where && where.length > 0) {
-      where.forEach(condition => {
-        query.where(condition.column, condition.operator, condition.value);
-        countQuery.where(condition.column, condition.operator, condition.value);
-      });
-    }
-
     // Apply search
     if (input.search) {
       const searchValue = input.search.trim();
 
-      if (searchableColumns && searchableColumns.length > 0) {
-        query.where(this.getSearchBuilder(searchableColumns, searchValue));
-        countQuery.where(this.getSearchBuilder(searchableColumns, searchValue));
+      if (tablePageProcessedConfig.searchableColumns && tablePageProcessedConfig.searchableColumns.length > 0) {
+        query.where(this.getSearchBuilder(tablePageProcessedConfig.searchableColumns, searchValue));
+        countQuery.where(this.getSearchBuilder(tablePageProcessedConfig.searchableColumns, searchValue));
       }
     }
 
     // Apply ordering
-    if (orderBy && orderBy.length > 0) {
-      orderBy.forEach(order => {
-        if (sortableColumns && sortableColumns.includes(order.column)) {
-          query.orderBy(order.column, order.direction);
-        }
-      });
-    } else if (input.sorting) {
-      if (sortableColumns && sortableColumns.includes(input.sorting.column)) {
+    if (input.sorting) {
+      if (tablePageProcessedConfig.sortableColumns && tablePageProcessedConfig.sortableColumns.includes(input.sorting.column)) {
         query.orderBy(input.sorting.column, input.sorting.direction);
       }
     } else {
       // By default, order by the primary key column
-      query.orderBy(primaryKeyColumn, 'desc');
+      query.orderBy(tablePageProcessedConfig.primaryKeyColumn, 'desc');
     }
 
     // Apply filters
@@ -242,9 +217,9 @@ export abstract class DataSourceAdapter {
     }
 
     // Apply pagination
-    const offset = (input.page - 1) * pageSize;
+    const offset = (input.page - 1) * limit;
     query
-      .limit(pageSize)
+      .limit(limit)
       .offset(offset);
 
     const [records, [{ count }]] = await Promise.all([
@@ -261,36 +236,25 @@ export abstract class DataSourceAdapter {
       });
     }
 
-    const linkedOneToOne = Object.fromEntries(
-      Object.entries(linked ?? {})
-        .filter(([, linkedItem]) => linkedItem.relation === 'oneToOne' && !hiddenColumns?.includes(linkedItem.foreignKeyColumn))
-    ) as Record<string, OneToOneRelation>;
-    
-    const linkedOneToMany = Object.fromEntries(
-      Object.entries(linked ?? {})
-        .filter(([linkedItemKey, linkedItem]) => linkedItem.relation === 'oneToMany' && !hiddenLinkedItems?.includes(linkedItemKey))
-    ) as Record<string, OneToManyRelation>;
-
-    const linkedManyToMany = Object.fromEntries(
-      Object.entries(linked ?? {})
-        .filter(([linkedItemKey, linkedItem]) => linkedItem.relation === 'manyToMany' && !hiddenLinkedItems?.includes(linkedItemKey))
-    ) as Record<string, ManyToManyRelation>;
+    const oneToOneRelationships = (tablePageProcessedConfig.relationships?.filter(relationship => relationship.relation === 'oneToOne') ?? []) as (Relationship & { relation: 'oneToOne' })[]; 
+    const oneToManyRelationships = (tablePageProcessedConfig.relationships?.filter(relationship => relationship.relation === 'oneToMany') ?? []) as (Relationship & { relation: 'oneToMany' })[];
+    const manyToManyRelationships = (tablePageProcessedConfig.relationships?.filter(relationship => relationship.relation === 'manyToMany') ?? []) as (Relationship & { relation: 'manyToMany' })[];
     
     // Preload linked one-to-one records
-    if (Object.keys(linkedOneToOne).length > 0) {
+    if (oneToOneRelationships.length > 0) {
       const linkedRecordKeys: Record<string, any[]> = {};
 
       records.forEach(record => {
-        Object.entries(linkedOneToOne).forEach(([, linkedItem]) => {
-          const values = record[linkedItem.foreignKeyColumn];
-          if (!values) {
+        oneToOneRelationships.forEach(relationship => {
+          const values = relationship.foreignKeyColumn && record[relationship.foreignKeyColumn];
+          if (!values || !relationship.foreignKeyColumn) {
             return;
           }
 
-          if (!linkedRecordKeys[linkedItem.foreignKeyColumn]) {
-            linkedRecordKeys[linkedItem.foreignKeyColumn] = [];
+          if (!linkedRecordKeys[relationship.foreignKeyColumn]) {
+            linkedRecordKeys[relationship.foreignKeyColumn] = [];
           }
-          linkedRecordKeys[linkedItem.foreignKeyColumn].push(values);
+          linkedRecordKeys[relationship.foreignKeyColumn].push(values);
         });
       });
 
@@ -299,55 +263,56 @@ export abstract class DataSourceAdapter {
 
       // Fetch the foreign tables records
       await Promise.all(Object.entries(linkedRecordKeys).map(async ([column, values]) => {
-        const linkedItem = Object.values(linkedOneToOne)?.find(linked => linked.foreignKeyColumn === column);
-        if (!linkedItem) {
+        const relationship = oneToOneRelationships?.find(linked => linked.foreignKeyColumn === column);
+        if (!relationship || !relationship.targetTableKeyColumn || !relationship.targetTable) {
           return;
         }
 
+        const tablePageConfigColumn = tablePageProcessedConfig.columns?.find(c => c.column === column);
+
         const foreignRecords = await this
-          .client(linkedItem.targetTable)
-          .select(linkedItem.previewColumns ? [linkedItem.targetTableKeyColumn, ...linkedItem.previewColumns] : [linkedItem.targetTableKeyColumn])
-          .whereIn(linkedItem.targetTableKeyColumn, values);
+          .client(relationship.targetTable)
+          .select(tablePageConfigColumn?.relationshipPreviewColumns ? [relationship.targetTableKeyColumn, ...tablePageConfigColumn.relationshipPreviewColumns] : [relationship.targetTableKeyColumn])
+          .whereIn(relationship.targetTableKeyColumn, values);
 
         // If excluded columns are provided, remove them from all records
-        if (this.tablesConfig[linkedItem.targetTable]?.excludedColumns) {
+        if (this.tablesConfig[relationship.targetTable]?.excludedColumns) {
           foreignRecords.forEach(record => {
-            this.tablesConfig[linkedItem.targetTable].excludedColumns?.forEach(column => {
+            this.tablesConfig[relationship.targetTable!].excludedColumns?.forEach(column => {
               delete record[column];
             });
           });
         }
 
-        linkedTableRecords[linkedItem.targetTable] = foreignRecords;
+        linkedTableRecords[relationship.targetTable] = foreignRecords;
       }));
 
       // Add linked records to the records
       records.forEach(record => {
         Object.keys(linkedRecordKeys).forEach((column) => {
-          
-          const linkedItemKey = Object.entries(linkedOneToOne).find(([, linkedItem]) => linkedItem.foreignKeyColumn === column)?.[0];
-          if (!linkedItemKey) {
+          const relationshipKey = oneToOneRelationships.find(relationship => relationship.foreignKeyColumn === column)?.key;
+          if (!relationshipKey) {
             return;
           }
           
-          const linkedItem = linkedOneToOne?.[linkedItemKey];
-          if (!linkedItem) {
+          const relationship = oneToOneRelationships?.find(relationship => relationship.key === relationshipKey);
+          if (!relationship || !relationship.targetTable || !relationship.targetTableKeyColumn) {
             return;
           }
 
-          const linkedRecords = linkedTableRecords[linkedItem.targetTable];
-          if (!record['_linked']) {
-            record['_linked'] = {};
+          const linkedRecords = linkedTableRecords[relationship.targetTable];
+          if (!record['_related']) {
+            record['_related'] = {};
           }
-          if (!record['_linked'][linkedItemKey]) {
-            (record['_linked'] as TableRpcResultSelectRecordLinkedDTO)[linkedItemKey] = {
+          if (!record['_related'][relationshipKey]) {
+            (record['_related'] as TablePageResultSelectRecordLinkedDTO)[relationshipKey] = {
               records: [],
             };
           }
           
           linkedRecords.map(linkedRecord => {
-            if (linkedRecord[linkedItem.targetTableKeyColumn] === record[column]) {
-              record['_linked'][linkedItemKey].records.push(linkedRecord);
+            if (linkedRecord[relationship.targetTableKeyColumn!] === record[column]) {
+              record['_related'][relationshipKey].records.push(linkedRecord);
             }
           });
           
@@ -356,18 +321,18 @@ export abstract class DataSourceAdapter {
     }
 
     // Preload linked one-to-many records
-    if (Object.values(linkedOneToMany).length > 0 || Object.values(linkedManyToMany).length > 0) {
-      await Promise.all(Object.entries({ ...linkedOneToMany, ...linkedManyToMany }).map(async ([linkedItemKey, linkedItem]) => {
-        const foreignKeyValues = records.map(record => record[primaryKeyColumn!]);
+    if (oneToManyRelationships.length > 0 || manyToManyRelationships.length > 0) {
+      await Promise.all([...oneToManyRelationships, ...manyToManyRelationships].map(async relationship => {
+        const foreignKeyValues = records.map(record => record[tablePageProcessedConfig.primaryKeyColumn!]);
         
         // TODO: replace with a single query
         const foreignTotalRecords: Record<string, number> = {};
-        if (linkedItem.relation === 'oneToMany') {
+        if (relationship.relation === 'oneToMany' && relationship.targetTableForeignKeyColumn) {
           await Promise.all(
             foreignKeyValues.map(async keyValue => {
-              const recordForeignRecords = await this.client(linkedItem.targetTable)
+              const recordForeignRecords = await this.client(relationship.targetTable)
                 .count({ count: '*' })
-                .where(linkedItem.targetTableForeignKeyColumn, keyValue);
+                .where(relationship.targetTableForeignKeyColumn!, keyValue);
 
               foreignTotalRecords[keyValue] = recordForeignRecords[0]?.count ? Number(recordForeignRecords[0]?.count) : 0;
             })
@@ -375,15 +340,15 @@ export abstract class DataSourceAdapter {
         }
 
         // TODO: replace with a single query
-        if (linkedItem.relation === 'manyToMany') {
+        if (relationship.relation === 'manyToMany' && relationship.junctionTable) {
           await Promise.all(
             foreignKeyValues.map(async keyValue => {
               // Select the count of the records in the target table using the junction table
-              const recordForeignRecords = await this.client(linkedItem.targetTable)
-                .join(linkedItem.junctionTable, `${linkedItem.targetTable}.${linkedItem.targetTableKeyColumn}`, `${linkedItem.junctionTable}.${linkedItem.junctionTableTargetKeyColumn}`)
-                .join(table!, `${linkedItem.junctionTable}.${linkedItem.junctionTableSourceKeyColumn}`, `${table}.${primaryKeyColumn}`)
-                .where(`${table}.${primaryKeyColumn}`, keyValue)
-                .count({ count: `${linkedItem.targetTable}.${linkedItem.targetTableKeyColumn}` });
+              const recordForeignRecords = await this.client(relationship.targetTable)
+                .join(relationship.junctionTable!, `${relationship.targetTable}.${relationship.targetTableKeyColumn}`, `${relationship.junctionTable}.${relationship.junctionTableTargetKeyColumn}`)
+                .join(table!, `${relationship.junctionTable}.${relationship.junctionTableSourceKeyColumn}`, `${table}.${tablePageProcessedConfig.primaryKeyColumn}`)
+                .where(`${table}.${tablePageProcessedConfig.primaryKeyColumn}`, keyValue)
+                .count({ count: `${relationship.targetTable}.${relationship.targetTableKeyColumn}` });
 
               foreignTotalRecords[keyValue] = recordForeignRecords[0]?.count ? Number(recordForeignRecords[0]?.count) : 0;
             })
@@ -392,17 +357,17 @@ export abstract class DataSourceAdapter {
 
         // Add linked records to the records
         records.forEach(record => {
-          if (!record['_linked']) {
-            record['_linked'] = {};
+          if (!record['_related']) {
+            record['_related'] = {};
           }
-          if (!record['_linked'][linkedItemKey]) {
-            (record['_linked'] as TableRpcResultSelectRecordLinkedDTO)[linkedItemKey] = {
+          if (!record['_related'][relationship.key]) {
+            (record['_related'] as TablePageResultSelectRecordLinkedDTO)[relationship.key] = {
               totalRecords: 0,
             };
           }
 
           // Loop through the foreign records and add them to the linked field
-          record['_linked'][linkedItemKey].totalRecords = foreignTotalRecords[record[primaryKeyColumn!]] ?? 0;
+          record['_related'][relationship.key].totalRecords = foreignTotalRecords[record[tablePageProcessedConfig.primaryKeyColumn!]] ?? 0;
         });
       }));
     }
@@ -415,14 +380,14 @@ export abstract class DataSourceAdapter {
     };
   };
 
-  private async prepareRecords(records: any[], tableSchema: RelationalDatabaseSchemaTable): Promise<TableRpcResultSelectRecord[]> {
+  private async prepareRecords(records: any[], tableSchema: RelationalDatabaseSchemaTable): Promise<TablePageResultSelectRecord[]> {
     const preparedRecords = await Promise.all(records.map(async record => {
       const preparedRecord: Record<string, any> = {
-        _linked: record._linked,
+        _related: record._related,
       };
 
-      // Process each property of the record except _linked
-      await Promise.all(Object.entries(record).filter(([key]) => key !== '_linked').map(async ([key, value]) => {
+      // Process each property of the record except _related
+      await Promise.all(Object.entries(record).filter(([key]) => key !== '_related').map(async ([key, value]) => {
         const columnSchema = tableSchema.columns.find(column => column.name === key);
         if (!columnSchema) {
           preparedRecord[key] = value;
@@ -447,21 +412,30 @@ export abstract class DataSourceAdapter {
    * @description Used for one-to-one RecordSelect fields
    * @returns The table record
    */
-  async getOneTableRecord(input: TableRpcInputSelectSingle, databaseSchema: RelationalDatabaseSchema): Promise<TableRpcResultSelectSingleDTO> {
-    const { linkedItemKey, primaryKeyValues, forPreview, tableRpc } = input;
-    const { linked, tableSchema, primaryKeyColumn: tableRpcPrimaryKeyColumn } = getTableData({ tableRpc, databaseSchema });
+  async getOneTableRecord(input: TablePageInputSelectSingle, databaseSchema: RelationalDatabaseSchema): Promise<TablePageResultSelectSingleDTO> {
+    const { relationshipKey, primaryKeyValues, forPreview, tablePageConfig } = input;
+    const { 
+      tableSchema,
+      tablePageProcessedConfig: {
+        relationships, 
+        primaryKeyColumn: tablePagePrimaryKeyColumn, 
+        columns 
+      }
+    } = getTableData({ tablePageConfig, databaseSchema });
     if (!tableSchema) {
       throw new Error('Table schema not provided');
     }
 
-    const linkedItem = linkedItemKey ? findLinkedItem(linkedItemKey, linked) : null;
-    if ((linkedItemKey && !linkedItem) || (linkedItem && linkedItem.relation !== 'oneToOne') || !primaryKeyValues?.length) {
-      throw new Error('Invalid primary key values or linked item key');
+    const relationship = relationshipKey ? findRelationship(relationshipKey, relationships) : null;
+    if ((relationshipKey && !relationship) || (relationship && relationship.relation !== 'oneToOne') || !primaryKeyValues?.length) {
+      throw new Error('Invalid primary key values or relationship key');
     }
     
-    const columns = tableRpc.columns;
-    const table = linkedItem ? linkedItem.targetTable : tableRpc.table;
-    const primaryKeyColumn = linkedItem ? linkedItem.targetTableKeyColumn : tableRpcPrimaryKeyColumn;
+    const selectableColumns = columns?.map(c => c.column) ?? [];
+    const table = relationship ? relationship.targetTable : tablePageConfig.table;
+    const primaryKeyColumn = relationship ? relationship.targetTableKeyColumn : tablePagePrimaryKeyColumn;
+
+    const tablePageConfigColumn = columns?.find(c => c.column === relationship?.foreignKeyColumn);
     
     if (!table || !primaryKeyColumn) {
       throw new Error('Table name or primary key column not provided');
@@ -475,11 +449,11 @@ export abstract class DataSourceAdapter {
 
     // Select specific columns
     if (columns?.length && !forPreview) {
-      const combinedColumns = columns.concat([primaryKeyColumn]) ?? [primaryKeyColumn];
+      const combinedColumns = selectableColumns.concat([primaryKeyColumn]) ?? [primaryKeyColumn];
       query.select(combinedColumns.map(column => `${table}.${column}`));
     } else {
-      if (linkedItem && forPreview) {
-        query.select([primaryKeyColumn, ...(linkedItem.previewColumns ?? [])].map(column => `${table}.${column}`));
+      if (relationship && forPreview) {
+        query.select([primaryKeyColumn, ...(tablePageConfigColumn?.relationshipPreviewColumns ?? [])].map(column => `${table}.${column}`));
       } else if (!columns) {
         // If no columns are specified, select all columns
         query.select('*');
@@ -516,12 +490,15 @@ export abstract class DataSourceAdapter {
    * Insert the table records (Table RPC)
    * @returns The table records
    */
-  async insertTableRecord(input: TableRpcInputInsert, databaseSchema: RelationalDatabaseSchema): Promise<TableRpcResultInsertDTO> {
-    const { tableRpc } = input;
-    const { tableSchema, allowInsert, primaryKeyColumn } = getTableData({ tableRpc, databaseSchema });
-    const table = tableRpc.table;
+  async insertTableRecord(input: TablePageInputInsert, databaseSchema: RelationalDatabaseSchema): Promise<TablePageResultInsertDTO> {
+    const { tablePageConfig } = input;
+    const { 
+      tableSchema, 
+      tablePageProcessedConfig,
+    } = getTableData({ tablePageConfig, databaseSchema });
+    const table = tablePageConfig.table;
 
-    if (!table || !primaryKeyColumn) {
+    if (!table || !tablePageProcessedConfig.primaryKeyColumn) {
       throw new Error('Table name or primary key column not provided');
     }
     if (this.tablesConfig[table]?.excluded || this.tablesConfig[table]?.preventInsert) {
@@ -530,18 +507,18 @@ export abstract class DataSourceAdapter {
     if (this.app.readOnlyMode) {
       throw new Error('Insert operation not permitted in read-only mode');
     }
-    if (!allowInsert) {
+    if (!tablePageProcessedConfig.allowInsert) {
       throw new Error('Insert operation not permitted on this table');
     }
 
     // Check if the record can be inserted
-    if (tableRpc.canBeInserted && !tableRpc.canBeInserted(input.values)) {
+    if (tablePageConfig.canBeInserted && !tablePageConfig.canBeInserted(input.values)) {
       throw new Error('Record cannot be inserted');
     }
 
     // Pre-process the input values
-    if (tableRpc.beforeInsert) {
-      input.values = await tableRpc.beforeInsert(input.values);
+    if (tablePageConfig.beforeInsert) {
+      input.values = await tablePageConfig.beforeInsert(input.values);
     } else {
       for (const key in input.values) {
         const columnSchema = tableSchema?.columns.find(column => column.name === key);
@@ -560,12 +537,15 @@ export abstract class DataSourceAdapter {
    * Update the table records (Table RPC)
    * @returns The table records
    */
-  async updateTableRecords(input: TableRpcInputUpdate, databaseSchema: RelationalDatabaseSchema): Promise<TableRpcResultUpdateDTO> {
-    const { tableRpc } = input;
-    const { tableSchema, allowUpdate, primaryKeyColumn } = getTableData({ tableRpc, databaseSchema });
-    const table = tableRpc.table;
+  async updateTableRecords(input: TablePageInputUpdate, databaseSchema: RelationalDatabaseSchema): Promise<TablePageResultUpdateDTO> {
+    const { tablePageConfig } = input;
+    const { 
+      tableSchema, 
+      tablePageProcessedConfig 
+    } = getTableData({ tablePageConfig, databaseSchema });
+    const table = tablePageConfig.table;
 
-    if (!table || !primaryKeyColumn) {
+    if (!table || !tablePageProcessedConfig.primaryKeyColumn) {
       throw new Error('Table name or primary key column not provided');
     }
     if (this.tablesConfig[table]?.excluded || this.tablesConfig[table]?.preventUpdate) {
@@ -574,18 +554,18 @@ export abstract class DataSourceAdapter {
     if (this.app.readOnlyMode) {
       throw new Error('Update operation not permitted in read-only mode');
     }
-    if (!allowUpdate) {
+    if (!tablePageProcessedConfig.allowUpdate) {
       throw new Error('Update operation not permitted on this table');
     }
 
     // Check if the record can be updated
-    if (tableRpc.canBeUpdated && !tableRpc.canBeUpdated(input.values)) {
+    if (tablePageConfig.canBeUpdated && !tablePageConfig.canBeUpdated(input.values)) {
       throw new Error('Record cannot be updated');
     }
 
     // Pre-process the input values
-    if (tableRpc.beforeUpdate) {
-      input.values = await tableRpc.beforeUpdate(input.values);
+    if (tablePageConfig.beforeUpdate) {
+      input.values = await tablePageConfig.beforeUpdate(input.values);
     } else {
       for (const key in input.values) {
         const columnSchema = tableSchema?.columns.find(column => column.name === key);
@@ -596,7 +576,7 @@ export abstract class DataSourceAdapter {
     }
 
     await this.client(table)
-      .whereIn(primaryKeyColumn, input.primaryKeys)
+      .whereIn(tablePageProcessedConfig.primaryKeyColumn, input.primaryKeys)
       .update(input.values);
 
     return {};
@@ -606,12 +586,12 @@ export abstract class DataSourceAdapter {
    * Delete the table records (Table RPC)
    * @returns The table records
    */
-  async deleteTableRecords(input: TableRpcInputDelete, databaseSchema: RelationalDatabaseSchema): Promise<true> {
-    const { tableRpc } = input;
-    const { allowDelete, primaryKeyColumn } = getTableData({ tableRpc, databaseSchema });
-    const table = tableRpc.table;
+  async deleteTableRecords(input: TablePageInputDelete, databaseSchema: RelationalDatabaseSchema): Promise<true> {
+    const { tablePageConfig } = input;
+    const { tablePageProcessedConfig } = getTableData({ tablePageConfig, databaseSchema });
+    const table = tablePageConfig.table;
 
-    if (!table || !primaryKeyColumn) {
+    if (!table || !tablePageProcessedConfig.primaryKeyColumn) {
       throw new Error('Table name or primary key column not provided');
     }
     if (this.tablesConfig[table]?.excluded || this.tablesConfig[table]?.preventDelete) {
@@ -620,17 +600,17 @@ export abstract class DataSourceAdapter {
     if (this.app.readOnlyMode) {
       throw new Error('Delete operation not permitted in read-only mode');
     }
-    if (!allowDelete) {
+    if (!tablePageProcessedConfig.allowDelete) {
       throw new Error('Delete operation not permitted on this table');
     }
 
     // Check if the record can be deleted
-    if (tableRpc.canBeDeleted && !tableRpc.canBeDeleted(input.primaryKeys)) {
+    if (tablePageConfig.canBeDeleted && !tablePageConfig.canBeDeleted(input.primaryKeys)) {
       throw new Error('Record cannot be deleted');
     }
 
     await this.client.table(table)
-      .whereIn(primaryKeyColumn, input.primaryKeys)
+      .whereIn(tablePageProcessedConfig.primaryKeyColumn, input.primaryKeys)
       .del();
 
     return true;

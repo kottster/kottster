@@ -1,20 +1,23 @@
-import { TableRpc } from "./tableRpc.model";
+import { TablePageConfig } from "./tablePage.model";
 
 export interface OneToOneRelationConfig {
-  relation: 'oneToOne';
+  key: string;
+  
+  position?: number;
+
+  hidden?: boolean;
+
+  relation?: 'oneToOne';
 
   /** The name of the column in the current table that references the target table's primary key */
-  foreignKeyColumn: string;
+  foreignKeyColumn?: string;
   
   /** Name of the table being referenced/joined */
-  targetTable: string;
+  targetTable?: string;
   
   /** The foreign key column in the current table that references the target table's primary key */
-  targetTableKeyColumn: string;
-  
-  /** Array of column names to display in the preview view (e.g. table cells, dropdowns) */
-  previewColumns: string[];
+  targetTableKeyColumn?: string;
 
   /** Optional object to specify linked tables of the target table */
-  linked?: TableRpc['linked'];
+  relationships?: TablePageConfig['relationships'];
 }

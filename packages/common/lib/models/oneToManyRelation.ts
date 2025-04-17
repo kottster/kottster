@@ -1,17 +1,23 @@
-import { TableRpc } from "./tableRpc.model";
+import { TablePageConfig } from "./tablePage.model";
 
 export interface OneToManyRelationConfig {
-  relation: 'oneToMany';
+  key: string;
+
+  position?: number;
+
+  hidden?: boolean;
+  
+  relation?: 'oneToMany';
 
   /** Name of the table being referenced/joined */
-  targetTable: string;
+  targetTable?: string;
   
   /** The primary key column in the target table */
-  targetTableKeyColumn: string;
+  targetTableKeyColumn?: string;
 
   /** The foreign key column in the target table that references the current table's primary key */
-  targetTableForeignKeyColumn: string;
+  targetTableForeignKeyColumn?: string;
 
   /** Optional object to specify linked tables of the target table */
-  linked?: TableRpc['linked'];
+  relationships?: TablePageConfig['relationships'];
 }

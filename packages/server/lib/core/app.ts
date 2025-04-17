@@ -1,6 +1,6 @@
 import { ExtendAppContextFunction } from '../models/appContext.model';
 import { PROJECT_DIR } from '../constants/projectDir';
-import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, TableRpc, RPCActionBody, TableRpcInputSelect, TableRpcInputDelete, TableRpcInputUpdate, TableRpcInputInsert, isSchemaEmpty, RPCResponse, schemaPlaceholder, InternalApiResponse, TableSpec, TableRpcInputSelectSingle, PageSettings, pageSettingsTableRpcKey, PageSettingsWithVersion } from '@kottster/common';
+import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, TablePageConfig, RPCActionBody, TablePageInputSelect, TablePageInputDelete, TablePageInputUpdate, TablePageInputInsert, isSchemaEmpty, RPCResponse, schemaPlaceholder, InternalApiResponse, TablePageInputSelectSingle, PageSettings, pageSettingsTablePageKey, PageSettingsWithVersion } from '@kottster/common';
 import { DataSourceRegistry } from './dataSourceRegistry';
 import { ActionService } from '../services/action.service';
 import * as jose from 'jose';
@@ -209,18 +209,18 @@ export class KottsterApp {
   /**
    * Define a table controller
    * @param dataSource The data source
-   * @param tableRpcSimplified The table RPC
+   * @param tablePageOrPageSettings The table page configuration
    * @returns The action function
    */
   public defineTableController(
     dataSource: DataSource, 
-    tableRpcOrPageSettings: TableRpc | PageSettingsWithVersion,
+    tablePageOrPageSettings: TablePageConfig | PageSettingsWithVersion,
   ): ActionFunction {
-    // Determine if the input is a PageSettings object or a TableRpc object
-    const pageSettings = pageSettingsTableRpcKey in tableRpcOrPageSettings 
-      ? tableRpcOrPageSettings as PageSettings 
+    // Determine if the input is a PageSettings object or a TablePage object
+    const pageSettings = pageSettingsTablePageKey in tablePageOrPageSettings 
+      ? tablePageOrPageSettings as PageSettings 
       : {
-        [pageSettingsTableRpcKey]: tableRpcOrPageSettings,
+        [pageSettingsTablePageKey]: tablePageOrPageSettings,
       };
 
     const func: ActionFunction = async ({ request }) => {
@@ -248,46 +248,42 @@ export class KottsterApp {
       return json(response);
     };
     
-    func['rpcFunction'] = 'createTableRpc';
+    func['rpcFunction'] = 'createTablePage';
     
     return func;
   };
 
   private async processTableControllerRequest(dataSource: DataSource, request: Request, pageSettings: PageSettings): Promise<any> {
-    const tableRpc = pageSettings[pageSettingsTableRpcKey];
+    const tablePageConfig = pageSettings[pageSettingsTablePageKey];
 
     const { isTokenValid, newRequest, invalidTokenErrorMessage } = await this.ensureValidToken(request);
     if (!isTokenValid) {
       throw new Error(`Invalid JWT token: ${invalidTokenErrorMessage}`);
     }
 
-    const body = await newRequest.json() as RPCActionBody<'page_settings' | 'table_spec' | 'table_select' | 'table_selectOne' | 'table_insert' | 'table_update' | 'table_delete'>;
+    const body = await newRequest.json() as RPCActionBody<'page_settings' | 'table_select' | 'table_selectOne' | 'table_insert' | 'table_update' | 'table_delete'>;
 
     try {
       if (body.action === 'page_settings') {
         return pageSettings;
-      } else if (body.action === 'table_spec') {
-        return {
-          tableRpc,
-        } as TableSpec;
       } else {
         const dataSourceAdapter = dataSource.adapter as DataSourceAdapter;
         const databaseSchema = await dataSourceAdapter.getDatabaseSchema();
 
         if (body.action === 'table_select') {
-          const result = await dataSourceAdapter.getTableRecords(body.input as TableRpcInputSelect, databaseSchema, tableRpc);
+          const result = await dataSourceAdapter.getTableRecords(body.input as TablePageInputSelect, databaseSchema, tablePageConfig);
           return result;
         } else if (body.action === 'table_selectOne') {
-          const result = await dataSourceAdapter.getOneTableRecord(body.input as TableRpcInputSelectSingle, databaseSchema);
+          const result = await dataSourceAdapter.getOneTableRecord(body.input as TablePageInputSelectSingle, databaseSchema);
           return result;
         } else if (body.action === 'table_insert') {
-          const result = await dataSourceAdapter.insertTableRecord(body.input as TableRpcInputInsert, databaseSchema);
+          const result = await dataSourceAdapter.insertTableRecord(body.input as TablePageInputInsert, databaseSchema);
           return result;
         } else if (body.action === 'table_update') {
-          const result = await dataSourceAdapter.updateTableRecords(body.input as TableRpcInputUpdate, databaseSchema);
+          const result = await dataSourceAdapter.updateTableRecords(body.input as TablePageInputUpdate, databaseSchema);
           return result;
         } else if (body.action === 'table_delete') {
-          const result = await dataSourceAdapter.deleteTableRecords(body.input as TableRpcInputDelete, databaseSchema);
+          const result = await dataSourceAdapter.deleteTableRecords(body.input as TablePageInputDelete, databaseSchema);
           return result;
         };
       }

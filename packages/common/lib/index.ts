@@ -11,11 +11,9 @@ export * from './models/databaseSchema.model';
 export * from './models/rpc.model';
 export * from './models/spec.model';
 export * from './models/tablePage.model';
-export * from './models/formField.model';
+export * from './models/fieldInput.model';
 export * from './models/js.model';
-export * from './models/oneToOneRelation';
-export * from './models/oneToManyRelation';
-export * from './models/manyToManyRelation';
+export * from './models/relationship.model';
 export * from './models/pageSettings.model';
 export * from './models/filter.model';
 

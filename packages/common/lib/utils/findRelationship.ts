@@ -1,4 +1,5 @@
-import { Relationship, TablePageConfig } from "../models/tablePage.model";
+import { Relationship } from "../models/relationship.model";
+import { TablePageConfig } from "../models/tablePage.model";
 
 /**
  * Find a relationship by its key in relationships array

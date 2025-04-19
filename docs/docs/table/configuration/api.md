@@ -539,13 +539,13 @@ Below is a list of supported field input types and their interfaces:
 
       Select records from another table.
 
-      Requires a one-to-one relationship to be configured (see [one-to-one linked](/table/configuration/linked-records#one-to-one)). 
+      Requires a one-to-one relationship defined in the database schema or in the [`relationships`](#relationships) property of the table configuration.
 
       ```typescript
       {
         type: 'recordSelect',
         
-        /** The linked relation key */
+        /** The key of the relationship */
         relationshipKey?: string;
       }
       ```

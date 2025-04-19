@@ -1,8 +1,6 @@
 import { FilterItem } from "./filter.model";
-import { FormField } from "./formField.model";
-import { ManyToManyRelationConfig } from "./manyToManyRelation";
-import { OneToManyRelationConfig } from "./oneToManyRelation";
-import { OneToOneRelationConfig } from "./oneToOneRelation";
+import { FieldInput } from "./fieldInput.model";
+import { OneToManyRelationship, Relationship } from "./relationship.model";
 
 export interface TablePageInputBase {}
 
@@ -21,7 +19,7 @@ export interface TablePageInputSelect extends TablePageInputBase {
   
   // TODO: Add many-to-many relation support
   getByForeignRecord?: {
-    relationship: Relationship & { relation: 'oneToMany' };
+    relationship: OneToManyRelationship;
     recordPrimaryKeyValue: string | number;
   };
 }
@@ -61,30 +59,60 @@ export interface TablePageInputDelete extends TablePageInputBase {
   primaryKeys: any[];
 }
 
-export type Relationship = OneToOneRelationConfig | OneToManyRelationConfig | ManyToManyRelationConfig;
-
-export enum TablePageFormColumnRequirementRule {
+export enum TablePageFieldRequirement {
   none = 'none',
   notEmpty = 'notEmpty',
   notZero = 'notZero',
 }
 
 export interface TablePageConfigColumn {
+  /** Column name in the database table or any other unique identifier */
   column: string;
 
+  /** Display name for the column */
   label?: string;
+
+  /** Prefix for the column value (goes before the value) */
   prefix?: string;
+
+  /** Suffix for the column value (goes after the value) */
   suffix?: string;
   
-  hidden?: boolean;
+  /** 
+   * Whether the column is hidden in the table 
+   * @default false
+   */
+  hiddenInTable?: boolean;
+
+  /** Whether the column is sortable */
   sortable?: boolean;
+
+  /** Whether the column is searchable */
   searchable?: boolean;
+
+  /** Whether the column is filterable */
   filterable?: boolean;
   
-  formField?: FormField;
-  formFieldRequirement?: keyof typeof TablePageFormColumnRequirementRule;
+  /** 
+   * Whether the column is hidden in the form
+   * @default false
+   */
+  hiddenInForm?: boolean;
+
+  /**
+   * Form input type and its properties
+   */
+  fieldInput?: FieldInput;
+
+  /** 
+   * Validation rule for the column
+   */
+  fieldRequirement?: string | keyof typeof TablePageFieldRequirement;
+
+  /** Grid field span for the field in the form (12, 8, 6, 4) */
   formFieldSpan?: string;
   
+  /** If the column is a foreign key, this specifies the column in the related table to be displayed as the label */
   relationshipPreviewColumns?: string[];
   
   /** Client-side index of the column in the table */

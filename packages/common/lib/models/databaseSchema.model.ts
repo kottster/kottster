@@ -1,5 +1,5 @@
 import { ContentHint } from "./contentHint.model";
-import { FormField } from "./formField.model";
+import { FieldInput } from "./fieldInput.model";
 import { JsType } from "./js.model";
 
 export interface RelationalDatabaseSchemaColumn {
@@ -7,7 +7,7 @@ export interface RelationalDatabaseSchemaColumn {
   type: string;
   fullType: string;
 
-  formField?: FormField;
+  fieldInput?: FieldInput;
   returnedJsType?: keyof typeof JsType;
 
   /** If true, the column is an array */

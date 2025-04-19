@@ -1,4 +1,4 @@
-import { DataSourceAdapterType, FilterItem, FilterItemOperator, FormField, isIsoString, JsType, MysqlBaseType, mysqlBaseTypesByContentHint, mysqlBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, removeTrailingZeros } from "@kottster/common";
+import { DataSourceAdapterType, FilterItem, FilterItemOperator, FieldInput, isIsoString, JsType, MysqlBaseType, mysqlBaseTypesByContentHint, mysqlBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, removeTrailingZeros } from "@kottster/common";
 import { DataSourceAdapter } from "../../models/dataSourceAdapter.model";
 import { Knex } from "knex";
 import { ContentHint } from "@kottster/common/dist/models/contentHint.model";
@@ -27,14 +27,14 @@ export class KnexMysql2 extends DataSourceAdapter {
     const returnedJsType = mysqlBaseTypeToJsType[cleanType as keyof typeof MysqlBaseType] ?? JsType.string;
     const returnedAsArray = false;
 
-    let formField: FormField = { type: 'input' };
+    let fieldInput: FieldInput = { type: 'input' };
     if (column.foreignKey) {
-      formField = {
+      fieldInput = {
         type: 'recordSelect',
       }
     } 
     else if (column.enumValues) {
-      formField = {
+      fieldInput = {
         type: 'select',
         options: column.enumValues?.split(',').map(value => ({ label: value, value })) ?? []
       }
@@ -44,23 +44,23 @@ export class KnexMysql2 extends DataSourceAdapter {
       MysqlBaseType.datetime, 
       MysqlBaseType.date,
     ].includes(cleanType as MysqlBaseType)) {
-      formField = {
+      fieldInput = {
         type: (cleanType === MysqlBaseType.timestamp || cleanType === MysqlBaseType.datetime) ? 'dateTimePicker' : 'datePicker',
       }
     }
     else if ([MysqlBaseType.time,].includes(cleanType as MysqlBaseType)) {
-      formField = {
+      fieldInput = {
         type: 'timePicker'
       }
     }
     // Assuming that tinyint(1) is a boolean
     else if (column.fullType === 'tinyint(1)') {
-      formField = {
+      fieldInput = {
         type: 'checkbox',
       }
     }
     else if (cleanType === MysqlBaseType.char) {
-      formField = {
+      fieldInput = {
         type: 'input',
         maxLength: 1,
       }
@@ -74,7 +74,7 @@ export class KnexMysql2 extends DataSourceAdapter {
       MysqlBaseType.mediumblob,
       MysqlBaseType.longblob,
     ].includes(cleanType as MysqlBaseType)) {
-      formField = {
+      fieldInput = {
         type: 'textarea',
       }
     }
@@ -82,22 +82,22 @@ export class KnexMysql2 extends DataSourceAdapter {
       switch (returnedJsType) {
         case JsType.string:
         case JsType.buffer:
-          formField = {
+          fieldInput = {
             type: 'input'
           }
           break;
         case JsType.number:
-          formField = {
+          fieldInput = {
             type: 'numberInput'
           }
           break;
         case JsType.boolean:
-          formField = {
+          fieldInput = {
             type: 'checkbox'
           }
           break;
         case JsType.date:
-          formField = {
+          fieldInput = {
             type: 'datePicker'
           }
           break;
@@ -109,8 +109,8 @@ export class KnexMysql2 extends DataSourceAdapter {
       returnedJsType,
       returnedAsArray,
       contentHint,
-      formField: {
-        ...formField,
+      fieldInput: {
+        ...fieldInput,
         asArray: isArray ?? undefined,
       },
     }
@@ -367,11 +367,11 @@ export class KnexMysql2 extends DataSourceAdapter {
           };
         }
 
-        const { isArray, returnedAsArray, returnedJsType, formField, contentHint } = this.processColumn(column);
+        const { isArray, returnedAsArray, returnedJsType, fieldInput, contentHint } = this.processColumn(column);
 
         return {
           ...column,
-          formField,
+          fieldInput,
           contentHint,
           isArray,
           returnedJsType,

@@ -3,21 +3,21 @@ export interface SelectOption {
   value: string;
 }
 
-interface BaseFormField {
+interface BaseFieldInput {
   asArray?: boolean;
 }
 
-interface InputField extends BaseFormField {
+interface InputField extends BaseFieldInput {
   type: 'input';
   maxLength?: number;
 }
 
-interface NumberInputField extends BaseFormField {
+interface NumberInputField extends BaseFieldInput {
   type: 'numberInput';
   allowDecimal?: boolean;
 }
 
-interface TextareaField extends BaseFormField {
+interface TextareaField extends BaseFieldInput {
   type: 'textarea';
   maxLength?: number;
   autoSize?: boolean;
@@ -25,12 +25,12 @@ interface TextareaField extends BaseFormField {
   maxRows?: number;
 }
 
-interface SelectField extends BaseFormField {
+interface SelectField extends BaseFieldInput {
   type: 'select';
   options: SelectOption[];
 }
 
-interface CustomField extends BaseFormField {
+interface CustomField extends BaseFieldInput {
   type: 'custom';
 
   /**
@@ -53,29 +53,29 @@ interface CustomField extends BaseFormField {
   }) => any;
 }
 
-interface CheckboxField extends BaseFormField {
+interface CheckboxField extends BaseFieldInput {
   type: 'checkbox';
 }
 
-interface RecordSelectField extends BaseFormField {
+interface RecordSelectField extends BaseFieldInput {
   type: 'recordSelect';
 }
 
-interface DatePickerField extends BaseFormField {
+interface DatePickerField extends BaseFieldInput {
   type: 'datePicker';
 }
 
-interface DateTimePickerField extends BaseFormField {
+interface DateTimePickerField extends BaseFieldInput {
   type: 'dateTimePicker';
   timeWithSeconds?: boolean;
 }
 
-interface TimePickerField extends BaseFormField {
+interface TimePickerField extends BaseFieldInput {
   type: 'timePicker';
   withSeconds?: boolean;
 }
 
-export type FormField =
+export type FieldInput =
   | InputField
   | NumberInputField
   | DatePickerField

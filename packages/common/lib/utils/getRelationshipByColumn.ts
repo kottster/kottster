@@ -1,4 +1,5 @@
-import { Relationship, TablePageConfig } from "../models/tablePage.model";
+import { OneToOneRelationship } from "../models/relationship.model";
+import { TablePageConfig } from "../models/tablePage.model";
 import { getRelationshipKeyByColumn } from "./getRelationshipKeyByColumn";
 
 /**
@@ -6,7 +7,7 @@ import { getRelationshipKeyByColumn } from "./getRelationshipKeyByColumn";
  * @param linked The linked object
  * @param column The relationship
  */
-export function getRelationshipByColumn(relationships: TablePageConfig['relationships'] = [], column: string): (Relationship & { relation: 'oneToOne' }) | undefined {
+export function getRelationshipByColumn(relationships: TablePageConfig['relationships'] = [], column: string): OneToOneRelationship | undefined {
   const relationshipKey = getRelationshipKeyByColumn(relationships, column);
   const relationship = relationships.find(i => i.key === relationshipKey);
   
@@ -14,5 +15,5 @@ export function getRelationshipByColumn(relationships: TablePageConfig['relation
     return undefined;
   }
   
-  return relationship as Relationship & { relation: 'oneToOne' };
+  return relationship as OneToOneRelationship;
 }

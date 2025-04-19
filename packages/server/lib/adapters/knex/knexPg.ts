@@ -1,4 +1,4 @@
-import { DataSourceAdapterType, FilterItem, FilterItemOperator, FormField, JsType, PostgresBaseType, postgresBaseTypesByContentHint, postgresBaseTypeToArrayReturn, postgresBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn } from "@kottster/common";
+import { DataSourceAdapterType, FilterItem, FilterItemOperator, FieldInput, JsType, PostgresBaseType, postgresBaseTypesByContentHint, postgresBaseTypeToArrayReturn, postgresBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn } from "@kottster/common";
 import { DataSourceAdapter } from "../../models/dataSourceAdapter.model";
 import { Knex } from "knex";
 import { parse as parsePostgresArray } from 'postgres-array';
@@ -30,14 +30,14 @@ export class KnexPg extends DataSourceAdapter {
     const returnedJsType = postgresBaseTypeToJsType[cleanType as keyof typeof PostgresBaseType] ?? JsType.string;
     const returnedAsArray = isArray && (postgresBaseTypeToArrayReturn[cleanType as keyof typeof postgresBaseTypeToArrayReturn] ?? false);
 
-    let formField: FormField = { type: 'input' };
+    let fieldInput: FieldInput = { type: 'input' };
     if (column.foreignKey) {
-      formField = {
+      fieldInput = {
         type: 'recordSelect',
       }
     } 
     else if (column.enumValues) {
-      formField = {
+      fieldInput = {
         type: 'select',
         options: column.enumValues?.split(',').map(value => ({ label: value, value })) ?? []
       }
@@ -47,7 +47,7 @@ export class KnexPg extends DataSourceAdapter {
       PostgresBaseType.timestamp_without_time_zone,
       PostgresBaseType.timestamp_with_time_zone,
     ].includes(cleanType as PostgresBaseType)) {
-      formField = {
+      fieldInput = {
         type: (cleanType === PostgresBaseType.timestamp_without_time_zone || cleanType === PostgresBaseType.timestamp_with_time_zone) ? 'dateTimePicker' : 'datePicker',
       }
     }
@@ -55,12 +55,12 @@ export class KnexPg extends DataSourceAdapter {
       PostgresBaseType.time_without_time_zone,
       PostgresBaseType.time_with_time_zone,
     ].includes(cleanType as PostgresBaseType)) {
-      formField = {
+      fieldInput = {
         type: 'timePicker'
       }
     }
     else if (cleanType === PostgresBaseType.char || cleanType === PostgresBaseType.character) {
-      formField = {
+      fieldInput = {
         type: 'input',
         maxLength: 1,
       }
@@ -73,7 +73,7 @@ export class KnexPg extends DataSourceAdapter {
       PostgresBaseType.tsquery,
       PostgresBaseType.tsvector,
     ].includes(cleanType as PostgresBaseType)) {
-      formField = {
+      fieldInput = {
         type: 'textarea',
       }
     }
@@ -81,22 +81,22 @@ export class KnexPg extends DataSourceAdapter {
       switch (returnedJsType) {
         case JsType.string:
         case JsType.buffer:
-          formField = {
+          fieldInput = {
             type: 'input'
           }
           break;
         case JsType.number:
-          formField = {
+          fieldInput = {
             type: 'numberInput'
           }
           break;
         case JsType.boolean:
-          formField = {
+          fieldInput = {
             type: 'checkbox'
           }
           break;
         case JsType.date:
-          formField = {
+          fieldInput = {
             type: 'datePicker'
           }
           break;
@@ -108,8 +108,8 @@ export class KnexPg extends DataSourceAdapter {
       returnedJsType,
       returnedAsArray,
       contentHint,
-      formField: {
-        ...formField,
+      fieldInput: {
+        ...fieldInput,
         asArray: isArray ?? undefined,
       },
     }
@@ -381,11 +381,11 @@ export class KnexPg extends DataSourceAdapter {
         };
       }
 
-      const { isArray, returnedAsArray, returnedJsType, formField, contentHint } = this.processColumn(column);
+      const { isArray, returnedAsArray, returnedJsType, fieldInput, contentHint } = this.processColumn(column);
       
       table.columns.push({
         ...column,
-        formField,
+        fieldInput,
         contentHint,
         isArray,
         returnedJsType,

@@ -1,5 +1,5 @@
 import { Knex } from "knex";
-import { DataSourceAdapterType, FormField, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TablePageInputDelete, TablePageInputInsert, TablePageInputSelect, TablePageInputUpdate, TablePageResultInsertDTO, TablePageResultSelectDTO, TablePageResultSelectRecord, TablePageResultUpdateDTO, TablePageResultSelectRecordLinkedDTO, defaultTablePageSize, TablePageInputSelectUsingExecuteQuery, TablePageInputSelectSingle, TablePageResultSelectSingleDTO, findRelationship, DataSourceTablesConfig, getTableData, TablePageConfig, FilterItem, Relationship } from "@kottster/common";
+import { DataSourceAdapterType, FieldInput, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TablePageInputDelete, TablePageInputInsert, TablePageInputSelect, TablePageInputUpdate, TablePageResultInsertDTO, TablePageResultSelectDTO, TablePageResultSelectRecord, TablePageResultUpdateDTO, TablePageResultSelectRecordLinkedDTO, defaultTablePageSize, TablePageInputSelectUsingExecuteQuery, TablePageInputSelectSingle, TablePageResultSelectSingleDTO, findRelationship, DataSourceTablesConfig, getTableData, TablePageConfig, FilterItem, OneToOneRelationship, OneToManyRelationship, ManyToManyRelationship } from "@kottster/common";
 import { KottsterApp } from "../core/app";
 
 /**
@@ -105,7 +105,7 @@ export abstract class DataSourceAdapter {
    */
   abstract processColumn(column: RelationalDatabaseSchemaColumn): { 
     isArray: boolean;
-    formField: FormField;
+    fieldInput: FieldInput;
     returnedJsType: keyof typeof JsType;
     returnedAsArray: boolean;
   };
@@ -236,9 +236,9 @@ export abstract class DataSourceAdapter {
       });
     }
 
-    const oneToOneRelationships = (tablePageProcessedConfig.relationships?.filter(relationship => relationship.relation === 'oneToOne') ?? []) as (Relationship & { relation: 'oneToOne' })[]; 
-    const oneToManyRelationships = (tablePageProcessedConfig.relationships?.filter(relationship => relationship.relation === 'oneToMany') ?? []) as (Relationship & { relation: 'oneToMany' })[];
-    const manyToManyRelationships = (tablePageProcessedConfig.relationships?.filter(relationship => relationship.relation === 'manyToMany') ?? []) as (Relationship & { relation: 'manyToMany' })[];
+    const oneToOneRelationships = (tablePageProcessedConfig.relationships?.filter(relationship => relationship.relation === 'oneToOne') ?? []) as OneToOneRelationship[]; 
+    const oneToManyRelationships = (tablePageProcessedConfig.relationships?.filter(relationship => relationship.relation === 'oneToMany') ?? []) as OneToManyRelationship[];
+    const manyToManyRelationships = (tablePageProcessedConfig.relationships?.filter(relationship => relationship.relation === 'manyToMany') ?? []) as ManyToManyRelationship[];
     
     // Preload linked one-to-one records
     if (oneToOneRelationships.length > 0) {
@@ -517,18 +517,19 @@ export abstract class DataSourceAdapter {
     }
 
     // Pre-process the input values
+    let values: Record<string, any> = {};
     if (tablePageConfig.beforeInsert) {
-      input.values = await tablePageConfig.beforeInsert(input.values);
+      values = await tablePageConfig.beforeInsert(input.values);
     } else {
       for (const key in input.values) {
         const columnSchema = tableSchema?.columns.find(column => column.name === key);
         if (columnSchema) {
-          input.values[key] = await this.prepareRecordValueBeforeUpsert(input.values[key], columnSchema);
+          values[key] = await this.prepareRecordValueBeforeUpsert(input.values[key], columnSchema);
         }
       }
     }
 
-    await this.client(table).insert(input.values);
+    await this.client(table).insert(values);
 
     return {};
   }
@@ -564,20 +565,21 @@ export abstract class DataSourceAdapter {
     }
 
     // Pre-process the input values
+    let values: Record<string, any> = {};
     if (tablePageConfig.beforeUpdate) {
-      input.values = await tablePageConfig.beforeUpdate(input.values);
+      values = await tablePageConfig.beforeUpdate(input.values);
     } else {
       for (const key in input.values) {
         const columnSchema = tableSchema?.columns.find(column => column.name === key);
         if (columnSchema) {
-          input.values[key] = await this.prepareRecordValueBeforeUpsert(input.values[key], columnSchema);
+          values[key] = await this.prepareRecordValueBeforeUpsert(input.values[key], columnSchema);
         }
       }
     }
 
     await this.client(table)
       .whereIn(tablePageProcessedConfig.primaryKeyColumn, input.primaryKeys)
-      .update(input.values);
+      .update(values);
 
     return {};
   }

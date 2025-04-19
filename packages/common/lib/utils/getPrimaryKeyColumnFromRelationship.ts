@@ -1,4 +1,4 @@
-import { Relationship } from "../models/tablePage.model";
+import { Relationship } from "../models/relationship.model";
 
 /**
  * Get the primary key column based on the relationship object

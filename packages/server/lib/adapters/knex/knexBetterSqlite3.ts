@@ -1,4 +1,4 @@
-import { DataSourceAdapterType, FilterItem, FilterItemOperator, FormField, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, SqliteBaseType, sqliteBaseTypesByContentHint, sqliteBaseTypeToJsType } from "@kottster/common";
+import { DataSourceAdapterType, FilterItem, FilterItemOperator, FieldInput, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, SqliteBaseType, sqliteBaseTypesByContentHint, sqliteBaseTypeToJsType } from "@kottster/common";
 import { DataSourceAdapter } from "../../models/dataSourceAdapter.model";
 import { Knex } from "knex";
 import { ContentHint } from "@kottster/common/dist/models/contentHint.model";
@@ -22,14 +22,14 @@ export class KnexBetterSqlite3 extends DataSourceAdapter {
     const returnedJsType = sqliteBaseTypeToJsType[cleanType as keyof typeof SqliteBaseType] ?? JsType.string;
     const returnedAsArray = false;
 
-    let formField: FormField = { type: 'input' };
+    let fieldInput: FieldInput = { type: 'input' };
     if (column.foreignKey) {
-      formField = {
+      fieldInput = {
         type: 'recordSelect',
       }
     } 
     else if (column.enumValues) {
-      formField = {
+      fieldInput = {
         type: 'select',
         options: column.enumValues?.split(',').map(value => ({ label: value, value })) ?? []
       }
@@ -38,7 +38,7 @@ export class KnexBetterSqlite3 extends DataSourceAdapter {
       SqliteBaseType.date,
       SqliteBaseType.datetime,
     ].includes(cleanType as SqliteBaseType)) {
-      formField = {
+      fieldInput = {
         type: cleanType === SqliteBaseType.datetime ? 'dateTimePicker' : 'datePicker',
       }
     }
@@ -52,7 +52,7 @@ export class KnexBetterSqlite3 extends DataSourceAdapter {
       SqliteBaseType.text,
       SqliteBaseType.clob,
     ].includes(cleanType as SqliteBaseType)) {
-      formField = {
+      fieldInput = {
         type: 'textarea',
       }
     }
@@ -60,22 +60,22 @@ export class KnexBetterSqlite3 extends DataSourceAdapter {
       switch (returnedJsType) {
         case JsType.string:
         case JsType.buffer:
-          formField = {
+          fieldInput = {
             type: 'input'
           }
           break;
         case JsType.number:
-          formField = {
+          fieldInput = {
             type: 'numberInput'
           }
           break;
         case JsType.boolean:
-          formField = {
+          fieldInput = {
             type: 'checkbox'
           }
           break;
         case JsType.date:
-          formField = {
+          fieldInput = {
             type: 'datePicker'
           }
           break;
@@ -87,8 +87,8 @@ export class KnexBetterSqlite3 extends DataSourceAdapter {
       returnedJsType,
       returnedAsArray,
       contentHint,
-      formField: {
-        ...formField,
+      fieldInput: {
+        ...fieldInput,
         asArray: false,
       },
     }
@@ -290,11 +290,11 @@ export class KnexBetterSqlite3 extends DataSourceAdapter {
           };
         }
 
-        const { isArray, returnedAsArray, returnedJsType, formField, contentHint } = this.processColumn(column);
+        const { isArray, returnedAsArray, returnedJsType, fieldInput, contentHint } = this.processColumn(column);
 
         return {
           ...column,
-          formField,
+          fieldInput,
           contentHint,
           isArray,
           returnedJsType,

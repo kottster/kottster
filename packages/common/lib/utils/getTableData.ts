@@ -1,6 +1,7 @@
 import { defaultTablePageSize } from "../constants/table";
 import { RelationalDatabaseSchema, RelationalDatabaseSchemaTable } from "../models/databaseSchema.model";
-import { Relationship, TablePageConfig, TablePageConfigColumn } from "../models/tablePage.model";
+import { Relationship } from "../models/relationship.model";
+import { TablePageConfig, TablePageConfigColumn } from "../models/tablePage.model";
 import { findNameLikeColumns } from "./findNameLikeColumns";
 import { getAllPossibleRelationships } from "./getAllPossibleLinked";
 import { getLabelFromForeignKeyColumnName } from "./getLabelFromForeignKeyColumnName";
@@ -56,13 +57,14 @@ export function getDefaultColumnData(
   return {
     column: columnSchema.name,
     label: columnSchema.foreignKey ? getLabelFromForeignKeyColumnName(columnSchema.name) : transformToReadable(columnSchema.name),
-    hidden: false,
+    hiddenInTable: false,
+    hiddenInForm: columnSchema.primaryKey?.autoIncrement ? true : false,
     filterable: true,
     sortable: (columnSchema.contentHint && ['number', 'boolean', 'date'].includes(columnSchema.contentHint)) || false,
     searchable: (!columnSchema.foreignKey && columnSchema.contentHint === 'string') || false,
     relationshipPreviewColumns,
-    formField: columnSchema.formField,
-    formFieldRequirement: columnSchema.nullable ? 'none' : 'notEmpty',
+    fieldInput: columnSchema.fieldInput,
+    fieldRequirement: columnSchema.nullable ? 'none' : 'notEmpty',
     formFieldSpan: '12',
   };
 }
@@ -94,34 +96,37 @@ export function getTableData(params: {
   databaseSchema?: RelationalDatabaseSchema;
 }): ReturnType {
   const { tablePageConfig, databaseSchema } = params;
-  if (!tablePageConfig || !tablePageConfig.table || !databaseSchema) {
+  if (!tablePageConfig) {
     return emptyData;
   };
 
   // Table schema
-  const tableSchema = databaseSchema?.tables.find((t) => t.name === tablePageConfig.table);
-  if (!tableSchema) {
+  const tableSchema = tablePageConfig.table ? databaseSchema?.tables.find((t) => t.name === tablePageConfig.table) : undefined;
+  if (tablePageConfig.table && !tableSchema) {
     return emptyData;
   };
 
   const primaryKeyColumn = tablePageConfig?.primaryKeyColumn ?? tableSchema?.columns.filter(c => c.primaryKey)[0]?.name;
-  const allowInsert = tablePageConfig?.allowInsert ?? true;
-  const allowUpdate = tablePageConfig?.allowUpdate ?? true;
-  const allowDelete = tablePageConfig?.allowDelete ?? true;
+  
+  // Allow CRUD only if table is defined
+  const allowInsert = tablePageConfig.table ? (tablePageConfig?.allowInsert ?? true) : false;
+  const allowUpdate = tablePageConfig.table ? (tablePageConfig?.allowUpdate ?? true) : false;
+  const allowDelete = tablePageConfig.table ? (tablePageConfig?.allowDelete ?? true) : false;
 
-  // Columns
-  const columns = tableSchema.columns.map(c => {
+  // Get columns based on table schema or table page config
+  const columns = tableSchema ? tableSchema.columns.map(c => {
     const column = tablePageConfig?.columns?.find(c2 => c2.column === c.name);
     const defaultColumnData = getDefaultColumnData(
       tablePageConfig.table!,
       c.name, 
-      databaseSchema,
+      databaseSchema!,
     );
 
     return {
       column: c.name,
       label: column?.label ?? defaultColumnData.label,
-      hidden: column?.hidden ?? defaultColumnData.hidden,
+      hiddenInTable: column?.hiddenInTable ?? defaultColumnData.hiddenInTable,
+      hiddenInForm: column?.hiddenInForm ?? defaultColumnData.hiddenInForm,
       filterable: column?.filterable ?? defaultColumnData.filterable,
       sortable: column?.sortable ?? defaultColumnData.sortable,
       searchable: column?.searchable ?? defaultColumnData.searchable,
@@ -129,33 +134,33 @@ export function getTableData(params: {
       suffix: column?.suffix ?? defaultColumnData.suffix,
       position: column?.position ?? defaultColumnData.position,
       relationshipPreviewColumns: column?.relationshipPreviewColumns ?? defaultColumnData.relationshipPreviewColumns,
-      formField: column?.formField ?? defaultColumnData.formField,
-      formFieldRequirement: column?.formFieldRequirement ?? defaultColumnData.formFieldRequirement,
+      fieldInput: column?.fieldInput ?? defaultColumnData.fieldInput,
+      fieldRequirement: column?.fieldRequirement ?? defaultColumnData.fieldRequirement,
       formFieldSpan: column?.formFieldSpan ?? defaultColumnData.formFieldSpan,
     } as TablePageConfigColumn;
-  });
-  const sortedColumns = sortColumnsByPriority(tableSchema?.columns, columns);
+  }) : tablePageConfig.columns;
+  const sortedColumns = tableSchema ? sortColumnsByPriority(tableSchema.columns, columns) : tablePageConfig.columns;
   const selectableColumns = columns?.map(c => c.column) ?? [];
   const searchableColumns = columns?.filter(c => c.searchable).map(c => c.column) ?? [];
   const sortableColumns = columns?.filter(c => c.sortable).map(c => c.column) ?? [];
   const filterableColumns = columns?.filter(c => c.filterable).map(c => c.column) ?? [];
-  const hiddenColumns = columns?.filter(c => c.hidden).map(c => c.column) ?? [];
+  const hiddenColumns = columns?.filter(c => c.hiddenInTable).map(c => c.column) ?? [];
 
   // Relationships
-  const autoDetectedRelationships = getAllPossibleRelationships(tablePageConfig, databaseSchema) ?? [];
+  const autoDetectedRelationships = (databaseSchema && getAllPossibleRelationships(tablePageConfig, databaseSchema)) ?? [];
   const relationships = autoDetectedRelationships.map(i => {
     const relationship = tablePageConfig?.relationships?.find(i2 => i2.key === i.key);
 
     return {
       ...i,
       key: i.key,
-      hidden: relationship?.hidden ?? false,
+      hiddenInTable: relationship?.hiddenInTable ?? false,
       position: relationship?.position ?? i.position,
     } as Relationship;
   });
   const sortedRelationships = sortRelationshipsByOrder(relationships);
-  const hiddenRelationships = relationships?.filter(i => i.hidden).map(i => i.key) ?? [];
-  
+  const hiddenRelationships = relationships?.filter(i => i.hiddenInTable).map(i => i.key) ?? [];
+
   return {
     tableSchema,
     tablePageProcessedConfig: {

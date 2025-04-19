@@ -10,7 +10,7 @@ There are many ways to customize existing columns in the table.
 
 If you want to update the existing columns, you can use the [`columnOverrides`](/table/table-page-component#columnoverrides) prop.  
 
-```jsx title="Example of modifying email column"
+```tsx title="Example of modifying email column"
 export default () => (
   <TablePage
     columnOverrides={{
@@ -18,7 +18,7 @@ export default () => (
       email: column => ({
         ...column,
 
-        // The display column name
+        // The custom display label for the column
         label: 'Email address',
 
         // Optional render function to display the column content
@@ -29,4 +29,4 @@ export default () => (
 );
 ```
 
-You can learn more about the available column configurations on the [TablePage Component](/table/table-page-component#columns-1) page.
+Learn more about **columns and their parameters** in the [API reference](/table/configuration/api#columns-1).

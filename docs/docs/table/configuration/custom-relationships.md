@@ -2,34 +2,32 @@
 sidebar_position: 4
 ---
 
-# Linked records (Joins)
+# Custom relationships
 
-Kottster allows you to fetch data from related tables when displaying data in a table or in a form for creating or updating records. To set this up, include the relationship configuration in the `linked` object inside [`defineTableController`](/table/configuration/api).
+By default, Kottster detects relationships between tables based on foreign keys. However, you can also define custom relationships if you need to override the default behavior or if your database schema doesn't follow the standard conventions.
+
+To set this up, include the relationship configuration in the `relationships` object inside [`defineTableController`](/table/configuration/api).
 
 ## One-to-one
 
-A one-to-one relationship links one record in a table to exactly one record in another table. To define this relationship in Kottster, provide the following object in `linked`:
+A one-to-one relationship links one record in a table to exactly one record in another table. To define this relationship in Kottster, provide the following object in `relationships`:
 
 ```typescript
-{
-    relation: 'oneToOne',
-    
-    /** Foreign key column in the current table */   
-    foreignKeyColumn: '',
-    
-    /** The name of the target table */      
-    targetTable: '',
-    
-    /** The primary key column in the target table 
-        that the foreign key refers to */ 
-    targetTableKeyColumn: '',
-    
-    /** The array of columns in the target table to include 
-        in queries and display by default */
-    columns: [],
-    
-    /** The array of columns in the target table available for search */
-    searchableColumns: [],
+{ 
+  relation: 'oneToOne',
+  
+  /** The unique key for the relationship, used to access it in the table configuration */
+  key: '',
+  
+  /** Foreign key column in the current table */   
+  foreignKeyColumn: '',
+  
+  /** The name of the target table */      
+  targetTable: '',
+  
+  /** The primary key column in the target table 
+      that the foreign key refers to */ 
+  targetTableKeyColumn: ''
 }
 ```
 
@@ -43,72 +41,50 @@ This also simplifies forms for creating or updating users. Instead of typing a `
 
 **Here’s an example of the page file:**
 
-```typescript
-import { OneToOneRelation } from '@kottster/server';
+```typescript title="app/routes/users/index.jsx"
 import { TablePage } from '@kottster/react';
-import { app } from '../.server/app';
-import dataSource from '../.server/data-sources/postgres';
+import { app } from '../../.server/app';
+import dataSource from '../../.server/data-sources/postgres';
+import pageSettings from './settings.json';
 
 export const action = app.defineTableController(dataSource, {
+  ...pageSettings,
   rootTable: {
-    table: 'users',
-    primaryKeyColumn: 'id',
-    pageSize: 30,
-    allowInsert: true,
-    allowUpdate: true,
-    allowDelete: true,
-    linked: {
-      user_workspace: new OneToOneRelation({
+    ...pageSettings.rootTable,
+    relationships: [
+      {
+        relation: 'oneToOne',
+        key: 'user_workspace',
         foreignKeyColumn: 'workspace_id',    
         targetTable: 'workspaces',
-        targetTableKeyColumn: 'id',
-        columns: ['id', 'name'],
-        searchableColumns: ['name'],
-      }),
-    },
+        targetTableKeyColumn: 'id'
+      },
+    ],
   },
 });
 
 export default () => (
-  <TablePage
-    columns={[
-      {
-        label: 'User ID',
-        column: 'id',
-      },
-      {
-        label: 'Name',
-        column: 'first_name',
-      },
-      {
-        label: 'Email',
-        column: 'email',
-      },
-      {
-        label: 'Workspace',
-        column: 'workspace',
-        linked: 'user_workspace',
-      },
-    ]}
-  />
+  <TablePage />
 );
 ```
 
-As shown above, the page includes a `linked` object with a relation under the key user_workspace. This key can have any name and is defined for convenience. It is also referenced in the **Workspace** column.
+As shown above, the page includes a `relationships` object with the key `"user_workspace"`. This key can have any name and is defined for convenience. 
 
 The relation we specified enables two features:
 
-- **Displaying Data**: Adds a Workspace column that shows the workspace ID and name from the `workspaces` table.
-
+- **Displaying Data**: Adds a Workspace column that shows preview of records from the `workspaces` table instead of just displaying the `workspace_id`.
 - **Inserting/Updating Data**: Allows people to select a workspace from a list, improving usability and reducing errors.
 
 ## One-to-many
 
-A one-to-many relationship links one record in a table to multiple records in another table. To define this relationship in Kottster, include the following object in `linked`:
+A one-to-many relationship links one record in a table to multiple records in another table. To define this relationship in Kottster, include the following object in `relationships`:
 
 ```typescript
 {
   relation: 'oneToMany',
+
+  /** The unique key for the relationship, used to access it in the table configuration */
+  key: '',
     
   /** The name of the target table */
   targetTable: '',
@@ -118,14 +94,7 @@ A one-to-many relationship links one record in a table to multiple records in an
     
   /** The foreign key column in the target table 
       that refers to the current table */ 
-  targetTableForeignKeyColumn: '',
-    
-  /** The array of columns in the target table to include 
-      in queries and display by default */ 
-  columns: [],
-    
-  /** The array of columns in the target table available for search */ 
-  searchableColumns: [],
+  targetTableForeignKeyColumn: ''
 }
 ```
 
@@ -137,43 +106,32 @@ Imagine we want to create a page to view data in the `projects` table. By defini
 
 **Here’s how the page file might look:**
 
-```typescript
-import { OneToManyRelation } from '@kottster/server';
+```typescript title="app/routes/projects/index.jsx"
 import { TablePage } from '@kottster/react';
-import { app } from '../.server/app';
-import dataSource from '../.server/data-sources/postgres';
+import { app } from '../../.server/app';
+import dataSource from '../../.server/data-sources/postgres';
+import pageSettings from './settings.json';
 
 export const action = app.defineTableController(dataSource, {
+  ...pageSettings,
   rootTable: {
-    table: 'projects',
-    primaryKeyColumn: 'id',
-    pageSize: 30,
-    linked: {
-      project_tasks: new OneToManyRelation({
+    ...pageSettings.rootTable,
+    relationships: [
+      {
+        relation: 'oneToMany',
+        key: 'project_tasks',
         targetTable: 'tasks',
         targetTableKeyColumn: 'id',
         targetTableForeignKeyColumn: 'project_id',
         columns: ['id', 'title', 'status'],
         searchableColumns: ['title', 'status'],
-      }),
-    },
+      },
+    ],
   },
 });
 
 export default () => (
-  <TablePage
-    columns={[
-      {
-        label: 'Project Name',
-        column: 'name',
-      },
-      {
-        label: 'Tasks',
-        column: 'tasks',
-        linked: 'project_tasks',
-      },
-    ]}
-  />
+  <TablePage />
 );
 ```
 
@@ -181,12 +139,14 @@ export default () => (
 
 A many-to-many relationship links multiple records in one table to multiple records in another table. This is implemented using a junction table (also called a join table) to connect the two tables.
 
-To define this relationship in Kottster, include the following object in `linked`:
+To define this relationship in Kottster, include the following object in `relationships`:
 
 ```typescript
 {
-  /** Specifies the type of relationship between tables */
   relation: 'manyToMany';
+
+  /** The unique key for the relationship, used to access it in the table configuration */
+  key: '',
 
   /** Name of the table being referenced/joined */
   targetTable: '',
@@ -220,19 +180,21 @@ Imagine we want to create a page to view data in the `books` table. By defining 
 
 **Here’s how the page file might look:**
 
-```typescript
-import { ManyToManyRelation } from '@kottster/server';
+```typescript title="app/routes/books/index.jsx"
 import { TablePage } from '@kottster/react';
-import { app } from '../.server/app';
-import dataSource from '../.server/data-sources/postgres';
+import { app } from '../../.server/app';
+import dataSource from '../../.server/data-sources/postgres';
+import pageSettings from './settings.json';
 
 export const action = app.defineTableController(dataSource, {
+  ...pageSettings,
   rootTable: {
-    table: 'books',
-    primaryKeyColumn: 'id',
-    pageSize: 30,
-    linked: {
-      book_authors: new ManyToManyRelation({
+    ...pageSettings.rootTable,
+    relationships: [
+      book_authors: {
+        relation: 'manyToMany',
+        key: 'book_authors',
+
         // Junction table details
         junctionTable: 'author_books',
         junctionTableSourceKeyColumn: 'book_id',
@@ -243,24 +205,12 @@ export const action = app.defineTableController(dataSource, {
         targetTableKeyColumn: 'id',
         columns: ['id', 'full_name'],
         searchableColumns: ['full_name'],
-      }),
-    },
+      },
+    ],
   },
 });
 
 export default () => (
-  <TablePage
-    columns={[
-      { 
-        label: 'Book Title', 
-        column: 'title' 
-      },
-      { 
-        label: 'Authors', 
-        column: 'authors', 
-        linked: 'book_authors' 
-      },
-    ]}
-  />
+  <TablePage />
 );
 ```

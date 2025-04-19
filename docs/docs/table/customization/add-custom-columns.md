@@ -6,22 +6,20 @@ sidebar_position: 1
 
 There are many ways to add custom columns to the table. 
 
-## Using the `columnTransformer`
+## Using the `customColumns`
 
-If you want to add a new column to existing columns, you can use the [`columnTransformer`](/table/table-page-component#columntransformer) prop.  
+If you want to add a new column to existing columns, you can use the [`customColumns`](/table/table-page-component#customcolumns) prop.  
 
-```jsx title="Example of adding a full name column"
+```tsx title="Example of adding a full name column"
 export default () => (
   <TablePage
-    columnTransformer={columns => ([
-      ...columns,
-
+    customColumns={[
       // New column for displaying the full name
       {
-        // The column key
+        // The unique key for the new column
         column: 'fullName',
         
-        // The display column name
+        // The display label for the column
         label: 'Full name',
         
         // Position of the column, if not specified, it will be added to the end
@@ -30,9 +28,9 @@ export default () => (
         // Render function to display the column content
         render: ({ first_name, last_name }) => `${first_name} ${last_name}`,
       },
-    ])}
+    ]}
   />
 );
 ```
 
-You can learn more about the available column configurations on the [TablePage Component](/table/table-page-component#columns-1) page.
+Learn more about **columns and their parameters** in the [API reference](/table/configuration/api#columns-1).

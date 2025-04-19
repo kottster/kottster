@@ -12,7 +12,7 @@ The following example shows how to use the `fetch` API to make a request to an e
 
 ```tsx title="app/routes/my-custom-page.jsx"
 import { executeCustomAction, Page, usePage } from '@kottster/react';
-import { app } from '../.server/app';
+import { app } from '../../.server/app';
 import { useEffect, useState } from 'react';
 
 export const action = app.defineCustomController({
@@ -76,7 +76,7 @@ Then, you can use this client to make requests to a GraphQL API:
 
 ```tsx title="app/routes/my-custom-page.jsx"
 import { executeCustomAction, Page, usePage } from '@kottster/react';
-import { app } from '../.server/app';
+import { app } from '../../.server/app';
 import { useEffect, useState } from 'react';
 import client from '../apollo-client';
 

@@ -4,45 +4,43 @@ sidebar_position: 4
 
 # Customize fields
 
-There are many ways to customize existing fields in the form.
+In Kottster, all fields are basically columns. If toy need to customize fields in the form, you need to update columns configuration in the table configuration.
 
-## Using the `fieldOverrides`
+## Using the `columnOverrides`
 
-If you want to update the existing field, you can use the [`fieldOverrides`](/table/table-page-component#fieldoverrides) prop.  
+If you want to update the existing columns, you can use the [`columnOverrides`](/table/table-page-component#columnoverrides) prop.  
 
-```jsx title="Example of modifying email field"
+```tsx title="Example of modifying email field"
 export default () => (
   <TablePage
-    form={{
-      fieldOverrides: {
-        // Modifying the email field
-        email: field => ({
-          ...field,
+    columnOverrides={{
+      // Modifying the email column
+      email: column => ({
+        ...column,
 
-          // The display field name
-          label: 'Email address',
+        // The custom display label for the column
+        label: 'Email address',
 
-          // The custom field type
-          formField: {
-            type: 'custom',
-            renderComponent: (params) => {
-              const { value, updateFieldValue } = params;
+        // The custom field input
+        fieldInput: {
+          type: 'custom',
+          renderComponent: (params) => {
+            const { value, updateFieldValue } = params;
 
-              return (
-                <input 
-                  type='email'
-                  placeholder='Enter email'
-                  value={value} 
-                  onChange={(e) => updateFieldValue('first_name', e.target.value)} 
-                />
-              )
-            }
+            return (
+              <input 
+                type='email'
+                placeholder='Enter email'
+                value={value} 
+                onChange={(e) => updateFieldValue('first_name', e.target.value)} 
+              />
+            )
           },
-        }),
-      },
+        },
+      }),
     }}
   />
 );
 ```
 
-You can learn more about the available field configurations on the [TablePage Component](/table/table-page-component#form-fields) page.
+Learn more about `fieldInput` and its parameters in the [API reference](/table/configuration/api#field-inputs).

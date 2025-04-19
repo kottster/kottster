@@ -4,28 +4,85 @@ sidebar_position: 1
 
 # API Reference
 
-The `defineTableController` function sets up server-side endpoint to handle request from the page with the table component. It connects to a database and defines what data available for the table and how it behaves. It also allows to define [configuration for nested tables](#configuration-for-nested-tables).
+The `defineTableController` function sets up server-side endpoint to handle request from the page with the table component. It connects to a database and defines what data available for the table and how it behaves. It also allows to define configuration for nested tables.
 
-```typescript title="Example"
+By default, all settings are stored in a `settings.json` file located next to the page file. This file contains configuration for the main table and its nested tables. It allows you to edit table settings using the visual editor.
+
+Example of files for the table page for `users` table:
+
+```json title="app/routes/users/settings.json"
+{
+  "_version": "1",
+  
+  // Configuration for the main table (users)
+  "rootTable": {
+    "table": "users",
+    "allowDelete": false
+  },
+  
+  // Configuration for the nested table (e.g. orders)
+  "rootTable_ordersByUserIdTable": {
+    "table": "orders",
+    "allowInsert": false,
+    "allowDelete": false
+  }
+}
+```
+
+```tsx title="app/routes/users/index.jsx"
+import { TablePage } from '@kottster/react'; 
+import { app } from '../../.server/app';
+import dataSource from '../../.server/data-sources/postgres';
+import pageSettings from './settings.json';
+
+export const action = app.defineTableController(dataSource, {
+  ...pageSettings
+});
+
+export default () => (
+  <TablePage />
+);
+```
+
+
+<!-- **If you need more customization, beyound what visual editor provides**, you can import the `settings.json` file and extend it with your own settings. This is useful for advanced users who want more control over table configuration. -->
+
+**If you need more customization, beyound what visual editor provides**, you can extend the imported `settings.json` configuration with your own settings. This is useful for advanced users who want more control over table configuration.
+
+```typescript title="app/routes/users/index.jsx"
+import pageSettings from './settings.json';
+
 export default action = app.defineTableController(dataSource, {
+  ...pageSettings,
+
+  // Configuration for the main table 
   rootTable: {
-    table: 'users',
-    primaryKeyColumn: 'id',
-    pageSize: 16,
-    allowInsert: false,
-    allowUpdate: true,
-    allowDelete: false,
+    ...pageSettings.rootTable,
+
+    // Add custom configuration here...
+  },
+
+  // Configuration for the nested table
+  rootTable_ordersByUserIdTable: {
+    ...pageSettings.rootTable_ordersByUserIdTable,
+    
+    // Add custom configuration here...
   },
 });
 ```
+
 
 ## Usage
 
 The `defineTableController` function takes two required arguments:
 
-*   **`dataSource`**: A data source. Typically, imported from the `./app/.server/data-sources` directory.
+*   **`dataSource`**: A data source. Typically, imported from the `app/.server/data-sources` directory.
     
 *   **`settings`**: A configuration object that defines the behavior of the table and its nested tables. The configuration for the main table is defined under the `rootTable` key.
+
+<!-- Alternatively, if you want to customize already defined configuration but on the client side, you can use methods like `customColumns`, `columnTransformer`, `columnOverrides` on the [`TablePage`](/table/table-page-component) component.  -->
+
+Alternatively, you can customize already defined configuration on the client side using methods like `customColumns`, `columnTransformer`, `columnOverrides` on the [`TablePage`](/table/table-page-component) component. This approach is useful if you want to change **the way columns and fields are rendered**, or use **JSX components**.
 
 ## Parameters
 
@@ -33,7 +90,7 @@ The `defineTableController` function takes two required arguments:
 
   `string`, optional
 
-  Specifies the name of the database table.
+  Specifies the name of the database table. If not specified, the `executeQuery` function should be provided to define the query.
 
 - ### primaryKeyColumn
 
@@ -45,69 +102,15 @@ The `defineTableController` function takes two required arguments:
 
   `number`, optional
 
-  Sets the number of records displayed per page for table pagination.
+  Specifies the number of records to display per page. If not specified, the default value is `20`.
 
 - ### columns
 
-  `string[]`, optional
+  `TablePageConfigColumn[]`, optional
 
-  Specifies the columns to include in the query and display by default.
-
-  If not specified, all columns `(*)` will be included in the query.
-
-  ```json title="Example"
-  columns: ["first_name", "last_name", "email", "phone_number"]
-  ```
-
-- ### columnsOrder
-
-  `string[]`, optional
-
-  Specifies the order of columns in the table. If not specified, the columns will be displayed in the auto-generated order. If only some columns are specified, the rest will be displayed after the specified columns in the auto-generated order.
-
-  ```json title="Example"
-  columnsOrder: ["first_name", "last_name", "email"]
-  ```
-
-- ### hiddenColumns
-
-  `string[]`, optional
-
-  Specifies columns to exclude from the returned data. This is commonly used for system-generated or sensitive data (e.g., password hashes, access tokens). 
-
-  ```json title="Example"
-  hiddenColumns: ["password_hash", "address", "updated_at"]
-  ```
-
-- ### searchableColumns
-
-  `string[]`, optional
-
-  Enables a search input at the top of the table. Specifies the columns that are searchable, typically applicable to text or numeric column types.
-
-  ```json title="Example"
-  searchableColumns: ["first_name", "last_name", "email"]
-  ```
-
-- ### sortablecolumns
-
-  `string[]`, optional
-
-  Enables sorting functionality by clicking on column headers. Specifies the columns that can be sorted.
-
-  ```json title="Example"
-  sortableColumns: ["created_at"]
-  ```
-
-- ### filterableColumns
-
-  `string[]`, optional
-
-  Adds a "Filters" button at the top of the table. Specifies the columns that can be filtered.
-
-  ```json title="Example"
-  filterableColumns: ["status"]
-  ```
+  Specifies the configuration for the columns in the table. 
+  
+  Learn more: [Columns](#columns-1)
 
 - ### executeQuery
 
@@ -236,80 +239,341 @@ The `defineTableController` function takes two required arguments:
   }
   ```
 
-- ### fornHiddenColumns
+- ### relationships
 
-  `string[]`, optional
+  Specifies the configuration for the relationships the table has with other tables.
 
-  Specifies the columns to include in the form. 
+  By default, Kottster detects relationships between tables based on foreign keys. But you can also define custom relationships: [Custom relationships](/table/configuration/custom-relationships)
+
+  Each relation should have `key` property, which specifies the name of the relation. The key is used to access the relation in the table configuration.
+
+  Each relation object can have the following properties:
+
+  - #### hiddenInTable
+
+    `boolean`, optional
+
+    Specifies whether the relation should be hidden in the table. If not specified, the default value is `false`.
+
+  - #### position
+
+    `number`, optional
+
+    Specifies the position of the relation in the table. If not specified, relationships columns will be displayed in the end of the table.
+
+## Columns
+
+Specifies the configuration for the columns in the table. Each column configuration should have `column` property, which specifies the name of the column in the database table. 
   
-  This is commonly used for system-generated or sensitive data (e.g., password hashes, access tokens).
+If configuration or its properties are not specified, the default values will be used.
+The default values are determined automatically based on the database schema.
 
-  ```json title="Example"
-  formHiddenColumns: ["password_hash", "updated_at"]
-  ```
+```json title="Example"
+{
+  "_version": "1",
+  
+  "rootTable": {
+    "table": "users",
+    
+    "columns": [
+      {
+        "column": "first_name",
+        "label": "Name"
+      },
+      {
+        "column": "balance",
+        "label": "Balance",
+        "prefix": "$"
+      }
+    ]
+  }
+}
+```
 
-- ### formColumnsOrder
+### Parameters
+
+Each column can have the following properties:
+
+- #### label
+
+  `string`, optional
+
+  Specifies the display name of the column. If not specified, the label will be generated automatically based on the column name.
+
+
+- #### hiddenInTable
+
+  `boolean`, optional
+
+  Specifies whether the column should be hidden in the table. If not specified, the default value is `false`.
+
+- #### hiddenInForm
+
+  `boolean`, optional
+
+  Specifies whether the column should be hidden in the form.
+
+- #### sortable
+
+  `boolean`, optional
+
+  Specifies whether the column can be sorted. If not specified, the default value is `false`.
+
+- #### searchable
+
+  `boolean`, optional
+
+  Specifies whether the column can be searched. If not specified, the default value is `false`.
+
+- #### filterable
+
+  `boolean`, optional
+
+  Specifies whether the column can be filtered. If not specified, the default value is `false`.
+
+- #### position
+
+  `number`, optional
+
+  Specifies the position of the column in the table. If not specified, the columns will be displayed in default order. 
+
+- #### width
+
+  `number`, optional
+
+  Specifies the width of the column in pixels.
+
+- #### prefix
+
+  `string`, optional
+
+  Specifies the prefix to be added before the column value. E.g., `"$"` for currency columns.
+
+- #### suffix
+
+  `string`, optional
+
+  Specifies the suffix to be added after the column value. E.g., `"%"` for percentage columns.
+
+- #### fieldInput
+
+  `FieldInput`, optional
+
+  Specifies the field input configuration for the column. 
+
+  Learn more: [Field inputs](#field-inputs)
+
+- #### fieldRequirement
+
+  `"none" | "notEmpty" | "notZero"`, optional
+
+  Specifies the requirements for the form field.
+
+- #### hiddenInForm
+
+  `boolean`, optional
+
+  Specifies whether the column should be hidden in the form. If not specified, the default value is `false`.
+
+- #### formFieldSpan
+
+  `"12" | "8" | "6" | "4"`, optional
+
+  Specifies the span of the form field in the grid. The default value is `12`, which means the field will take the full width of the form.
+
+- #### relationshipPreviewColumns
 
   `string[]`, optional
 
-  Specifies the order of columns in the form. If not specified, the columns will be displayed in the auto-generated order. If only some columns are specified, the rest will be displayed after the specified columns in the auto-generated order.
+  If the column is a foreign key and has a one-to-one relationship with another table, this property allows to specify the columns to display for linked record preview. The value is an array of column names to display. Works only for one-to-one linked relations.
 
   ```json title="Example"
-  formColumnsOrder: ["first_name", "last_name", "email"]
+  relationshipPreviewColumns: ["id", "email"]
   ```
+- #### render
 
-- ### formColumnsRequirements
+  `(record: Record<string, any>) => any`, optional
 
-  `{ column: srting; rule: string; }[]`, optional
+  A custom function used to render content in the table cells. It receives the record data as an argument. This parameter only available on the client side.
 
-  Specifies the requirements for the form columns. The `rule` can be one of the following: `none`, `notEmpty`, `notZero`. If not specified, the requirements will be determined automatically based on the database schema.
-
-  ```json title="Example"
-  formColumnsRequirements: [
-    { column: "email", rule: "notEmpty" },
-    { column: "role", rule: "notZero" }
-  ]
-  ```
-
-- ### formColumnsFormFields
-
-  `{ column: string; type: string; }[]`, optional
-
-  Specifies the form fields for the form columns. The `type` can be one of the following: `input`, `numberInput`, `textarea`, `select`, `checkbox`, `datePicker`, `timePicker`, `dateTimePicker`. If not specified, the type will be determined automatically based on the database schema.
-
-  ```json title="Example"
-  formColumnsFormFields: [
-    { column: "description", type: "textarea" },
-    { column: "total", type: "numberInput" }
-  ]
-  ```
-
-- ### linked
-
-  Allows to set up custom linked relations between tables. Learn more: [Linked records (Joins)](/table/configuration/linked-records)
-
-  If not specified, the linked records will be determined automatically based on the database schema.
-
-- ### hiddenLinkedItems
-
-  `string[]`, optional
-
-  Allow to hide automatically determined linked relations.
-
-  ```json title="Example"
-  hiddenLinkedItems: ["usersByWorkspaceId"]
-  ```
-
-- ### linkedItemPreviewColumns
-
-  `{ [key: string]: string[] }`, optional
-
-  Allow to specify columns to display for linked record preview. Key is the linked relation key, value is the array of columns to display. Works only for one-to-one linked relations.
-
-  ```json title="Example"
-  linkedItemPreviewColumns: {
-    usersByUserId: ["id", "email"]
+  ```typescript title="Example #1"
+  {
+    label: 'Full name',
+    column: 'full_name',
+    render: (record) => `${record.firstName} ${record.lastName}`   
   }
   ```
 
-# Configuration for nested tables
+## Field inputs
+
+By default, form fields are automatically generated based on your database schema and [`defineTableController`](/table/configuration/api) settings. 
+
+But you can also define the form input explicitly using the `formInput` property in the [column configuration](#columns).
+
+```json title="Example"
+{
+  "_version": "1",
+  
+  "rootTable": {
+    "table": "users",
+    
+    "columns": [
+      {
+        "column": "description",
+        "label": "Description",
+        "formInput": {
+          "type": "textarea"
+        }
+      },
+      {
+        "column": "balance",
+        "label": "Balance",
+        "prefix": "$",
+        "formInput": {
+          "type": "numberInput",
+          "allowDecimal": true
+        }
+      }
+    ]
+  }
+}
+```
+
+### Field input types
+
+The type property defines the field type and supports additional properties depending on the type. 
+
+Below is a list of supported field input types and their interfaces:
+
+- #### input
+      
+      A single-line text input. 
+
+      ```typescript
+      {
+        type: 'input'
+      }
+      ```
+
+- #### numberInput
+
+      A number-only input field.
+
+      ```typescript
+      {
+        type: 'numberInput',
+        
+        /** Determines whether decimal values are allowed, true by default */
+        allowDecimal?: boolean;
+      }
+      ```
+
+- #### textarea
+      
+      A multi-line text input.
+
+      ```typescript
+      {
+        type: 'textarea'
+      }
+      ```
+
+- #### select
+
+      A searchable dropdown menu.
+
+      ```typescript
+      {
+        type: 'select',
+        
+        /** List of selectable options */
+        options: { 
+          /** Display label for the option */
+          label: string; 
+          
+          /** Value associated with the option */
+          value: string; 
+        }[]
+      }
+      ```
+- #### checkbox
+
+      A checkbox for boolean input.
+
+      ```typescript
+      {
+        type: 'checkbox'
+      }
+      ```
+
+- #### datePicker
+
+      An inline date (datetime) picker.
+
+      ```typescript
+      {
+        type: 'datePicker',
+        
+        /** Adds time picker */
+        withTime: boolean,
+        
+        /** Adds seconds input to time picker */
+        timeWithSeconds: boolean
+      }
+      ```
+
+- #### timePicker
+
+      An inline time picker.
+
+      ```typescript
+      {
+        type: 'timePicker',
+        
+        /** Adds seconds input */
+        withSeconds: boolean;
+      }
+      ```
+
+- #### recordSelect
+
+      Select records from another table.
+
+      Requires a one-to-one relationship to be configured (see [one-to-one linked](/table/configuration/linked-records#one-to-one)). 
+
+      ```typescript
+      {
+        type: 'recordSelect',
+        
+        /** The linked relation key */
+        relationshipKey?: string;
+      }
+      ```
+
+### Custom field input
+
+If you need to use a custom field input, you can define it using the type `custom` and the `renderComponent` function.
+
+This function receives the following parameters:
+- `value`: The current value of the field.
+- `values`: The current values of the form.
+- `record`: The original record data including the primary key.
+- `updateFieldValue(key: string, value: any)`: A function to update the field value.
+- `meta`: An object containing metadata about the field, including:
+  - `hasError`: A boolean indicating if the field has an error (e.g., validation error).
+  - `readOnly`: A boolean indicating if the field is read-only.
+
+```tsx title="Example with custom textarea component"
+{
+  type: 'custom',
+
+  renderComponent: ({ value, updateFieldValue }) => {
+    return (
+      <textarea 
+        value={value} 
+        onChange={e => updateFieldValue('description', e.target.value)} 
+      />
+    );
+  }
+}
+```

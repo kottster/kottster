@@ -11,7 +11,8 @@ The `defineCustomController` function sets up a custom controller to handle requ
 The object returned by `defineCustomController` **should always** be exported as `action` from the file.
 
 ```typescript title="Example"
-import { app } from '../.server/app';
+import { Page } from '@kottster/react';
+import { app } from '../../.server/app';
 
 export const action = app.defineCustomController({
   getProduct: async () => {
@@ -28,7 +29,13 @@ export const action = app.defineCustomController({
 });
 
 // Frontend part
-export default () => { /* ... */ };
+export default () => {
+  return (
+    <Page title='My custom page'>
+      {/* Custom page content */}
+    </Page>
+  );
+};
 ```
 
 Each action function should be defined inside the object passed to `defineCustomController`. The function should be `async` and return data that will be sent to the frontend.
@@ -58,12 +65,12 @@ export const action = app.defineCustomController({
 
 ```typescript title="Example of an action with context"
 export const action = app.defineCustomController({
-  getCurrentUser: async (_, { user }) => {
-    // Fetch user by id from the database
-    const user = await db.users.findOne({ id: user.id });
+  getProductOfCurrentUser: async ({ id }, { user }) => {
+    // Fetch product by id from the database
+    const product = await db.products.findOne({ id, userId: user.id });
 
-    // Return user data to the frontend
-    return user;
+    // Return product data to the frontend
+    return product;
   },
 });
 ```
@@ -93,7 +100,7 @@ The function accepts two arguments:
 ### Examples
 
 ```typescript title="Example"
-import { app } from '../.server/app';
+import { app } from '../../.server/app';
 import { executeCustomAction } from '@kottster/react';
 
 export const action = app.defineCustomController({

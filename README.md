@@ -74,7 +74,7 @@ See [CONTRIBUTING.md](https://github.com/kottster/kottster/blob/main/CONTRIBUTIN
 
 - 💬 [Join our Discord](https://discord.com/invite/Qce9uUqK98)
 - 📬 [Contact us](https://kottster.app/contact-us)
-- ✉️ [team@kottster.app](mailto:team@kottster.app)
+- ✉️ [team@kottster.io](mailto:team@kottster.io)
 
 ## License
 

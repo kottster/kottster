@@ -4,7 +4,7 @@ sidebar_position: 4
 
 # Deploying
 
-You can deploy your Kottster app using a cloud provider, self-host it on a Node.js server, or run it with a Docker image. Kottster app is basically a Remix app, so you can deploy it like any other Node.js app.
+You can deploy your Kottster app using a cloud provider, self-host it on a Node.js server, or run it with a Docker image. Kottster app is basically a Node.js server with a React frontend, so you can deploy it like any other Node.js app.
 
 **Before starting the app in production mode, you need to build it first:**
 

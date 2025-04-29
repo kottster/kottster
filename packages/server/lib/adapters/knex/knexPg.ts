@@ -82,7 +82,7 @@ export class KnexPg extends DataSourceAdapter {
         case JsType.string:
         case JsType.buffer:
           fieldInput = {
-            type: 'input'
+            type: 'textarea'
           }
           break;
         case JsType.number:

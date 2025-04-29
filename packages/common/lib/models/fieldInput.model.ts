@@ -7,17 +7,17 @@ interface BaseFieldInput {
   asArray?: boolean;
 }
 
-interface InputField extends BaseFieldInput {
+export interface InputFieldInput extends BaseFieldInput {
   type: 'input';
   maxLength?: number;
 }
 
-interface NumberInputField extends BaseFieldInput {
+export interface NumberInputFieldInput extends BaseFieldInput {
   type: 'numberInput';
   allowDecimal?: boolean;
 }
 
-interface TextareaField extends BaseFieldInput {
+export interface TextareaFieldInput extends BaseFieldInput {
   type: 'textarea';
   maxLength?: number;
   autoSize?: boolean;
@@ -25,12 +25,12 @@ interface TextareaField extends BaseFieldInput {
   maxRows?: number;
 }
 
-interface SelectField extends BaseFieldInput {
+export interface SelectFieldInput extends BaseFieldInput {
   type: 'select';
-  options: SelectOption[];
+  options?: SelectOption[];
 }
 
-interface CustomField extends BaseFieldInput {
+export interface CustomFieldInput extends BaseFieldInput {
   type: 'custom';
 
   /**
@@ -41,7 +41,7 @@ interface CustomField extends BaseFieldInput {
    * @param meta - Additional metadata about the field.
    * @returns A React component.
    */
-  renderComponent: (params: {
+  renderComponent?: (params: {
     value: any;
     values: Record<string, any>, 
     record: Record<string, any> | null,
@@ -53,36 +53,36 @@ interface CustomField extends BaseFieldInput {
   }) => any;
 }
 
-interface CheckboxField extends BaseFieldInput {
+export interface CheckboxFieldInput extends BaseFieldInput {
   type: 'checkbox';
 }
 
-interface RecordSelectField extends BaseFieldInput {
+export interface RecordSelectFieldInput extends BaseFieldInput {
   type: 'recordSelect';
 }
 
-interface DatePickerField extends BaseFieldInput {
+export interface DatePickerFieldInput extends BaseFieldInput {
   type: 'datePicker';
 }
 
-interface DateTimePickerField extends BaseFieldInput {
+export interface DateTimePickerFieldInput extends BaseFieldInput {
   type: 'dateTimePicker';
   timeWithSeconds?: boolean;
 }
 
-interface TimePickerField extends BaseFieldInput {
+export interface TimePickerFieldInput extends BaseFieldInput {
   type: 'timePicker';
   withSeconds?: boolean;
 }
 
 export type FieldInput =
-  | InputField
-  | NumberInputField
-  | DatePickerField
-  | DateTimePickerField
-  | TimePickerField
-  | TextareaField
-  | SelectField
-  | CheckboxField
-  | RecordSelectField
-  | CustomField;
+  | InputFieldInput
+  | NumberInputFieldInput
+  | DatePickerFieldInput
+  | DateTimePickerFieldInput
+  | TimePickerFieldInput
+  | TextareaFieldInput
+  | SelectFieldInput
+  | CheckboxFieldInput
+  | RecordSelectFieldInput
+  | CustomFieldInput;

@@ -1,6 +1,6 @@
 import { ExtendAppContextFunction } from '../models/appContext.model';
 import { PROJECT_DIR } from '../constants/projectDir';
-import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, TablePageConfig, RPCActionBody, TablePageInputSelect, TablePageInputDelete, TablePageInputUpdate, TablePageInputInsert, isSchemaEmpty, RPCResponse, schemaPlaceholder, InternalApiResponse, TablePageInputSelectSingle, PageSettings, pageSettingsTablePageKey, PageSettingsWithVersion } from '@kottster/common';
+import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, RPCActionBody, TablePageInputSelect, TablePageInputDelete, TablePageInputUpdate, TablePageInputInsert, isSchemaEmpty, RPCResponse, schemaPlaceholder, InternalApiResponse, TablePageInputSelectSingle, PageSettings, pageSettingsTablePageKey, SafePageSettings } from '@kottster/common';
 import { DataSourceRegistry } from './dataSourceRegistry';
 import { ActionService } from '../services/action.service';
 import * as jose from 'jose';
@@ -209,25 +209,20 @@ export class KottsterApp {
   /**
    * Define a table controller
    * @param dataSource The data source
-   * @param tablePageOrPageSettings The table page configuration
+   * @param pageSettings The page settings
    * @returns The action function
    */
   public defineTableController(
     dataSource: DataSource, 
-    tablePageOrPageSettings: TablePageConfig | PageSettingsWithVersion,
+    pageSettings: SafePageSettings,
   ): ActionFunction {
-    // Determine if the input is a PageSettings object or a TablePage object
-    const pageSettings = pageSettingsTablePageKey in tablePageOrPageSettings 
-      ? tablePageOrPageSettings as PageSettings 
-      : {
-        [pageSettingsTablePageKey]: tablePageOrPageSettings,
-      };
+    const typesPageSettings = pageSettings as PageSettings;
 
     const func: ActionFunction = async ({ request }) => {
       let response: RPCResponse;
       
       try {
-        const res = await this.processTableControllerRequest(dataSource, request, pageSettings);
+        const res = await this.processTableControllerRequest(dataSource, request, typesPageSettings);
         response = {
           status: 'success',
           result: res,

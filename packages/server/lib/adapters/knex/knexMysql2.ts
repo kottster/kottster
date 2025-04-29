@@ -66,6 +66,7 @@ export class KnexMysql2 extends DataSourceAdapter {
       }
     }
     else if ([
+      MysqlBaseType.varchar,
       MysqlBaseType.text,
       MysqlBaseType.longtext,
       MysqlBaseType.mediumtext,
@@ -83,7 +84,7 @@ export class KnexMysql2 extends DataSourceAdapter {
         case JsType.string:
         case JsType.buffer:
           fieldInput = {
-            type: 'input'
+            type: 'textarea'
           }
           break;
         case JsType.number:

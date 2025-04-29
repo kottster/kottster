@@ -1,3 +1,5 @@
+import os from 'os';
+
 interface NewProjectCommandOptions {
   packageManager?: string;
   usingTypescript?: boolean;
@@ -14,7 +16,7 @@ export class KottsterApi {
   /**
    * Send usage data to the server when a new project is created using "@kottster/cli new".
    * Usage data includes only the following information:
-   * - App ID
+   * - Username of the user (being used to identify the commands coming from the same user)
    * - Command stage (start, finish, error)
    * - Current date and time
    * - Platform (Windows, macOS, Linux)
@@ -22,6 +24,10 @@ export class KottsterApi {
    * - Command duration (for 'finish' stage)
    * - Package manager used (npm, yarn, pnpm, etc.)
    * - Whether TypeScript is used
+   * 
+   * The collected data is sent to the Kottster API for analytics purposes.
+   * We use this data to improve the CLI experience and understand how many users are using the CLI.
+   * All collected data is anonymized and aggregated to ensure user privacy. 
    * 
    * @param stage - The stage of the command ('start', 'finish', or 'error')
    * @param startTime - The timestamp when the command started (for 'finish' stage)
@@ -41,6 +47,13 @@ export class KottsterApi {
       duration = Date.now() - startTime;
     }
 
+    let username;
+    try {
+      username = os.userInfo().username;
+    } catch (err) {
+      console.error('Failed to get current username:', err.message);
+    }
+
     try {
       await fetch(`${this.API_BASE_URL}/v1/apps/cli-usage-data`, {
         method: 'POST',
@@ -49,6 +62,7 @@ export class KottsterApi {
         },
         body: JSON.stringify({
           command: 'new',
+          username,
           stage,
           dateTime,
           platform,

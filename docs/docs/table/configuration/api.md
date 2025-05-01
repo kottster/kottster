@@ -104,6 +104,18 @@ Alternatively, you can customize already defined configuration on the client sid
 
   Specifies the number of records to display per page. If not specified, the default value is `20`.
 
+- ### defaultSortColumn
+
+  `string`, optional
+
+  Specifies the default column to sort the table by. If not specified, the default value is the primary key column.
+
+- ### defaultSortDirection
+
+  `"asc" | "desc"`, optional
+
+  Specifies the default sort direction. If not specified, the default value is `"desc"`.
+
 - ### columns
 
   `TablePageConfigColumn[]`, optional

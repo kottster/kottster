@@ -182,6 +182,9 @@ export function getTableData(params: {
       allowDelete,
   
       pageSize: tablePageConfig?.pageSize ?? defaultTablePageSize,
+
+      defaultSortColumn: tablePageConfig?.defaultSortColumn ?? primaryKeyColumn,
+      defaultSortDirection: tablePageConfig?.defaultSortDirection ?? 'desc',
     },
   };
 }

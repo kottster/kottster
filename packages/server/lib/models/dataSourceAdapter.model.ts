@@ -200,14 +200,16 @@ export abstract class DataSourceAdapter {
       }
     }
 
-    // Apply ordering
+    // Apply sorting
     if (input.sorting) {
       if (tablePageProcessedConfig.sortableColumns && tablePageProcessedConfig.sortableColumns.includes(input.sorting.column)) {
         query.orderBy(input.sorting.column, input.sorting.direction);
       }
-    } else {
-      // By default, order by the primary key column
-      query.orderBy(tablePageProcessedConfig.primaryKeyColumn, 'desc');
+    } else if (tablePageProcessedConfig.defaultSortColumn && tablePageProcessedConfig.defaultSortDirection) {
+      query.orderBy(
+        tablePageProcessedConfig.defaultSortColumn, 
+        tablePageProcessedConfig.defaultSortDirection
+      );
     }
 
     // Apply filters

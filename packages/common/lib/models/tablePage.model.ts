@@ -144,6 +144,17 @@ export interface TablePageConfig {
   allowDelete?: boolean;
   canBeDeleted?: (record: Record<string, any>) => boolean;
 
+  /**
+   * Column name to sort by default
+   */
+  defaultSortColumn?: string;
+
+  /**
+   * Default sort direction
+   * @default 'desc'
+   */
+  defaultSortDirection?: 'asc' | 'desc';
+
   /** Optional object to specify relationships */
   relationships?: Relationship[];
 }

@@ -149,6 +149,7 @@ export abstract class DataSourceAdapter {
     const executeQuery = tablePageConfig.executeQuery;
     const table = tablePageConfig.table;
     const limit = ((input.pageSize > 1000 ? 1000 : input.pageSize) || tablePageProcessedConfig.pageSize || defaultTablePageSize);
+    const knexQueryModifier = tablePageConfig.knexQueryModifier as ((knex: Knex.QueryBuilder) => Knex.QueryBuilder) | undefined;
 
     // If a custom query is provided, execute it and return the result directly
     if (executeQuery) {
@@ -166,9 +167,10 @@ export abstract class DataSourceAdapter {
     if (this.tablesConfig[table]?.excluded) {
       throw new Error(`Access to the table "${table}" is restricted`);
     }
-    
-    const query = this.client(table);
-    const countQuery = this.client(table);
+
+    const tableAlias = 'main';
+    let query = this.client(table).from({ [tableAlias]: table });
+    let countQuery = this.client(table).from({ [tableAlias]: table });
 
     // Selecting records by a specific foreign record
     if (input.getByForeignRecord) {
@@ -189,6 +191,13 @@ export abstract class DataSourceAdapter {
       query.select('*');
     }
     countQuery.count({ count: '*' });
+
+    // Add calculated columns to the select statement
+    if (tablePageConfig.calculatedColumns) {
+      tablePageConfig.calculatedColumns.forEach(calculatedColumn => {
+        query.select(this.client.raw(`(${calculatedColumn.sqlExpression}) as ${calculatedColumn.alias}`));
+      });
+    }
 
     // Apply search
     if (input.search) {
@@ -216,6 +225,12 @@ export abstract class DataSourceAdapter {
     if (input.filters?.length) {
       query.where(this.getFilterBuilder(input.filters));
       countQuery.where(this.getFilterBuilder(input.filters));
+    }
+
+    // Apply Knex query modifier
+    if (knexQueryModifier) {
+      query = knexQueryModifier(query);
+      countQuery = knexQueryModifier(countQuery);
     }
 
     // Apply pagination

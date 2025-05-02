@@ -251,6 +251,55 @@ Alternatively, you can customize already defined configuration on the client sid
   }
   ```
 
+- ### knexQueryModifier
+
+  `(knex: Knex.QueryBuilder) => Knex.QueryBuilder`, optional
+
+  A function that modifies the Knex query before it is executed. This function is often used to add custom where clauses, joins, or other query modifications. 
+  Learn more in the [Knex documentation](https://knexjs.org/guide/query-builder.html).
+
+  ```typescript title="Example with where clause"
+  knexQueryModifier: (knex) => {
+    return knex.where('is_active', true);
+  }
+  ```
+
+  ```typescript title="Example with group by"
+  knexQueryModifier: (knex) => {
+    return knex.groupBy('user_id');
+  }
+  ```
+
+- ### calculatedColumns
+
+  `TablePageConfigCalculatedColumn[]`, optional
+
+  Specifies the configuration for the calculated columns in the table. 
+
+  Each calculated column should have the following properties:
+
+  - #### alias
+
+    `string`, required
+
+    Specifies the alias for the calculated column. This is used to reference the column after querying the database.
+
+  - #### sqlExpression
+
+    `string`, required
+
+    Specifies the SQL expression to calculate the value. This expression should return a single value.
+
+    The SQL expression can reference the main table using the `main` alias. 
+
+    For example, if you want to count the number of orders for each user, you can use the following SQL expression:
+
+    ```sql
+    SELECT COUNT(*) FROM orders WHERE orders.user_id = main.id AND orders.status = 'completed'
+    ```
+
+  Learn more: [Adding calculated columns](/table/customization/add-custom-columns#calculated-columns)
+
 - ### relationships
 
   Specifies the configuration for the relationships the table has with other tables.

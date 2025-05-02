@@ -1,6 +1,6 @@
 import { ExtendAppContextFunction } from '../models/appContext.model';
 import { PROJECT_DIR } from '../constants/projectDir';
-import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, RPCActionBody, TablePageInputSelect, TablePageInputDelete, TablePageInputUpdate, TablePageInputInsert, isSchemaEmpty, RPCResponse, schemaPlaceholder, InternalApiResponse, TablePageInputSelectSingle, PageSettings, pageSettingsTablePageKey, SafePageSettings } from '@kottster/common';
+import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, RPCActionBody, TablePageInputSelect, TablePageInputDelete, TablePageInputUpdate, TablePageInputInsert, isSchemaEmpty, RPCResponse, schemaPlaceholder, InternalApiResponse, TablePageInputSelectSingle, PageSettings, pageSettingsTablePageKey } from '@kottster/common';
 import { DataSourceRegistry } from './dataSourceRegistry';
 import { ActionService } from '../services/action.service';
 import * as jose from 'jose';
@@ -8,6 +8,7 @@ import { commonHeaders } from '../constants/commonHeaders';
 import { ActionFunction, json } from "@remix-run/node";
 import { DataSourceAdapter } from '../models/dataSourceAdapter.model';
 import { parse as parseCookie } from 'cookie';
+import { SafePageSettings } from '../models/safePageSettings.model';
 
 export interface KottsterAppOptions {
   secretKey?: string;

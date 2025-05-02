@@ -676,10 +676,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@kottster/common@^1.8.3":
-  version "1.8.3"
-  resolved "https://registry.yarnpkg.com/@kottster/common/-/common-1.8.3.tgz#f800f6b26539ef141387a74ae0e48d865eda8225"
-  integrity sha512-BgTcRZf8k9QSo5b77Lz3gx0a2OmECQ86SUytbG64UvfZvP9N7YtvbVXwtXOI7dyUkkN7X4N3kaWhwurwmj947A==
+"@kottster/common@^1.8.4":
+  version "1.8.4"
+  resolved "https://registry.yarnpkg.com/@kottster/common/-/common-1.8.4.tgz#26ee69e96bd9462bbc94cd4e70a3670d964dc295"
+  integrity sha512-7lTjlupyeatSRjsUXkwPeAM3KJC5GUERlY8D9rW+XIMjYV9yxDIJDvjj9VVhZZYOzyFDwjK8YP5rweI67sa2Lg==
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"

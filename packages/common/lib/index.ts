@@ -39,6 +39,7 @@ export * from './utils/getRelationshipKeyByColumn';
 export * from './utils/getRelationshipByColumn';
 export * from './utils/getTablePage';
 export * from './utils/getCustomPage';
+export * from './utils/transformToKebabCase';
 
 // Constants
 export * from './constants/dataSourceTypes';

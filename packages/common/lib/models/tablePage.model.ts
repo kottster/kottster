@@ -125,11 +125,27 @@ export interface TablePageConfigColumn {
   width?: number;
 }
 
+export interface TablePageConfigCalculatedColumn {
+  /**
+   * Raw SQL expression for the calculated column
+   * Use 'main' as the alias for the main table
+   * @example 'SELECT COUNT(*) FROM orders WHERE orders.user_id = main.id'
+   */
+  sqlExpression: string;
+
+  /**
+   * Alias for the calculated column in SQL results and display
+   * This will be used as both the SQL alias and the property name in result objects
+   */
+  alias: string;
+}
+
 export interface TablePageConfig {
   table?: string;
   primaryKeyColumn?: string;
   pageSize?: number;
   columns?: TablePageConfigColumn[];
+  calculatedColumns?: TablePageConfigCalculatedColumn[];
 
   executeQuery?: (input: TablePageInputSelectUsingExecuteQuery) => Promise<TablePageResultSelectDTO>;
 
@@ -144,9 +160,7 @@ export interface TablePageConfig {
   allowDelete?: boolean;
   canBeDeleted?: (record: Record<string, any>) => boolean;
 
-  /**
-   * Column name to sort by default
-   */
+  /** Column name to sort by default */
   defaultSortColumn?: string;
 
   /**
@@ -157,6 +171,9 @@ export interface TablePageConfig {
 
   /** Optional object to specify relationships */
   relationships?: Relationship[];
+
+  // Will be typed as Knex.Where in @kottster/server
+  knexQueryModifier?: any;
 }
 
 export type TablePageResultSelectRecord = Record<string, any>;

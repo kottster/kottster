@@ -2,7 +2,7 @@
 sidebar_position: 3
 ---
 
-# Data Sources
+# Data sources
 
 In Kottster, data sources are the primary way to connect to your database. They allow you to define connections to various databases and configure how Kottster interacts with them.
 

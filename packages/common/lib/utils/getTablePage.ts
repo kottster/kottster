@@ -15,7 +15,7 @@ interface GetTablePageParams {
  * @returns The default page structure.
  */
 export function getTablePage({ pageId, usingTsc, tablePageConfig, dataSourceName }: GetTablePageParams): PageFileStructure {
-  const fileContent = `import { TablePage } from '@kottster/react';\nimport { app } from '${usingTsc ? '@' : '../..'}/.server/app';\nimport dataSource from '${usingTsc ? '@' : '../..'}/.server/data-sources/${dataSourceName}';\nimport pageSettings from './settings.json';\n\n/**\n * Learn more about configuring the table controller:\n * https://docs.kottster.app/table/configuration/api\n */\nexport const action = app.defineTableController(dataSource, {\n  ...pageSettings\n});\n\n/**\n * Learn more about TablePage component and its properties:\n * https://docs.kottster.app/table/table-page-component\n */\nexport default () => (\n  <TablePage />\n);\n`;
+  const fileContent = `import { TablePage } from '@kottster/react';\nimport { app } from '${usingTsc ? '@' : '../..'}/.server/app';\nimport dataSource from '${usingTsc ? '@' : '../..'}/.server/data-sources/${dataSourceName}';\nimport pageSettings from './settings.json';\n\nexport const action = app.defineTableController(dataSource, {\n  ...pageSettings,\n  rootTable: {\n    ...pageSettings.rootTable,\n    /**\n     * Need more customization? Adjust the table configuration here.\n     * Learn more: https://docs.kottster.app/table/configuration/api#parameters\n     */\n  }\n});\n\nexport default () => (\n  <TablePage />\n);\n`;
   const fileName = `index.${usingTsc ? 'tsx' : 'jsx'}`;
 
   return {

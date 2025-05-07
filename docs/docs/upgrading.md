@@ -2,7 +2,7 @@
 sidebar_position: 4
 ---
 
-# App upgrade
+# Upgrading
 
 This page explains how to check your current Kottster versions and upgrade to the latest or a specific version. Your app consists of multiple core packages (`@kottster/common`, `@kottster/cli`, `@kottster/server`, and `@kottster/react`). You can upgrade all of them at once or choose to upgrade only specific packages.
 

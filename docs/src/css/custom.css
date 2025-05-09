@@ -25,10 +25,9 @@ nav {
   font-size: 15px;
 }
 
-/* article {
-  max-width: 850px;
-  margin: 0 auto;
-} */
+.navbar__item svg {
+  display: none;
+}
 
 article img {
   border-radius: 8px;

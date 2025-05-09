@@ -77,25 +77,35 @@ const config: Config = {
       title: 'Kottster',
       items: [
         {
+          href: 'https://kottster.app',
+          position: 'left',
+          label: 'Website',
+        },
+        {
           type: 'docSidebar',
           sidebarId: 'tutorialSidebar',
           position: 'left',
           label: 'Docs',
         },
         {
-          href: 'https://kottster.app/',
-          label: 'Website',
-          position: 'right',
+          href: 'https://github.com/kottster/kottster',
+          label: 'GitHub',
+          position: 'left',
+        },
+        {
+          href: 'https://kottster.app/pricing',
+          label: 'Pricing',
+          position: 'left',
+        },
+        {
+          href: 'https://kottster.app/blog',
+          label: 'Blog',
+          position: 'left',
         },
         {
           href: 'https://demo.kottster.app/',
           label: 'Live Demo',
-          position: 'right',
-        },
-        {
-          href: 'https://github.com/kottster/kottster',
-          label: 'GitHub',
-          position: 'right',
+          position: 'left',
         },
       ],
     },

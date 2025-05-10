@@ -6,11 +6,11 @@ const config: Config = {
   title: 'Kottster Docs',
   tagline: 'Instant admin panel for your project',
   
-  favicon: 'img/logo.png',
+  favicon: '/favicon-32x32.png',
 
-  url: 'https://docs.kottster.app',
+  url: 'https://kottster.app',
   
-  baseUrl: '/',
+  baseUrl: '/docs',
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -24,7 +24,7 @@ const config: Config = {
 
   scripts: [
     {
-      src: '/js/analytics.js',
+      src: '/docs/js/analytics.js',
     }
   ],
 
@@ -72,11 +72,15 @@ const config: Config = {
           marginLeft: '4px'
         },
         alt: 'Kottster Logo',
-        src: 'img/logo.png',
-        
+        src: '/docs/img/logo.png',
       },
       title: 'Kottster',
       items: [
+        {
+          href: 'https://kottster.app',
+          position: 'left',
+          label: 'Website',
+        },
         {
           type: 'docSidebar',
           sidebarId: 'tutorialSidebar',
@@ -84,19 +88,24 @@ const config: Config = {
           label: 'Docs',
         },
         {
-          href: 'https://kottster.app/',
-          label: 'Website',
-          position: 'right',
+          href: 'https://github.com/kottster/kottster',
+          label: 'GitHub',
+          position: 'left',
+        },
+        {
+          href: 'https://kottster.app/pricing',
+          label: 'Pricing',
+          position: 'left',
+        },
+        {
+          href: 'https://kottster.app/blog',
+          label: 'Blog',
+          position: 'left',
         },
         {
           href: 'https://demo.kottster.app/',
           label: 'Live Demo',
-          position: 'right',
-        },
-        {
-          href: 'https://github.com/kottster/kottster',
-          label: 'GitHub',
-          position: 'right',
+          position: 'left',
         },
       ],
     },

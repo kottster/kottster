@@ -139,10 +139,12 @@ export class FileWriter {
 
       export const app = createApp({
         schema,
-        secretKey: '${secretKey}',
 
-        // For security, consider moving the secret key to an environment variable:
-        // secretKey: process.env.NODE_ENV === 'development' ? 'dev-secret-key' : process.env.SECRET_KEY,
+        /* 
+         * For security, consider moving the secret key to an environment variable: 
+         * https://docs.kottster.app/deploying#before-you-deploy
+         */
+        secretKey: '${secretKey}',
       });
 
       app.registerDataSources(dataSourceRegistry);

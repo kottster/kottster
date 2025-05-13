@@ -75,6 +75,11 @@ export class AddDataSource extends DSAction {
         if (dbErrorMatch && dbErrorMatch[1]) {
           try {
             errorMessage = dbErrorMatch[1];
+            
+            // Remove quotes from the error message if they exist
+            if (errorMessage.startsWith(`"`) && errorMessage.endsWith(`"`)) {
+              errorMessage = errorMessage.slice(1, -1);
+            }
           } catch (err) {
             console.warn('Could not parse database error:', err);
           }
@@ -144,7 +149,7 @@ export class AddDataSource extends DSAction {
         const databaseTableCount = await dataSource.adapter.getDatabaseTableCount();
         process.stdout.write('${this.dbDataStartMarker}' + JSON.stringify({ tableCount: databaseTableCount }) + '${this.dbDataEndMarker}');
       } catch (err) {
-        process.stdout.write('${this.dbErrorStartMarker}' + JSON.stringify(err instanceof Error ? err.message : err) + '${this.dbErrorEndMarker}');
+        process.stdout.write('${this.dbErrorStartMarker}' + JSON.stringify((err && err.message) ? err.message : err) + '${this.dbErrorEndMarker}');
       } finally {
         process.exit(0); 
       }

@@ -88,7 +88,7 @@ export class FileTemplateManager {
           }),
         ],
         optimizeDeps: {
-          include: ['react', 'react-dom', '@kottster/common', '@kottster/server'],
+          include: ['react', 'react-dom', '@kottster/common', '@kottster/server', 'dayjs', 'dayjs/plugin/isoWeek.js', 'prop-types'],
           exclude: ['@kottster/react'],
         },
       });
@@ -134,10 +134,12 @@ export class FileTemplateManager {
 
       export const app = createApp({
         schema,
-        secretKey: process.env.SECRET_KEY,
 
-        // For security, consider moving the secret key to an environment variable:
-        // secretKey: process.env.NODE_ENV === 'development' ? 'dev-secret-key' : process.env.SECRET_KEY,
+        /* 
+         * For security, consider moving the secret key to an environment variable: 
+         * https://docs.kottster.app/deploying#before-you-deploy
+         */
+        secretKey: process.env.SECRET_KEY,
       });
 
       app.registerDataSources(dataSourceRegistry);
@@ -299,16 +301,23 @@ export class FileTemplateManager {
     `),
 
     'app/root.jsx': stripIndent(`
+      import { MantineProvider } from '@mantine/core';
       import { Outlet } from '@remix-run/react';
-      import { KottsterApp, ClientOnly, getRootLayout } from '@kottster/react';
+      import { KottsterApp, ClientOnly, getRootLayout, appTheme } from '@kottster/react';
       import '@kottster/react/dist/style.css';
       import schema from '../app-schema.json';
 
       function ClientApp() {
         return (
-          <KottsterApp.Provider schema={schema}>
-            <Outlet />
-          </KottsterApp.Provider>
+          <MantineProvider 
+            theme={appTheme} 
+            defaultColorScheme='light' 
+            forceColorScheme='light'
+          >
+            <KottsterApp.Provider schema={schema}>
+              <Outlet />
+            </KottsterApp.Provider>
+          </MantineProvider>
         );
       }
 

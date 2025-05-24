@@ -196,28 +196,32 @@ export class KnexMysql2 extends DataSourceAdapter {
   getFilterBuilder(filterItems: FilterItem[]) {
     return (builder: Knex.QueryBuilder) => {
       filterItems.forEach(filterItem => {
-        if (filterItem.value === undefined || filterItem.value === null || filterItem.value === '') {
-          return;
-        }
-  
         switch (filterItem.operator) {
           case FilterItemOperator.equal:
-            builder.where(filterItem.column, filterItem.value);
+            builder.where(filterItem.column, filterItem.value ?? '');
             break;
           case FilterItemOperator.notEqual:
-            builder.whereNot(filterItem.column, filterItem.value);
+            builder.whereNot(filterItem.column, filterItem.value ?? '');
             break;
           case FilterItemOperator.greaterThan:
-            builder.where(filterItem.column, '>', filterItem.value);
+            if (filterItem.value) {
+              builder.where(filterItem.column, '>', filterItem.value);
+            }
             break;
           case FilterItemOperator.lessThan:
-            builder.where(filterItem.column, '<', filterItem.value);
+            if (filterItem.value) {
+              builder.where(filterItem.column, '<', filterItem.value);
+            }
             break;
           case FilterItemOperator.between:
-            builder.whereBetween(filterItem.column, filterItem.value);
+            if (filterItem.value) {
+              builder.whereBetween(filterItem.column, filterItem.value);
+            }
             break;
           case FilterItemOperator.notBetween:
-            builder.whereNotBetween(filterItem.column, filterItem.value);
+            if (filterItem.value) {
+              builder.whereNotBetween(filterItem.column, filterItem.value);
+            }  
             break;
           case FilterItemOperator.isNull:
             builder.whereNull(filterItem.column);
@@ -232,31 +236,39 @@ export class KnexMysql2 extends DataSourceAdapter {
             builder.where(filterItem.column, false);
             break;
           case FilterItemOperator.contains:
-            builder.whereRaw(`${filterItem.column} LIKE LOWER(?)`, [`%${filterItem.value}%`]);
+            builder.whereRaw(`${filterItem.column} LIKE LOWER(?)`, [`%${filterItem.value ?? ''}%`]);
             break;
           case FilterItemOperator.notContains:
-            builder.whereRaw(`${filterItem.column} NOT LIKE LOWER(?)`, [`%${filterItem.value}%`]);
+            builder.whereRaw(`${filterItem.column} NOT LIKE LOWER(?)`, [`%${filterItem.value ?? ''}%`]);
             break;
           case FilterItemOperator.startsWith:
-            builder.whereRaw(`${filterItem.column} LIKE LOWER(?)`, [`${filterItem.value}%`]);
+            builder.whereRaw(`${filterItem.column} LIKE LOWER(?)`, [`${filterItem.value ?? ''}%`]);
             break;
           case FilterItemOperator.endsWith:
-            builder.whereRaw(`${filterItem.column} LIKE LOWER(?)`, [`%${filterItem.value}`]);
+            builder.whereRaw(`${filterItem.column} LIKE LOWER(?)`, [`%${filterItem.value ?? ''}`]);
             break;
           case FilterItemOperator.dateEquals:
-            builder.whereRaw(`DATE(${filterItem.column}) = ?`, [filterItem.value]);
+            builder.whereRaw(`DATE(${filterItem.column}) = ?`, [filterItem.value ?? '']);
             break;
           case FilterItemOperator.dateAfter:
-            builder.where(filterItem.column, '>', filterItem.value);
+            if (filterItem.value) {
+              builder.where(filterItem.column, '>', filterItem.value);
+            }
             break;
           case FilterItemOperator.dateBefore:
-            builder.where(filterItem.column, '<', filterItem.value);
+            if (filterItem.value) {
+              builder.where(filterItem.column, '<', filterItem.value);
+            }
             break;
           case FilterItemOperator.dateBetween:
-            builder.whereBetween(filterItem.column, filterItem.value);
+            if (filterItem.value) {
+              builder.whereBetween(filterItem.column, filterItem.value);
+            }
             break;
           case FilterItemOperator.dateNotBetween:
-            builder.whereNotBetween(filterItem.column, filterItem.value);
+            if (filterItem.value) {
+              builder.whereNotBetween(filterItem.column, filterItem.value);
+            }
             break;
           default:
             throw new Error(`Unsupported filter operator: ${filterItem.operator}`);

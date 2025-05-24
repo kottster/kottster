@@ -162,7 +162,12 @@ export class FileCreator {
         '@kottster/common': KOTTSTER_COMMON_DEP_VER ?? '^1.x',
         '@kottster/cli': KOTTSTER_CLI_DEP_VER ?? '^2.x',
         '@kottster/server': KOTTSTER_SERVER_DEP_VER ?? '^1.x',
-        '@kottster/react': KOTTSTER_REACT_DEP_VER ?? '^1.x',
+        '@kottster/react': KOTTSTER_REACT_DEP_VER ?? '^2.x',
+
+        '@mantine/core': '^8.x',
+        '@mantine/hooks': '^8.x',
+        '@mantine/modals': '^8.x',
+        '@mantine/notifications': '^8.x',
 
         'isbot': '^4.x',
         

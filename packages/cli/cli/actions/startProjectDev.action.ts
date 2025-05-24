@@ -32,6 +32,8 @@ export async function startProjectDev (options: Options): Promise<void> {
       DEV_SYNC_SERVER_URL: devSyncServerUrl,
       VITE_DEV_SYNC_SERVER_URL: devSyncServerUrl,
       DEBUG_MODE: options.debug ? 'true' : undefined,
+      // Disabling CJS warnings for Vite (https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated)
+      VITE_CJS_IGNORE_WARNING: 'true',
     },
   });
 }

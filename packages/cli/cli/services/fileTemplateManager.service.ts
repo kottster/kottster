@@ -3,8 +3,9 @@ import { stripIndent } from "@kottster/common";
 type TemplateVars = {
   'vite.config.js': undefined;
   'tsconfig.json': undefined;
-  'app/.server/app.js': undefined;
-  'app/.server/data-sources/postgres/index.js': {
+  'app/_server/app.js': undefined;
+  'app/_server/server.js': undefined;
+  'app/_server/data-sources/postgres/index.js': {
     connection?: string | {
       host: string;
       port: number;
@@ -14,7 +15,7 @@ type TemplateVars = {
     };
     searchPath?: string;
   };
-  'app/.server/data-sources/mysql/index.js': {
+  'app/_server/data-sources/mysql/index.js': {
     connection?: string | {
       host: string;
       port: number;
@@ -23,7 +24,7 @@ type TemplateVars = {
       database: string;
     };
   };
-  'app/.server/data-sources/mariadb/index.js': {
+  'app/_server/data-sources/mariadb/index.js': {
     connection?: string | {
       host: string;
       port: number;
@@ -32,18 +33,17 @@ type TemplateVars = {
       database: string;
     };
   };
-  'app/.server/data-sources/mssql/index.js': undefined;
-  'app/.server/data-sources/sqlite/index.js': {
+  'app/_server/data-sources/mssql/index.js': undefined;
+  'app/_server/data-sources/sqlite/index.js': {
     connection?: {
       filename: string;
     };
   };
-  'app/.server/data-sources/registry.js': {
+  'app/_server/data-sources/registry.js': {
     dataSourceName: string;
   };
-  'app/root.jsx': undefined;
-  'app/service-route.js': undefined;
-  'app/entry.client.jsx': undefined;
+  'app/index.html': undefined;
+  'app/main.jsx': undefined;
 };
 
 /**
@@ -59,37 +59,30 @@ export class FileTemplateManager {
       ? string | ((usingTsc: boolean) => string)
       : (usingTsc: boolean, vars: TemplateVars[K]) => string;
   } = {
-    'vite.config.js': (usingTsc) => stripIndent(`
+    'vite.config.js': () => stripIndent(`
       import { defineConfig } from 'vite';
-      import { vitePlugin as remix } from '@remix-run/dev';
-      import { viteCommonjs } from '@originjs/vite-plugin-commonjs';
-      import tsconfigPaths from 'vite-tsconfig-paths';
+      import { vitePlugin as kottster } from '@kottster/react';
+      import react from '@vitejs/plugin-react';
 
       export default defineConfig({
+        root: './app',
+        server: {
+          port: 5480,
+          open: true,
+        },
+        build: {
+          outDir: '../dist/client',
+          emptyOutDir: true,
+          chunkSizeWarningLimit: 1000,
+        },
         plugins: [
-          remix({
-            future: {
-              v3_fetcherPersist: true,
-              v3_relativeSplatPath: true,
-              v3_throwAbortReason: true,
-              v3_lazyRouteDiscovery: false,
-              v3_singleFetch: false,
-            },
-            routes(defineRoutes) {
-              return defineRoutes((route) => {
-                route('/auth/*', 'service-route.${usingTsc ? 'ts' : 'js'}', { id: 'auth' }),
-                route('/-/*', 'service-route.${usingTsc ? 'ts' : 'js'}', { id: 'service' })
-              });
-            },
-          }),
-          tsconfigPaths(),
-          viteCommonjs({
-            include: ['util'],
-          }),
+          kottster(),
+          react(),
         ],
-        optimizeDeps: {
-          include: ['react', 'react-dom', '@kottster/common', '@kottster/server', 'dayjs', 'dayjs/plugin/isoWeek.js', 'prop-types'],
-          exclude: ['@kottster/react'],
+        resolve: {
+          alias: {
+            '@': '/app'
+          }
         },
       });
     `),
@@ -97,16 +90,16 @@ export class FileTemplateManager {
     'tsconfig.json': stripIndent(`
       {
         "include": [
-          "**/*.ts",
-          "**/*.tsx",
-          "**/.server/**/*.ts",
-          "**/.server/**/*.tsx",
+          "**/app/**/*.ts",
+          "**/app/**/*.tsx",
+          "**/_server/**/*.ts",
+          "**/_server/**/*.tsx",
           "**/.client/**/*.ts",
           "**/.client/**/*.tsx"
         ],
         "compilerOptions": {
           "lib": ["DOM", "DOM.Iterable", "ES2022"],
-          "types": ["@remix-run/node", "vite/client"],
+          "types": ["@types/node", "vite/client"],
           "isolatedModules": true,
           "esModuleInterop": true,
           "jsx": "react-jsx",
@@ -119,6 +112,7 @@ export class FileTemplateManager {
           "skipLibCheck": true,
           "forceConsistentCasingInFileNames": true,
           "baseUrl": ".",
+          "outDir": "./dist",
           "paths": {
             "@/*": ["./app/*"]
           },
@@ -127,25 +121,39 @@ export class FileTemplateManager {
       }
     `),
 
-    'app/.server/app.js': stripIndent(`
+    'app/_server/app.js': stripIndent(`
       import { createApp } from '@kottster/server';
       import { dataSourceRegistry } from './data-sources/registry';
-      import schema from '../../app-schema.json';
+      import schema from '../../kottster-app.json';
 
       export const app = createApp({
         schema,
 
         /* 
-         * For security, consider moving the secret key to an environment variable: 
-         * https://docs.kottster.app/deploying#before-you-deploy
-         */
+        * For security, consider moving the secret key to an environment variable: 
+        * https://kottster.app/docs/deploying#before-you-deploy
+        */
         secretKey: process.env.SECRET_KEY,
       });
 
       app.registerDataSources(dataSourceRegistry);
     `),
 
-    'app/.server/data-sources/postgres/index.js': (usingTsc, vars) => stripIndent(`
+    'app/_server/server.js': stripIndent(`
+      import { app } from './app';
+
+      async function bootstrap() {
+        // Use the PORT environment variable to set the port in production
+        await app.listen();
+      }
+
+      bootstrap().catch(err => {
+        console.error(err);
+        process.exit(1);
+      });
+    `),
+
+    'app/_server/data-sources/postgres/index.js': (usingTsc, vars) => stripIndent(`
       import { createDataSource, KnexPgAdapter } from '@kottster/server';
       import knex from 'knex';
       ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
@@ -176,7 +184,7 @@ export class FileTemplateManager {
       export default dataSource;
     `),
 
-    'app/.server/data-sources/mysql/index.js': (usingTsc, vars) => stripIndent(`
+    'app/_server/data-sources/mysql/index.js': (usingTsc, vars) => stripIndent(`
       import { createDataSource, KnexMysql2Adapter } from '@kottster/server';
       import knex from 'knex';
       ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
@@ -206,7 +214,7 @@ export class FileTemplateManager {
       export default dataSource;
     `),
 
-    'app/.server/data-sources/mariadb/index.js': (usingTsc, vars) => stripIndent(`
+    'app/_server/data-sources/mariadb/index.js': (usingTsc, vars) => stripIndent(`
       import { createDataSource, KnexMysql2Adapter } from '@kottster/server';
       import knex from 'knex';
       ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
@@ -236,7 +244,7 @@ export class FileTemplateManager {
       export default dataSource;
     `),
 
-    'app/.server/data-sources/mssql/index.js': (usingTsc) => stripIndent(`
+    'app/_server/data-sources/mssql/index.js': (usingTsc) => stripIndent(`
       import { createDataSource, KnexTediousAdapter } from '@kottster/server';
       import knex from 'knex';
       ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
@@ -267,7 +275,7 @@ export class FileTemplateManager {
       export default dataSource;
     `),
 
-    'app/.server/data-sources/sqlite/index.js': (usingTsc, vars) => stripIndent(`
+    'app/_server/data-sources/sqlite/index.js': (usingTsc, vars) => stripIndent(`
       import { createDataSource, KnexBetterSqlite3Adapter } from '@kottster/server';
       import knex from 'knex';
       ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
@@ -293,81 +301,57 @@ export class FileTemplateManager {
       export default dataSource;
     `),
 
-    'app/.server/data-sources/registry.js': (_, vars) => stripIndent(`
+    'app/_server/data-sources/registry.js': (_, vars) => stripIndent(`
       import { DataSourceRegistry } from '@kottster/server';
       ${vars.dataSourceName ? `import ${vars.dataSourceName}DataSource from './${vars.dataSourceName}';` : ''}
 
-      export const dataSourceRegistry = new DataSourceRegistry([${vars.dataSourceName ? `${vars.dataSourceName}DataSource` : ''}]);
+      export const dataSourceRegistry = new DataSourceRegistry([
+        ${vars.dataSourceName ? `${vars.dataSourceName}DataSource` : ''}
+      ]);
     `),
 
-    'app/root.jsx': stripIndent(`
-      import { MantineProvider } from '@mantine/core';
-      import { Outlet } from '@remix-run/react';
-      import { KottsterApp, ClientOnly, getRootLayout, appTheme } from '@kottster/react';
-      import '@kottster/react/dist/style.css';
-      import schema from '../app-schema.json';
+    'app/index.html': usingTsc => stripIndent(`
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="UTF-8" />
+          <link rel="icon" type="image/png" href="https://web.kottster.app/icon.png" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>Kottster App</title>
+        </head>
+        <body>
+          <div id="root"></div>
+          <script type="module" src="./main.${usingTsc ? 'tsx' : 'jsx'}"></script>
+        </body>
+      </html>
+    `),
 
-      function ClientApp() {
-        return (
+    'app/main.jsx': usingTsc => stripIndent(`
+      import React from 'react';
+      import ReactDOM from 'react-dom/client';
+      import { MantineProvider } from '@mantine/core';
+      import { appTheme, KottsterApp } from '@kottster/react';
+      import '@kottster/react/dist/style.css';
+      
+      import schema from '../kottster-app.json';
+
+      const pageEntries = import.meta.glob('./pages/**/index.${usingTsc ? `{jsx,tsx}` : 'jsx'}', { eager: true });
+
+      ReactDOM.createRoot(document.getElementById('root')${usingTsc ? '!' : ''}).render(
+        <React.StrictMode>
           <MantineProvider 
             theme={appTheme} 
             defaultColorScheme='light' 
             forceColorScheme='light'
           >
-            <KottsterApp.Provider schema={schema}>
-              <Outlet />
-            </KottsterApp.Provider>
+            <KottsterApp 
+              schema={schema} 
+              pageEntries={pageEntries}
+            />
           </MantineProvider>
-        );
-      }
-
-      export default function App() {
-        return (
-          <ClientOnly>
-            <ClientApp />
-          </ClientOnly>
-        );
-      }
-
-      export const Layout = getRootLayout({ schema });
-      export { App as ErrorBoundary };
+        </React.StrictMode>
+      );
     `),
-
-    'app/service-route.js': (usingTsc) => stripIndent(`
-      import { app } from './.server/app';
-      import { SpecialRoutePage } from '@kottster/react';
-      ${usingTsc ? `import { ActionFunctionArgs, LoaderFunctionArgs } from '@remix-run/node';` : ''}
-
-      export const loader = async (args${usingTsc ? ': LoaderFunctionArgs' : ''}) => {
-        return app.createServiceRouteLoader()(args);
-      };
-
-      export const action = async (args${usingTsc ? ': ActionFunctionArgs' : ''}) => {
-        return app.createServiceRouteLoader()(args);
-      };
-
-      export default SpecialRoutePage;
-    `),
-
-    'app/entry.client.jsx': stripIndent(`
-      import { startTransition, StrictMode } from 'react';
-      import { RemixBrowser } from '@remix-run/react';
-      import { hydrateRoot } from 'react-dom/client';
-      import { handleRecoverableError } from '@kottster/react';
-
-      startTransition(() => {
-        hydrateRoot(
-          document,
-          <StrictMode>
-            <RemixBrowser />
-          </StrictMode>,
-          {
-            onRecoverableError: handleRecoverableError
-          }
-        );
-      });
-    `),
-    
   };
 
   /**

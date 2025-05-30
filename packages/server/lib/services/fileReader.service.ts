@@ -9,10 +9,10 @@ import { PageFileStructure, File, AppSchema } from "@kottster/common";
 export class FileReader {
 
   /**
-   * Read the schema from the app-schema.json file
+   * Read the schema from the kottster-app.json file
    */
   public readSchemaJsonFile(): AppSchema {
-    const filePath = `${PROJECT_DIR}/app-schema.json`;
+    const filePath = `${PROJECT_DIR}/kottster-app.json`;
     if (!fs.existsSync(filePath)) {
       throw new Error(`File not found: ${filePath}`);
     }
@@ -40,7 +40,7 @@ export class FileReader {
    * @returns The page directories
    */
   public getPagesDirectories(): string[] {
-    const dir = `${PROJECT_DIR}/app/routes`;
+    const dir = `${PROJECT_DIR}/app/pages`;
     if (!fs.existsSync(dir)) {
       return [];
     }
@@ -54,7 +54,7 @@ export class FileReader {
    * @returns The page structure or null if the page does not exist
    */
   public getPageFileStructure(pageId: string): PageFileStructure | null {
-    const dirPath = `app/routes/${pageId}`;
+    const dirPath = `app/pages/${pageId}`;
     const absoluteDirPath = `${PROJECT_DIR}/${dirPath}`;
     
     // Get the entry file path

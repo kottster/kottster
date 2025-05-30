@@ -54,8 +54,8 @@ Learn more about `fieldInput` and its parameters in the [API reference](/table/c
 
 ```tsx title="Example of a page with a custom column"
 import { TablePage } from '@kottster/react';
-import { app } from '../../.server/app';
-import dataSource from '@/.server/data-sources/mysql';
+import { app } from '../../_server/app';
+import dataSource from '../../_server/data-sources/mysql';
 import pageSettings from './settings.json';
 
 export const action = app.defineTableController(dataSource, {

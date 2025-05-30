@@ -12,7 +12,7 @@ The object returned by `defineCustomController` **should always** be exported as
 
 ```typescript title="Example"
 import { Page } from '@kottster/react';
-import { app } from '../../.server/app';
+import { app } from '../../_server/app';
 
 export const action = app.defineCustomController({
   getProduct: async () => {
@@ -100,7 +100,7 @@ The function accepts two arguments:
 ### Examples
 
 ```typescript title="Example"
-import { app } from '../../.server/app';
+import { app } from '../../_server/app';
 import { executeCustomAction } from '@kottster/react';
 
 export const action = app.defineCustomController({

@@ -1,14 +1,17 @@
 import { ExtendAppContextFunction } from '../models/appContext.model';
 import { PROJECT_DIR } from '../constants/projectDir';
-import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, RPCActionBody, TablePageInputSelect, TablePageInputDelete, TablePageInputUpdate, TablePageInputInsert, isSchemaEmpty, RPCResponse, schemaPlaceholder, InternalApiResponse, TablePageInputSelectSingle, PageSettings, pageSettingsTablePageKey } from '@kottster/common';
+import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, RpcActionBody, TablePageInputSelect, TablePageInputDelete, TablePageInputUpdate, TablePageInputInsert, isSchemaEmpty, schemaPlaceholder, ApiResponse, TablePageInputSelectSingle, PageSettings, pageSettingsTablePageKey } from '@kottster/common';
 import { DataSourceRegistry } from './dataSourceRegistry';
 import { ActionService } from '../services/action.service';
 import * as jose from 'jose';
 import { commonHeaders } from '../constants/commonHeaders';
-import { ActionFunction, json } from "@remix-run/node";
 import { DataSourceAdapter } from '../models/dataSourceAdapter.model';
 import { parse as parseCookie } from 'cookie';
 import { SafePageSettings } from '../models/safePageSettings.model';
+import { Request, Response, NextFunction } from 'express';
+import { createServer } from '../factories/createServer';
+
+type RequestHandler = (req: Request, res: Response, next: NextFunction) => void;
 
 export interface KottsterAppOptions {
   secretKey?: string;
@@ -35,7 +38,7 @@ export class KottsterApp {
   private readonly secretKey: string;
   public readonly usingTsc: boolean;
   public readonly readOnlyMode: boolean = false;
-  public readonly stage: Stage = (process.env.NODE_ENV || 'production') as Stage;
+  public readonly stage: Stage = process.env.NODE_ENV === Stage.development ? Stage.development : Stage.production;
   public dataSources: DataSource[] = [];
   public schema: AppSchema;
   private customEnsureValidToken?: (request: Request) => Promise<EnsureValidTokenResponse>;
@@ -64,6 +67,7 @@ export class KottsterApp {
       if (this) {
         adapter.setApp(this);
         adapter.setTablesConfig(dataSource.tablesConfig);
+        adapter.connect();
       };
     });
   }
@@ -76,175 +80,214 @@ export class KottsterApp {
     this.extendContext = fn;
   }
 
-  /**
-   * Execute an action
-   * @param action The action to execute
-   * @param data The data to pass to the action
-   * @returns The result of the action
-   */
   public async executeAction(action: string, data: any) {
     return await ActionService.getAction(this, action).execute(data);
   }
 
-  /**
-   * Create a service route action for the Remix app
-   * @returns The action function
-   */
-  public createServiceRouteAction() {
-    return this.createServiceRouteLoader();
+  public async executeDevSyncAction(action: string, data: any) {
+    return await ActionService.getDSAction(this, action).execute(data);
   }
 
   /**
-   * Create a service route loader for the Remix app
-   * @param appRouter The tRPC router
-   * @returns The loader function
+   * Get the middleware for the app
+   * @param req The request object
+   * @returns The middleware function
    */
-  public createServiceRouteLoader() {
-    const loader = async ({ request }: { request: Request }) => {
-      const { pathname } = new URL(request.url);
-
-      // Handle CORS preflight requests
-      if (request.method === 'OPTIONS') {
-        return new Response(null, { headers: commonHeaders });
+  public getInternalApiRoute() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      if (req.method === 'GET') {
+        next();
+        return;
       }
-      
-      // Handle Kottster API requests
-      if (pathname.startsWith('/-/internal-api/v1')) {
-        return this.handleInternalApiRequest(request);
+  
+      try {
+        const result = await this.handleInternalApiRequest(req);
+        
+        if (result) {
+          res.setHeader('Content-Type', 'application/json');
+          res.status(200).json(result);
+          return;
+        } else {
+          res.status(404).json({ error: 'Not Found' });
+          return;
+        }
+      } catch (error) {
+        console.error('Error handling internal API request:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+        return;
       }
-
-      return null;
     }
-
-    return loader;
-  }
-
-  private enrichWithCors(response: Response): Response {
-    const newHeaders = new Headers(response.headers);
-    Object.entries(commonHeaders).forEach(([key, value]) => {
-      newHeaders.set(key, value);
-    });
-    return new Response(response.body, {
-      status: response.status,
-      statusText: response.statusText,
-      headers: newHeaders
-    });
   }
 
   /**
-   * Get the Kottster API handler
-   * @param request The request object
-   * @returns The handler function
+   * Get the middleware for the app
+   * @param req The request object
+   * @returns The middleware function
    */
-  public async handleInternalApiRequest(request: Request): Promise<Response> {
-    let response: InternalApiResponse;
+  public getDevSyncApiRoute() {
+    return async (req: Request, res: Response, next: NextFunction) => {
+      if (req.method === 'GET') {
+        next();
+        return;
+      }
+  
+      try {
+        const result = await this.handleDevSyncApiRequest(req);
+        
+        if (result) {
+          res.setHeader('Content-Type', 'application/json');
+          res.status(200).json(result);
+          return;
+        } else {
+          res.status(404).json({ error: 'Not Found' });
+          return;
+        }
+      } catch (error) {
+        console.error('Error handling devsync API request:', error);
+        res.status(500).json({ error: 'Internal Server Error' });
+        return;
+      }
+    }
+  }
+
+  private async handleInternalApiRequest(request: Request): Promise<any> {
+    let result: ApiResponse;
     
     try {
       const { isTokenValid, newRequest, invalidTokenErrorMessage } = await this.ensureValidToken(request);
       if (!isTokenValid) {
-        return new Response(`Invalid JWT token: ${invalidTokenErrorMessage}. Please check your app's secret key or reload the page.`, { status: 401, headers: commonHeaders });
+        throw new Error(`Invalid JWT token: ${invalidTokenErrorMessage}`);
       }
       
-      const { searchParams } = new URL(newRequest.url);
-      const action = searchParams.get('action');
-      const actionDataRaw = searchParams.get('actionData');
-      const actionData = actionDataRaw ? JSON.parse(actionDataRaw) : {};
+      const action = newRequest.query.action as string | undefined;
+      const actionData = newRequest.body;
   
       if (!action) {
-        return new Response('Action not found in request', { status: 400, headers: commonHeaders });
+        throw new Error('Action not found in request');
       }
   
-      response = {
+      result = {
         status: 'success',
         result: await this.executeAction(action, actionData),
       };
     } catch (error) {
       console.error('Error handling Kottster API request:', error);
       
-      response = {
+      result = {
         status: 'error',
         error: error.message,
       };
     }
 
-    return json(response);
+    return result;
+  }
+
+  private async handleDevSyncApiRequest(request: Request): Promise<any> {
+    let result: ApiResponse;
+    
+    try {
+      const action = request.query.action as string | undefined;
+      const actionData = request.body;
+  
+      if (!action) {
+        return new Response('Action not found in request', { status: 400, headers: commonHeaders });
+      }
+  
+      result = {
+        status: 'success',
+        result: await this.executeDevSyncAction(action, actionData),
+      };
+    } catch (error) {
+      console.error('Error handling Kottster API request:', error);
+      
+      result = {
+        status: 'error',
+        error: error.message,
+      };
+    }
+
+    return result;
   }
 
   /**
    * Define a custom controller
    * @param procedures The procedures
-   * @returns The action function
+   * @returns The express request handler
    */
-  public defineCustomController(procedures: Record<string, (input: any) => {}>): ActionFunction {
-    const func: ActionFunction = async ({ request }) => {
-      const { isTokenValid, newRequest, invalidTokenErrorMessage } = await this.ensureValidToken(request);
+  public defineCustomController<T extends Record<string, (input: any) => any>>(
+    procedures: T
+  ): RequestHandler & { procedures: T } {
+    const func: RequestHandler = async (req, res) => {
+      const { isTokenValid, newRequest, invalidTokenErrorMessage } = await this.ensureValidToken(req);
       if (!isTokenValid) {
-        return new Response(`Invalid JWT token: ${invalidTokenErrorMessage}`, { status: 401 });
+        res.status(401).json({ error: `Invalid JWT token: ${invalidTokenErrorMessage}` });
+        return;
       }
 
-      const body = await newRequest.json() as RPCActionBody<'custom'>;
+      const body = await newRequest.body as RpcActionBody<'custom'>;
       const action = body.action;
       const { procedure, procedureInput } = body.input;
 
       if (procedure in procedures) {
         try {
-          return json({
+          const result = await procedures[procedure](procedureInput);
+          res.json({
             status: 'success',
-            result: await procedures[procedure](procedureInput),
+            result,
           });
+          return;
         } catch (error) {
           console.error(`Error executing procedure "${procedure}":`, error);
-          return json({
+          res.status(500).json({
             status: 'error',
             error: error.message,
           });
+          return;
         }
       }
 
-      return new Response(`Unknown procedure: ${action}`, { status: 404 });
+      res.status(404).json({ error: `Unknown procedure: ${action}` });
+      return;
     };
 
-    return func;
+    // Attach the procedures to the function for later reference
+    (func as any).procedures = procedures;
+
+    return func as RequestHandler & { procedures: T };
   }
 
   /**
    * Define a table controller
    * @param dataSource The data source
    * @param pageSettings The page settings
-   * @returns The action function
+   * @returns The express request handler
    */
   public defineTableController(
     dataSource: DataSource, 
     pageSettings: SafePageSettings,
-  ): ActionFunction {
+  ): RequestHandler {
     const typesPageSettings = pageSettings as PageSettings;
 
-    const func: ActionFunction = async ({ request }) => {
-      let response: RPCResponse;
-      
+    const func: RequestHandler = async (req, res) => {
       try {
-        const res = await this.processTableControllerRequest(dataSource, request, typesPageSettings);
-        response = {
+        const result = await this.processTableControllerRequest(dataSource, req, typesPageSettings);
+        res.json({
           status: 'success',
-          result: res,
-        };
+          result,
+        });
       } catch (error) {
         if (error instanceof Error && error.message === 'Unauthorized') {
           return new Response('Unauthorized', { status: 401 });
         }
 
         console.error('Error executing table RPC:', error);
-
-        response = {
+        res.status(500).json({
           status: 'error',
           error: error.message,
-        };
+        });
+        return;
       }
-
-      return json(response);
     };
-    
-    func['rpcFunction'] = 'createTablePage';
     
     return func;
   };
@@ -257,7 +300,7 @@ export class KottsterApp {
       throw new Error(`Invalid JWT token: ${invalidTokenErrorMessage}`);
     }
 
-    const body = await newRequest.json() as RPCActionBody<'page_settings' | 'table_select' | 'table_selectOne' | 'table_insert' | 'table_update' | 'table_delete'>;
+    const body = await newRequest.body as RpcActionBody<'page_settings' | 'table_select' | 'table_selectOne' | 'table_insert' | 'table_update' | 'table_delete'>;
 
     try {
       if (body.action === 'page_settings') {
@@ -294,7 +337,6 @@ export class KottsterApp {
     const { payload } = await jose.jwtVerify(token, new TextEncoder().encode(this.secretKey));
     const decodedToken = payload as unknown as JWTTokenPayload;
   
-    // Set the user on the request object
     const user: User = {
       id: decodedToken.userId,
       email: decodedToken.userEmail,
@@ -312,9 +354,9 @@ export class KottsterApp {
       return this.customEnsureValidToken(request);
     }
 
-    let token = request.headers.get('authorization')?.replace('Bearer ', '');
+    let token = request.get('authorization')?.replace('Bearer ', '');
     if (!token) {
-      const cookieHeader = request.headers.get('Cookie');
+      const cookieHeader = request.get('Cookie');
       const cookieData = parseCookie(cookieHeader ?? '');
       token = cookieData.jwtToken;
     }
@@ -328,14 +370,12 @@ export class KottsterApp {
 
     try {
       const { user, appId } = await this.getDataFromToken(token);
-  
       if (String(appId) !== String(this.appId)) {
         throw new Error('Invalid JWT token: invalid app ID');
       }
-  
-      // Clone the request and set the user
-      const newRequest = request.clone();
-      newRequest.headers.set('x-user', JSON.stringify(user));
+      
+      const newRequest = request as Request & { user?: User };
+      newRequest.user = user;
       
       return { isTokenValid: true, newRequest };
     } catch (error) {
@@ -348,5 +388,11 @@ export class KottsterApp {
    */
   public getDataSources() {
     return this.dataSources;
+  }
+
+  public async listen() {
+    return createServer({
+      app: this,
+    });
   }
 }

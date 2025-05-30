@@ -106,7 +106,7 @@ Feature suggestions are tracked as GitHub issues. Create an issue using the [fea
 
 Documentation is crucial for any project. If you find any typos, unclear instructions, or missing information, please submit a pull request with your changes.
 You can also help by:
-- Reviewing [existing documentation](https://docs.kottster.app/) for clarity
+- Reviewing [existing documentation](https://kottster.app/docs/) for clarity
 - Adding examples or use cases
 - Creating tutorials or guides
 

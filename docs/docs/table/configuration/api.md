@@ -10,7 +10,7 @@ By default, all settings are stored in a `settings.json` file located next to th
 
 Example of files for the table page for `users` table:
 
-```json title="app/routes/users/settings.json"
+```json title="app/pages/users/settings.json"
 {
   "_version": "1",
   
@@ -29,10 +29,10 @@ Example of files for the table page for `users` table:
 }
 ```
 
-```tsx title="app/routes/users/index.jsx"
+```tsx title="app/pages/users/index.jsx"
 import { TablePage } from '@kottster/react'; 
-import { app } from '../../.server/app';
-import dataSource from '../../.server/data-sources/postgres';
+import { app } from '../../_server/app';
+import dataSource from '../../_server/data-sources/postgres';
 import pageSettings from './settings.json';
 
 export const action = app.defineTableController(dataSource, {
@@ -49,7 +49,7 @@ export default () => (
 
 **If you need more customization, beyound what visual editor provides**, you can extend the imported `settings.json` configuration with your own settings. This is useful for advanced users who want more control over table configuration.
 
-```typescript title="app/routes/users/index.jsx"
+```typescript title="app/pages/users/index.jsx"
 import pageSettings from './settings.json';
 
 export default action = app.defineTableController(dataSource, {
@@ -76,7 +76,7 @@ export default action = app.defineTableController(dataSource, {
 
 The `defineTableController` function takes two required arguments:
 
-*   **`dataSource`**: A data source. Typically, imported from the `app/.server/data-sources` directory.
+*   **`dataSource`**: A data source. Typically, imported from the `app/_server/data-sources` directory.
     
 *   **`settings`**: A configuration object that defines the behavior of the table and its nested tables. The configuration for the main table is defined under the `rootTable` key.
 

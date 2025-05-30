@@ -10,7 +10,7 @@ interface ProjectSetup {
 }
 
 /**
- * Collect the setup for a new project
+ * Prompt the user for project setup details.
  */
 export async function collectNewProjectData(askProjectName: boolean = false): Promise<ProjectSetup> {
   const questions: Answers = [

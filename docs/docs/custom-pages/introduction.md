@@ -21,7 +21,7 @@ You can define both the **backend logic and the user interface in a single file*
 
 You can define just the frontend part of the custom page without any backend logic. The following example shows how to create a simple custom page that just displays a message.
 
-```tsx title="app/routes/my-custom-page/index.jsx"
+```tsx title="app/pages/my-custom-page/index.jsx"
 import { Page } from '@kottster/react';
 
 export default () => {
@@ -40,10 +40,10 @@ But if you need to fetch data from the backend, you can define a custom controll
 This is an example of a simple custom page that fetches a message from the backend and displays it on the frontend. 
 The action function `generateMessage` is accessible from the frontend using the [`executeCustomAction`](/custom-pages/api#client-side-usage) function.
 
-```tsx title="app/routes/my-custom-page/index.jsx"
+```tsx title="app/pages/my-custom-page/index.jsx"
 import { useEffect, useState } from 'react';
 import { executeCustomAction, Page, usePage } from '@kottster/react';
-import { app } from '../../.server/app';
+import { app } from '../../_server/app';
 
 // Backend part.
 // Here we define a custom controller that will handle requests.

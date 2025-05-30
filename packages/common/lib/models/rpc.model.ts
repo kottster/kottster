@@ -5,9 +5,9 @@ interface CustomRpcInput {
   procedureInput: any;
 };
 
-export type RPCActionType = 'custom' | 'page_settings' | 'table_select' | 'table_selectOne' | 'table_insert' | 'table_update' | 'table_delete';
+export type RpcActionType = 'custom' | 'page_settings' | 'table_select' | 'table_selectOne' | 'table_insert' | 'table_update' | 'table_delete';
 
-export interface RPCActionBody<T extends RPCActionType> {
+export interface RpcActionBody<T extends RpcActionType> {
   [key: string]: any;
   action: T;
   input:
@@ -21,7 +21,7 @@ export interface RPCActionBody<T extends RPCActionType> {
     : never;
 }
 
-export type InternalApiResponse = {
+export type ApiResponse = {
   status: 'success';
   result: any;
 } | {
@@ -29,7 +29,7 @@ export type InternalApiResponse = {
   error: any;
 };
 
-export type RPCResponse = {
+export type RpcResponse = {
   status: 'success';
   result: any;
 } | {

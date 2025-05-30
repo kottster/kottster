@@ -20,7 +20,6 @@ export * from './models/template.model';
 
 // Utils
 export * from './utils/getEnvOrThrow';
-export * from './utils/getDefaultPage';
 export * from './utils/transformToCamelCaseVarName';
 export * from './utils/stripIndent';
 export * from './utils/checkTsUsage';
@@ -38,8 +37,6 @@ export * from './utils/getAllPossibleLinked';
 export * from './utils/getTableData';
 export * from './utils/getRelationshipKeyByColumn';
 export * from './utils/getRelationshipByColumn';
-export * from './utils/getTablePage';
-export * from './utils/getCustomPage';
 export * from './utils/transformToKebabCase';
 
 // Constants
@@ -50,3 +47,6 @@ export * from './constants/mysql';
 export * from './constants/sqlite';
 export * from './constants/table';
 export * from './constants/pageSettings';
+
+// Types
+export * from './types/procedure';

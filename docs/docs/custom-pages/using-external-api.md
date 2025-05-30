@@ -10,9 +10,9 @@ This page shows how to define [custom controllers](/custom-pages/api#custom-cont
 
 The following example shows how to use the `fetch` API to make a request to an external API and return the data to the frontend:
 
-```tsx title="app/routes/my-custom-page.jsx"
+```tsx title="app/pages/my-custom-page.jsx"
 import { executeCustomAction, Page, usePage } from '@kottster/react';
-import { app } from '../../.server/app';
+import { app } from '../../_server/app';
 import { useEffect, useState } from 'react';
 
 export const action = app.defineCustomController({
@@ -74,9 +74,9 @@ export default client;
 
 Then, you can use this client to make requests to a GraphQL API:
 
-```tsx title="app/routes/my-custom-page.jsx"
+```tsx title="app/pages/my-custom-page.jsx"
 import { executeCustomAction, Page, usePage } from '@kottster/react';
-import { app } from '../../.server/app';
+import { app } from '../../_server/app';
 import { useEffect, useState } from 'react';
 import client from '../apollo-client';
 

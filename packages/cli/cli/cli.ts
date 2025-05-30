@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import { newProject } from './actions/newProject.action';
 import { addDataSource } from './actions/addDataSource.action';
 import { startProjectDev } from './actions/startProjectDev.action';
+import { buildServer } from './actions/buildServer.action';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -33,3 +34,8 @@ program
   .option('--data <json>', 'The stringified JSON data with the connection details', String)
   .allowUnknownOption()
   .action(addDataSource)
+
+// Command to build the server
+program
+  .command('build:server')
+  .action(buildServer)

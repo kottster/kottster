@@ -35,7 +35,7 @@ export class KottsterApi {
   static async sendNewProjectCommandUsageData(
     stage: 'start' | 'finish' | 'error',
     options?: NewProjectCommandOptions,
-    startTime?: number, // Optional, only required for 'finish' stage,
+    startTime?: number, // Optional, only required for 'finish' stage
   ) {
     const dateTime = new Date().toISOString();
     const platform = process.platform;

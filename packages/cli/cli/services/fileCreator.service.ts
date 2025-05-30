@@ -61,9 +61,9 @@ export class FileCreator {
     // Create directories
     this.createDir()
     this.createDir('app')
-    this.createDir('app/routes')
-    this.createDir('app/.server')
-    this.createDir('app/.server/data-sources')
+    this.createDir('app/pages')
+    this.createDir('app/_server')
+    this.createDir('app/_server/data-sources')
 
     // Create root files
     this.createPackageJson({ 
@@ -75,11 +75,11 @@ export class FileCreator {
     
     // Create files
     this.createFileFromTemplate('vite.config.js', path.join(this.projectDir, `vite.config.${this.jsExt}`));
-    this.createFileFromTemplate('app/root.jsx', path.join(this.projectDir, `app/root.${this.jsxExt}`));
-    this.createFileFromTemplate('app/entry.client.jsx', path.join(this.projectDir, `app/entry.client.${this.jsxExt}`));
-    this.createFileFromTemplate('app/service-route.js', path.join(this.projectDir, `app/service-route.${this.jsExt}`));
-    this.createFileFromTemplate('app/.server/app.js', path.join(this.projectDir, `app/.server/app.${this.jsExt}`));
-    this.createFileFromTemplate('app/.server/data-sources/registry.js', path.join(this.projectDir, `app/.server/data-sources/registry.${this.jsExt}`));
+    this.createFileFromTemplate('app/index.html', path.join(this.projectDir, `app/index.html`));
+    this.createFileFromTemplate('app/main.jsx', path.join(this.projectDir, `app/main.${this.jsxExt}`));
+    this.createFileFromTemplate('app/_server/app.js', path.join(this.projectDir, `app/_server/app.${this.jsExt}`));
+    this.createFileFromTemplate('app/_server/server.js', path.join(this.projectDir, `app/_server/server.${this.jsExt}`));
+    this.createFileFromTemplate('app/_server/data-sources/registry.js', path.join(this.projectDir, `app/_server/data-sources/registry.${this.jsExt}`));
     if (this.usingTsc) {
       this.createFileFromTemplate('tsconfig.json', path.join(this.projectDir, 'tsconfig.json'));
     }
@@ -95,8 +95,8 @@ export class FileCreator {
     return {
       'typescript': '^5.x',
       '@types/node': '^20.x',
-      '@types/react': '^18.x',
-      '@types/react-dom': "^18.x",
+      '@types/react': '^19.x',
+      '@types/react-dom': "^19.x",
     };
   }
 
@@ -110,16 +110,16 @@ export class FileCreator {
     const { fileTemplateName } = dataSourceTypeData;
 
     // Create directory
-    this.createDir(`app/.server/data-sources/${dataSourceType}`)
+    this.createDir(`app/_server/data-sources/${dataSourceType}`)
 
     // Create file
-    const filePath = path.join(this.projectDir, `app/.server/data-sources/${dataSourceType}`, `index.${this.jsExt}`)
+    const filePath = path.join(this.projectDir, `app/_server/data-sources/${dataSourceType}`, `index.${this.jsExt}`)
     const fileContent = this.fileTemplateManager.getTemplate(fileTemplateName as keyof typeof FileTemplateManager.templates, data);
     this.writeFile(filePath, fileContent)
 
-    // Update app/.server/data-sources/registry.ts
-    const registryFilePath = path.join(this.projectDir, 'app/.server/data-sources', `registry.${this.jsExt}`)
-    const registryFileContent = this.fileTemplateManager.getTemplate('app/.server/data-sources/registry.js', { dataSourceName: dataSourceType });
+    // Update app/_server/data-sources/registry.ts
+    const registryFilePath = path.join(this.projectDir, 'app/_server/data-sources', `registry.${this.jsExt}`)
+    const registryFileContent = this.fileTemplateManager.getTemplate('app/_server/data-sources/registry.js', { dataSourceName: dataSourceType });
     this.writeFile(registryFilePath, registryFileContent);
 
     return filePath;
@@ -146,39 +146,35 @@ export class FileCreator {
       private: true,
       sideEffects: false,
       scripts: {
-        'dev': 'kottster dev --port 5480',
+        'dev': 'kottster dev',
         'dev:add-data-source': 'kottster add-data-source',
-        'build': 'remix vite:build',
-        'start': 'remix-serve ./build/server/index.js'
+        "build": "vite build && kottster build:server",
+        "start": "node dist/server/server.cjs"
       },
       dependencies: {
-        'react': '^18.x',
-        'react-dom': '^18.x',
+        'react': '^19.x',
+        'react-dom': '^19.x',
+        "react-router-dom": "^7.x",
 
-        '@remix-run/node': "^2.x",
-        '@remix-run/react': "^2.x",
-        '@remix-run/serve': "^2.x",
-
-        '@kottster/common': KOTTSTER_COMMON_DEP_VER ?? '^1.x',
+        '@kottster/common': KOTTSTER_COMMON_DEP_VER ?? '^2.x',
         '@kottster/cli': KOTTSTER_CLI_DEP_VER ?? '^2.x',
-        '@kottster/server': KOTTSTER_SERVER_DEP_VER ?? '^1.x',
+        '@kottster/server': KOTTSTER_SERVER_DEP_VER ?? '^2.x',
         '@kottster/react': KOTTSTER_REACT_DEP_VER ?? '^2.x',
 
         '@mantine/core': '^8.x',
         '@mantine/hooks': '^8.x',
         '@mantine/modals': '^8.x',
         '@mantine/notifications': '^8.x',
-
-        'isbot': '^4.x',
         
         ...(options.dependencies ?? {}),
       },
       devDependencies: {
-        '@remix-run/dev': "^2.x",
-        'vite': "^5.x",
+        'vite': "^6.x",
         'vite-tsconfig-paths': "^4.x",
-        'esbuild': '^0.x',
-        "@originjs/vite-plugin-commonjs": "^1.x",
+        "@vitejs/plugin-react": "^4.x",
+        
+        // Using tsx to run TS/JS files directly
+        'tsx': '^4.x',
         ...(options.devDependencies ?? {}),
       },
       engines: {
@@ -246,11 +242,11 @@ export class FileCreator {
   }
 
   /**
-   * Create a app-schema.json file
+   * Create a kottster-app.json file
    */
   private createSchema(): void {
     const appSchema = {};
-    const filePath = path.join(this.projectDir, 'app-schema.json')
+    const filePath = path.join(this.projectDir, 'kottster-app.json')
     const fileContent = JSON.stringify(appSchema, null, 2);
     this.writeFile(filePath, fileContent);
   }

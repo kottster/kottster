@@ -18,7 +18,7 @@ export const dataSourcesTypeData: Record<string, DataSourceTypeData> = {
       ...knexPackages,
       'pg': '^8.7.1',
     },
-    fileTemplateName: 'app/.server/data-sources/postgres/index.js',
+    fileTemplateName: 'app/_server/data-sources/postgres/index.js',
     knexClientStr: 'pg',
   },
   [DataSourceType.mysql]: {
@@ -26,7 +26,7 @@ export const dataSourcesTypeData: Record<string, DataSourceTypeData> = {
       ...knexPackages,
       'mysql2': '^2.3.0',
     },
-    fileTemplateName: 'app/.server/data-sources/mysql/index.js',
+    fileTemplateName: 'app/_server/data-sources/mysql/index.js',
     knexClientStr: 'mysql2',
   },
   [DataSourceType.mariadb]: {
@@ -34,7 +34,7 @@ export const dataSourcesTypeData: Record<string, DataSourceTypeData> = {
       ...knexPackages,
       'mysql2': '^2.3.0',
     },
-    fileTemplateName: 'app/.server/data-sources/mariadb/index.js',
+    fileTemplateName: 'app/_server/data-sources/mariadb/index.js',
     knexClientStr: 'mysql2',
   },
   [DataSourceType.mssql]: {
@@ -42,7 +42,7 @@ export const dataSourcesTypeData: Record<string, DataSourceTypeData> = {
       ...knexPackages,
       'tedious': '^11.0.0',
     },
-    fileTemplateName: 'app/.server/data-sources/mssql/index.js',
+    fileTemplateName: 'app/_server/data-sources/mssql/index.js',
     knexClientStr: 'tedious',
   },
   [DataSourceType.sqlite]: {
@@ -50,7 +50,7 @@ export const dataSourcesTypeData: Record<string, DataSourceTypeData> = {
       ...knexPackages,
       'better-sqlite3': '^11.8.1',
     },
-    fileTemplateName: 'app/.server/data-sources/sqlite/index.js',
+    fileTemplateName: 'app/_server/data-sources/sqlite/index.js',
     knexClientStr: 'better-sqlite3',
   },
 };

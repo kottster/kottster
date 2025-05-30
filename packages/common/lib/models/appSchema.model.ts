@@ -22,7 +22,7 @@ export interface FullAppSchema extends AppSchema {
   };
 
   // Only available in development mode
-  devSyncServerUrl?: string;
+  serverUrl?: string;
   os?: {
     platform: string;
     type: string;

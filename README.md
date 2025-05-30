@@ -13,7 +13,7 @@ A simple Node.js admin panel for your app. Create pages to view and manage data 
 - **Customizable**: Build custom pages and components to fit your needs.
 - **Deploy anywhere**: Run on your server or in the cloud in minutes.
 
-[Get Started](https://docs.kottster.app/) • [Live Demo](https://demo.kottster.app) • [Our Website](https://kottster.app) • [Docs](https://docs.kottster.app/)
+[Get Started](https://kottster.app/docs/) • [Live Demo](https://demo.kottster.app) • [Our Website](https://kottster.app) • [Docs](https://kottster.app/docs/)
 
 [![Kottster](/assets/intro-4.png)](https://youtu.be/JBpLVgkoj-k?si=GJ3IIBmzlgrCLKWs)
 
@@ -27,7 +27,7 @@ npx @kottster/cli@latest new
 
 > Make sure you have **Node.js (v20 or above)** installed on your system.
 
-Alternatively, you can use Docker to run Kottster. For more details, check out the [Docker Quickstart](https://docs.kottster.app/quickstart-docker).
+Alternatively, you can use Docker to run Kottster. For more details, check out the [Docker Quickstart](https://kottster.app/docs/quickstart-docker).
 
 ## Next steps
 
@@ -50,15 +50,15 @@ After running the project, you'll need to log in to your account or create a new
 - Add pages for viewing and managing data in your database.
 - Or, build fully custom pages from scratch.
 
-#### 5. [Deploy your app](https://docs.kottster.app/deploying) when it's ready.
+#### 5. [Deploy your app](https://kottster.app/docs/deploying) when it's ready.
 
 ## Resources
 
-- [Docs](https://docs.kottster.app/)
-  - [Quickstart](https://docs.kottster.app/)
-  - [Quickstart with Docker](https://docs.kottster.app/quickstart-docker)
-  - [Tutorial (5 min)](https://docs.kottster.app/tutorial/)
-  - [Deploying](https://docs.kottster.app/deploying)
+- [Docs](https://kottster.app/docs/)
+  - [Quickstart](https://kottster.app/docs/)
+  - [Quickstart with Docker](https://kottster.app/docs/quickstart-docker)
+  - [Tutorial (5 min)](https://kottster.app/docs/tutorial/)
+  - [Deploying](https://kottster.app/docs/deploying)
  
 ## Contribute
 

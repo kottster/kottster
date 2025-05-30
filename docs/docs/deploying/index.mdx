@@ -32,12 +32,12 @@ Before deployment, ensure your environment meets these prerequisites:
 
 We recommend **using environment variables** to set different secret keys for development and production.
 
-Open `app/.server/app.js` file and update it to use separate keys based on the environment, like this:
+Open `app/_server/app.js` file and update it to use separate keys based on the environment, like this:
 
 ```javascript
 import { createApp } from '@kottster/server';
 import { dataSourceRegistry } from './data-sources/registry';
-import schema from '../../app-schema.json';
+import schema from '../../kottster-app.json';
 
 export const app = createApp({
   schema,

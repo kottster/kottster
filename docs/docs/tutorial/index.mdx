@@ -52,7 +52,7 @@ The most common option is a **table page** that allow you to view and manage dat
 
 To generate one, select "**Table**" as the content type and choose the table you want to generate the page for. Kottster will analyze the selected database table, its columns, and relationships to generate a page for viewing and managing data.
 
-The process takes up to 5 seconds. Once completed, the newly generated page will be available in the `./app/routes` folder.
+The process takes up to 5 seconds. Once completed, the newly generated page will be available in the `./app/pages` folder.
 
 ![Modal for adding page | Kottster](add-table-page.png)
 
@@ -60,14 +60,14 @@ The process takes up to 5 seconds. Once completed, the newly generated page will
 
 Besides generating pages, you can also create custom pages manually for your admin panel. These pages can include your own UI components or any specific functionality you need.
 
-Click the “**Add page**” button, enter the page name, select the "**Custom page**" or "**Empty page**" options, and click the “**Create**” button. This will create a new page in the `./app/routes` folder.
+Click the “**Add page**” button, enter the page name, select the "**Custom page**" or "**Empty page**" options, and click the “**Create**” button. This will create a new page in the `./app/pages` folder.
 
 If you choose the "**Custom page**" option, the created file will contain a custom controller with some sample procedure for getting hello world message.
 
 Inside this page, you can add any content, such as iframes or Raact components. You can also use UI libraries like [Mantine](https://mantine.dev/), [Chakra UI](https://www.chakra-ui.com/), or [Material UI](https://mui.com/) to simplify the building process.
 
 You can find examples of custom pages in our [live demo app](https://demo.kottster.app/):
-- **[Analytics Dashboard](https://demo.kottster.app/analyticsDashboard)** | [Source code](https://github.com/kottster/live-demo/blob/main/app/routes/analyticsDashboard/index.jsx)
+- **[Analytics Dashboard](https://demo.kottster.app/analyticsDashboard)** | [Source code](https://github.com/kottster/live-demo/blob/main/app/pages/analyticsDashboard/index.jsx)
 
 ## 5. Deploy your admin panel
 

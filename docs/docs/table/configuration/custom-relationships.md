@@ -41,10 +41,10 @@ This also simplifies forms for creating or updating users. Instead of typing a `
 
 **Here’s an example of the page file:**
 
-```typescript title="app/routes/users/index.jsx"
+```typescript title="app/pages/users/index.jsx"
 import { TablePage } from '@kottster/react';
-import { app } from '../../.server/app';
-import dataSource from '../../.server/data-sources/postgres';
+import { app } from '../../_server/app';
+import dataSource from '../../_server/data-sources/postgres';
 import pageSettings from './settings.json';
 
 export const action = app.defineTableController(dataSource, {
@@ -106,10 +106,10 @@ Imagine we want to create a page to view data in the `projects` table. By defini
 
 **Here’s how the page file might look:**
 
-```typescript title="app/routes/projects/index.jsx"
+```typescript title="app/pages/projects/index.jsx"
 import { TablePage } from '@kottster/react';
-import { app } from '../../.server/app';
-import dataSource from '../../.server/data-sources/postgres';
+import { app } from '../../_server/app';
+import dataSource from '../../_server/data-sources/postgres';
 import pageSettings from './settings.json';
 
 export const action = app.defineTableController(dataSource, {
@@ -180,10 +180,10 @@ Imagine we want to create a page to view data in the `books` table. By defining 
 
 **Here’s how the page file might look:**
 
-```typescript title="app/routes/books/index.jsx"
+```typescript title="app/pages/books/index.jsx"
 import { TablePage } from '@kottster/react';
-import { app } from '../../.server/app';
-import dataSource from '../../.server/data-sources/postgres';
+import { app } from '../../_server/app';
+import dataSource from '../../_server/data-sources/postgres';
 import pageSettings from './settings.json';
 
 export const action = app.defineTableController(dataSource, {

@@ -8,10 +8,10 @@ By default, Kottster manages data fetching internally. You can also define custo
 
 To do this, pass an `executeQuery` function to [`defineTableController`](/table/configuration/api):
 
-```typescript title="app/routes/users/index.jsx"
+```typescript title="app/pages/users/index.jsx"
 import { TablePage } from '@kottster/react'; 
-import { app } from '../../.server/app';
-import dataSource from '../../.server/data-sources/postgres';
+import { app } from '../../_server/app';
+import dataSource from '../../_server/data-sources/postgres';
 
 export const action = app.defineTableController(dataSource, {
   rootTable: {
@@ -106,10 +106,10 @@ Here we extend the existing table configuration to include a custom query for fe
 <details>
   <summary>MySQL example</summary>
   
-  ```typescript title="app/routes/users/index.jsx"
+  ```typescript title="app/pages/users/index.jsx"
   import { TablePage } from '@kottster/react';
-  import { app } from '../../.server/app';
-  import dataSource from '../../.server/data-sources/mysql';
+  import { app } from '../../_server/app';
+  import dataSource from '../../_server/data-sources/mysql';
   import pageSettings from './settings.json';
 
   const pageSize = 25;
@@ -155,10 +155,10 @@ Here we extend the existing table configuration to include a custom query for fe
 <details>
   <summary>PostgreSQL example</summary>
   
-  ```typescript title="app/routes/users/index.jsx"
+  ```typescript title="app/pages/users/index.jsx"
   import { TablePage } from '@kottster/react';
-  import { app } from '../../.server/app';
-  import dataSource from '../../.server/data-sources/postgres';
+  import { app } from '../../_server/app';
+  import dataSource from '../../_server/data-sources/postgres';
   import pageSettings from './settings.json';
 
   const pageSize = 25;
@@ -206,8 +206,8 @@ Here we extend the existing table configuration to include a custom query for fe
   
   ```typescript
   import { TablePage } from '@kottster/react';
-  import { app } from '../../.server/app';
-  import dataSource from '../../.server/data-sources/sqlite';
+  import { app } from '../../_server/app';
+  import dataSource from '../../_server/data-sources/sqlite';
   import pageSettings from './settings.json';
 
   const pageSize = 25;
@@ -256,10 +256,10 @@ Here we extend the existing table configuration to include a custom query for fe
 
 You can also define completely custom fetching logic. For example, you can fetch data from an external API or a different database.
 
-```typescript title="app/routes/users/index.jsx"
+```typescript title="app/pages/users/index.jsx"
 import { TablePage } from '@kottster/react';
-import { app } from '../../.server/app';
-import dataSource from '../../.server/data-sources/postgres';
+import { app } from '../../_server/app';
+import dataSource from '../../_server/data-sources/postgres';
 
 const pageSize = 25;
 

@@ -22,7 +22,7 @@ On the same "**Getting Started**" page, you can choose "**Edit file manually**" 
 
 You can also add a data source by creating a new directory in the `server/data-sources` folder and add a `index.js` file inside it. The file should export a function that returns a data source object.
 
-After this, go to `./app/.server/data-sources/registry.js` and add the data source to the registry.
+After this, go to `./app/_server/data-sources/registry.js` and add the data source to the registry.
 
 Restart the server to apply the changes.
 

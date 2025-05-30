@@ -22,12 +22,12 @@ Kottster tables let you **view and manage data** in the database tables.
 
 ## Page file
 
-With Kottster, you can setup all this by creating a single file in the `./app/routes` directory. It would look something like this:
+With Kottster, you can setup all this by creating a single file in the `./app/pages` directory. It would look something like this:
 
-```tsx title="app/routes/users/index.jsx"
+```tsx title="app/pages/users/index.jsx"
 import { TablePage } from '@kottster/react'; 
-import { app } from '../../.server/app';
-import dataSource from '../../.server/data-sources/postgres';
+import { app } from '../../_server/app';
+import dataSource from '../../_server/data-sources/postgres';
 
 // Defines the backend controller for the table.
 // It's responsible for handling requests from the TablePage component.

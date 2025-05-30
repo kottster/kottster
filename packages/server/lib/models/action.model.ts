@@ -1,5 +1,4 @@
 import { KottsterApp } from "../core/app";
-import { DevSync } from "../core/devSync";
 
 /**
  * The base class for actions
@@ -16,7 +15,7 @@ export abstract class Action {
  * @abstract
  */
 export abstract class DSAction {
-  constructor(protected readonly ds: DevSync) {}
+  constructor(protected readonly app: KottsterApp) {}
 
   public abstract execute(data: unknown): Promise<unknown>;
 }

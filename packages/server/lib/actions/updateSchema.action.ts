@@ -5,12 +5,11 @@ import { FullAppSchema } from "@kottster/common";
 interface Data extends FullAppSchema {}
 
 /**
- * Update the app schema
- * @description Updates the app-schema.json file and creates/removes pages as needed.
+ * Update the app schema file (kottster-app.json)
  */
 export class UpdateSchema extends DSAction {
   public async execute(data: Data) {
-    const fileWriter = new FileWriter({ usingTsc: this.ds.usingTsc });
+    const fileWriter = new FileWriter({ usingTsc: this.app.usingTsc });
 
     fileWriter.writeSchemaJsonFile(data);
 

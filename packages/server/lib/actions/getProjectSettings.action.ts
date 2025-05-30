@@ -10,7 +10,7 @@ interface Result {
 export class GetProjectSettings extends DSAction {
   public async execute(): Promise<Result> {
     return {
-      usingTsc: this.ds.usingTsc,
+      usingTsc: this.app.usingTsc,
     };
   }
 }

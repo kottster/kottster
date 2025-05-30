@@ -14,7 +14,7 @@ interface Result {}
  */
 export class InitApp extends DSAction {
   public async execute({ id, name, secretKey }: Data): Promise<Result> {
-    const fileWrtier = new FileWriter({ usingTsc: this.ds.usingTsc });
+    const fileWrtier = new FileWriter({ usingTsc: this.app.usingTsc });
     fileWrtier.writeSchemaJsonFile({
       id: id.toString(),
       meta: {

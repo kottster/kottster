@@ -7,7 +7,6 @@ import { UpdateSchema } from "../actions/updateSchema.action";
 import { CreatePage } from "../actions/createPage.action";
 import { UpdatePage } from "../actions/updatePage.action";
 import { DeletePage } from "../actions/deletePage.action";
-import { DevSync } from "../core/devSync";
 import { KottsterApp } from "../core/app";
 import { InitApp } from "../actions/initApp.action";
 import { AddDataSource } from "../actions/addDataSource.action";
@@ -15,7 +14,7 @@ import { InstallPackagesForDataSource } from "../actions/installPackagesForDataS
 import { GetProjectSettings } from "../actions/getProjectSettings.action";
 
 /**
- * Service for working with actions
+ * Service for working with actions.
  */
 export class ActionService {
   static getAction(app: KottsterApp, action: string): Action {
@@ -29,28 +28,28 @@ export class ActionService {
     }
   }
 
-  static getDSAction(ds: DevSync, action: string): DSAction {
+  static getDSAction(app: KottsterApp, action: string): DSAction {
     switch (action) {
       case 'initApp':
-        return new InitApp(ds);
+        return new InitApp(app);
       case 'updateSchema':
-        return new UpdateSchema(ds);
+        return new UpdateSchema(app);
       case 'updateFiles':
-        return new UpdateFiles(ds);
+        return new UpdateFiles(app);
       case 'getFiles':
-        return new GetFiles(ds);
+        return new GetFiles(app);
       case 'createPage':
-        return new CreatePage(ds);
+        return new CreatePage(app);
       case 'updatePage':
-        return new UpdatePage(ds);
+        return new UpdatePage(app);
       case 'deletePage':
-        return new DeletePage(ds);
+        return new DeletePage(app);
       case 'addDataSource':
-        return new AddDataSource(ds);
+        return new AddDataSource(app);
       case 'installPackagesForDataSource':
-        return new InstallPackagesForDataSource(ds);
+        return new InstallPackagesForDataSource(app);
       case 'getProjectSettings':
-        return new GetProjectSettings(ds);
+        return new GetProjectSettings(app);
       default:
         throw new Error(`Action ${action} not found`);
     }

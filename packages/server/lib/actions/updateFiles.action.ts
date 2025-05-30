@@ -12,7 +12,7 @@ interface Data {
  */
 export class UpdateFiles extends DSAction {
   public async execute(data: Data) {
-    const fileWriter = new FileWriter({ usingTsc: this.ds.usingTsc });
+    const fileWriter = new FileWriter({ usingTsc: this.app.usingTsc });
 
     if (data?.createOrUpdatePages) {
       data.createOrUpdatePages.forEach(page => {

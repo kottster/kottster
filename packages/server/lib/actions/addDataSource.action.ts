@@ -1,6 +1,6 @@
 import { DataSourceType, stripIndent, dataSourcesTypeData } from "@kottster/common";
 import { exec } from "child_process";
-import { spawn } from 'child_process';
+import spawn from 'cross-spawn';
 import { PROJECT_DIR } from "../constants/projectDir";
 import { DSAction } from "../models/action.model";
 

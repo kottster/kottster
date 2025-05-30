@@ -11,7 +11,7 @@ interface Data {
  */
 export class DeletePage extends DSAction {
   public async execute(data: Data) {
-    const fileWriter = new FileWriter({ usingTsc: this.ds.usingTsc });
+    const fileWriter = new FileWriter({ usingTsc: this.app.usingTsc });
     const fileReader = new FileReader();
     const { id } = data;
     const appSchema = fileReader.readSchemaJsonFile();
@@ -20,12 +20,9 @@ export class DeletePage extends DSAction {
     appSchema.navItems = appSchema.navItems.filter(item => item.id !== id);
     fileWriter.writeSchemaJsonFile(appSchema);
     
-    // Timeout to avoid making multiple changes at the same time
-    setTimeout(() => {
-      // Remove page directory or file
-      fileWriter.removePage(id);
-    }, 400);
-
+    // Remove page directory or file
+    fileWriter.removePage(id);
+    
     return null;
   }
 }

@@ -15,12 +15,17 @@ interface Data {
  */
 export class UpdatePage extends DSAction {
   public async execute(data: Data) {
-    const fileWriter = new FileWriter({ usingTsc: this.ds.usingTsc });
+    const fileWriter = new FileWriter({ usingTsc: this.app.usingTsc });
     const fileReader = new FileReader();
     const { id, page } = data;
     const appSchema = fileReader.readSchemaJsonFile();
 
-    // Update nav item in app schema
+    // Update page file if ID has changed
+    if (id !== page.id) {
+      fileWriter.renamePage(id, page.id);
+    }
+    
+    // Update nav item in the app schema
     appSchema.navItems = appSchema.navItems.map(p => {
       if (p.id === id) {
         return {
@@ -32,16 +37,7 @@ export class UpdatePage extends DSAction {
 
       return p;
     });
-    
-    // Remove page directory or file
-    fileWriter.renamePage(id, page.id);
-    
-    if (id !== page.id) {
-      // Timeout to avoid making multiple changes at the same time
-      setTimeout(() => {
-        fileWriter.writeSchemaJsonFile(appSchema);
-      }, 400);
-    }
+    fileWriter.writeSchemaJsonFile(appSchema);
 
     return {};
   }

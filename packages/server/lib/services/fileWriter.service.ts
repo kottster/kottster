@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { AppSchema, getDefaultPage, PageFileStructure, stripIndent } from "@kottster/common";
+import { AppSchema, PageFileStructure, stripIndent } from "@kottster/common";
 import { rimrafSync } from 'rimraf';
 import { PROJECT_DIR } from "../constants/projectDir";
 
@@ -23,7 +23,7 @@ export class FileWriter {
    * @param pageId The page ID
    */
   public removePage(pageId: string): void {
-    const dir = `${PROJECT_DIR}/app/routes/${pageId}`;
+    const dir = `${PROJECT_DIR}/app/pages/${pageId}`;
 
     // Check if the directory exists
     if (fs.existsSync(dir)) {
@@ -46,8 +46,8 @@ export class FileWriter {
    * @param newPageId The new page ID
    */
   public renamePage(oldPageId: string, newPageId: string): void {
-    const currentDir = `${PROJECT_DIR}/app/routes/${oldPageId}`;
-    const newDir = `${PROJECT_DIR}/app/routes/${newPageId}`;
+    const currentDir = `${PROJECT_DIR}/app/pages/${oldPageId}`;
+    const newDir = `${PROJECT_DIR}/app/pages/${newPageId}`;
 
     // Check if the directory exists
     if (fs.existsSync(currentDir)) {
@@ -61,19 +61,6 @@ export class FileWriter {
         fs.renameSync(`${currentDir}.${ext}`, `${newDir}.${ext}`);
       }
     });
-  }
-
-  /**
-   * Create a new page without any content
-   * @param pageId The page ID
-   */
-  public createNewEmptyPage(pageId: string) {
-    if (fs.existsSync(`${PROJECT_DIR}/app/routes/${pageId}`)) {
-      return;
-    }
-
-    const newPage = getDefaultPage(pageId, this.usingTsc);
-    this.writePageToFile(newPage);
   }
 
   /**
@@ -102,12 +89,12 @@ export class FileWriter {
   }
 
   /**
-   * Write the schema to the app-schema.json file
+   * Write the schema to the kottster-app.json file
    * @param schema The schema to write
    */
   public writeSchemaJsonFile(schema: AppSchema): void {
     const content = JSON.stringify(schema, null, 2);
-    const filePath = `${PROJECT_DIR}/app-schema.json`;
+    const filePath = `${PROJECT_DIR}/kottster-app.json`;
 
     this.writeFile(filePath, content);
   }
@@ -127,22 +114,21 @@ export class FileWriter {
   }
 
   /**
-   * Write app/.server/app.ts file with the secret key
+   * Write app/_server/app.ts file with the secret key
    * @param secretKey The secret key
    */
   writeAppServerFileWithSecretKey(secretKey: string): void {
-    // TODO: replace with updating the file instead of completely rewriting it
     const content = stripIndent(`
       import { createApp } from '@kottster/server';
       import { dataSourceRegistry } from './data-sources/registry';
-      import schema from '../../app-schema.json';
+      import schema from '../../kottster-app.json';
 
       export const app = createApp({
         schema,
 
         /* 
          * For security, consider moving the secret key to an environment variable: 
-         * https://docs.kottster.app/deploying#before-you-deploy
+         * https://kottster.app/docs/deploying#before-you-deploy
          */
         secretKey: '${secretKey}',
       });
@@ -150,7 +136,7 @@ export class FileWriter {
       app.registerDataSources(dataSourceRegistry);
     `);
 
-    const filePath = `${PROJECT_DIR}/app/.server/app.${this.usingTsc ? 'ts' : 'js'}`;
+    const filePath = `${PROJECT_DIR}/app/_server/app.${this.usingTsc ? 'ts' : 'js'}`;
     this.writeFile(filePath, content);
   }
 

@@ -31,7 +31,7 @@ Learn more about **columns and their parameters** in the [API reference](/table/
 ```tsx title="Example of a page with a modified column"
 import { TablePage } from '@kottster/react';
 import { app } from '../../_server/app';
-import dataSource from '@/_server/data-sources/mysql';
+import dataSource from '../../_server/data-sources/mysql';
 import pageSettings from './settings.json';
 
 export const action = app.defineTableController(dataSource, {

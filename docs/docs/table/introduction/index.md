@@ -4,9 +4,7 @@ sidebar_position: 1
 
 # Introduction
 
-Kottster tables let you **view and manage data** in the database tables.
-
-<!-- <img src='/img/table-explanation.png' width='100%' alt='Table features in Kottster' /> -->
+Kottster tables let you **view and manage data** in your database tables.
 
 ![Table features in Kottster](table-explanation.png)
 
@@ -20,39 +18,67 @@ Kottster tables let you **view and manage data** in the database tables.
 - Deleting records
 - Viewing and managing related records
 
-## Page file
+## Page Structure
 
-With Kottster, you can setup all this by creating a single file in the `./app/pages` directory. It would look something like this:
+With Kottster, you can set up all this functionality by creating two files in the `./app/pages/<page-id>` directory:
 
-```tsx title="app/pages/users/index.jsx"
-import { TablePage } from '@kottster/react'; 
+### Backend Controller
+Create an `api.server.js` file that handles your table's backend logic:
+
+```js title="app/pages/users/api.server.js"
 import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/postgres';
 
-// Defines the backend controller for the table.
-// It's responsible for handling requests from the TablePage component.
-export const action = app.defineTableController(dataSource, {
+// Default export the controller for handling table requests
+export default app.defineTableController(dataSource, {
   rootTable: {
     table: 'users'
   }
 });
+```
 
-// Defines the page layout.
+If your page was auto-generated using the visual editor, the `api.server.js` file will look like this:
+
+```js title="app/pages/users/api.server.js"
+import { app } from '../../_server/app';
+import dataSource from '../../_server/data-sources/postgres';
+import pageSettings from './settings.json';
+
+export default app.defineTableController(dataSource, {
+  ...pageSettings,
+  rootTable: {
+    ...pageSettings.rootTable,
+  }
+});
+```
+
+This version imports configuration from a `settings.json` file. The `settings.json` file contains the table page configuration and is automatically managed by the visual editor. You can still override or rewrite the configuration directly in the `api.server.js` file if needed. 
+
+**Note:** The `settings.json` file should not be edited manually - it exists only for the visual editor to store your page settings.
+
+### Frontend Component
+Create an `index.jsx` file that defines your page's user interface:
+
+```jsx title="app/pages/users/index.jsx"
+import { TablePage } from '@kottster/react'; 
+
 export default () => (
   <TablePage />
 );
 ```
 
-As you can see, a typical page in Kottster consists of two main parts:
+## How It Works
 
-- **Backend logic**: The `action` export uses `defineTableController` to define the configuration for the table including the table name, primary key, and available actions like selecting, inserting, updating, and deleting records.
+Each Kottster page consists of two separate parts:
 
-- **User interface**: The default export returns the `TablePage` component, which displays the table and form.
+- **Backend logic** (`api.server.js`): Uses `defineTableController` to configure the table including its name, primary key, and available actions like selecting, inserting, updating, and deleting records.
+
+- **User interface** (`index.jsx`): Returns the `TablePage` component, which displays the table and forms.
 
 ## Auto-generation
 
-With Kottster, you don’t need to manually create pages for every table in your database tables. 
+You don't need to manually create these files for every table in your database. 
 
-Kottster’s key feature is its ability to **automatically generate pages** like the one shown above. 
+Kottster's key feature is its ability to **automatically generate pages** like the ones shown above. 
 
-Our builder connects to your database, analyzes its tables, columns, and relationships, and lets you generate pages for them with just a click. In just seconds, you can generate a fully functional customizable admin panel that will allow you to **view and manage data in your database tables**.
+Our builder connects to your database, analyzes its tables, columns, and relationships, and lets you generate pages for them with just a click. In seconds, you can create a fully functional, customizable admin panel to **view and manage data in your database tables**.

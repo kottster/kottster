@@ -6,7 +6,7 @@ sidebar_position: 1
 
 The `defineTableController` function sets up server-side endpoint to handle request from the page with the table component. It connects to a database and defines what data available for the table and how it behaves. It also allows to define configuration for nested tables.
 
-By default, all settings are stored in a `settings.json` file located next to the page file. This file contains configuration for the main table and its nested tables. It allows you to edit table settings using the visual editor.
+By default, all table pages generated with visual editor will contain a `settings.json` file. This file contains configuration for the main table and its nested tables. It allows you to edit table settings using the visual editor.
 
 Example of files for the table page for `users` table:
 
@@ -29,27 +29,24 @@ Example of files for the table page for `users` table:
 }
 ```
 
-```tsx title="app/pages/users/index.jsx"
-import { TablePage } from '@kottster/react'; 
+```tsx title="app/pages/users/api.server.js"
 import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/postgres';
 import pageSettings from './settings.json';
 
-export const action = app.defineTableController(dataSource, {
-  ...pageSettings
+export default app.defineTableController(dataSource, {
+  ...pageSettings,
+  rootTable: {
+    ...pageSettings.rootTable,
+  },
 });
-
-export default () => (
-  <TablePage />
-);
 ```
-
-
-<!-- **If you need more customization, beyound what visual editor provides**, you can import the `settings.json` file and extend it with your own settings. This is useful for advanced users who want more control over table configuration. -->
 
 **If you need more customization, beyound what visual editor provides**, you can extend the imported `settings.json` configuration with your own settings. This is useful for advanced users who want more control over table configuration.
 
-```typescript title="app/pages/users/index.jsx"
+```typescript title="app/pages/users/api.server.js"
+import { app } from '../../_server/app';
+import dataSource from '../../_server/data-sources/postgres';
 import pageSettings from './settings.json';
 
 export default action = app.defineTableController(dataSource, {
@@ -79,8 +76,6 @@ The `defineTableController` function takes two required arguments:
 *   **`dataSource`**: A data source. Typically, imported from the `app/_server/data-sources` directory.
     
 *   **`settings`**: A configuration object that defines the behavior of the table and its nested tables. The configuration for the main table is defined under the `rootTable` key.
-
-<!-- Alternatively, if you want to customize already defined configuration but on the client side, you can use methods like `customColumns`, `columnTransformer`, `columnOverrides` on the [`TablePage`](/table/table-page-component) component.  -->
 
 Alternatively, you can customize already defined configuration on the client side using methods like `customColumns`, `columnTransformer`, `columnOverrides` on the [`TablePage`](/table/table-page-component) component. This approach is useful if you want to change **the way columns and fields are rendered**, or use **JSX components**.
 

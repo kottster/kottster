@@ -14,42 +14,26 @@ If you want to just display a new column in the table, you can use the [`customC
 
 Add the `customColumns` prop to the `TablePage` component. This prop accepts an array of objects, each representing a custom column.
 
-```tsx title="Example of a custom column"
-{
-  // The unique key for the new column
-  column: 'fullName',
-  
-  // The display label for the column
-  label: 'Full name',
-  
-  // Position of the column, if not specified, it will be added to the end
-  position: 1,
+**Example of a page with a custom column:**
 
-  // Render function to display the column content
-  render: ({ first_name, last_name }) => `${first_name} ${last_name}`
-}
-```
-
-Learn more about **columns and their parameters** in the [API reference](/table/configuration/api#columns-1).
-
-```tsx title="Example of a page with a custom column"
+```jsx title="app/pages/users/index.jsx"
 import { TablePage } from '@kottster/react';
-import { app } from '../../_server/app';
-import dataSource from '../../_server/data-sources/mysql';
-import pageSettings from './settings.json';
-
-export const action = app.defineTableController(dataSource, {
-  ...pageSettings,
-});
 
 export default () => (
   <TablePage
     customColumns={[
       // Add a custom column to the table
       {
+        // The unique key for the new column
         column: 'fullName',
+
+        // The display label for the column
         label: 'Full name',
+
+        // Position of the column, if not specified, it will be added to the end
         position: 1,
+
+        // Render function to display the column content
         render: ({ first_name, last_name }) => `${first_name} ${last_name}`,
       },
     ]}
@@ -57,33 +41,22 @@ export default () => (
 );
 ```
 
+Learn more about **columns and their parameters** in the [API reference](/table/configuration/api#columns-1).
+
 ## Calculated columns
 
 **Using the `calculatedColumns` in the `defineTableController` function**
 
 For more complex scenarios where you need to perform SQL calculations on the server side, you can use the [`calculatedColumns`](/table/configuration/api#calculatedcolumns) configuration. This is particularly useful for aggregate functions like counting related records or performing mathematical operations.
 
-```tsx title="Example of a calculated column"
-{
-  // The alias for the calculated column
-  alias: 'order_count'
+**Example of a server API with calculated columns:**
 
-  // SQL expression to calculate the value
-  // To reference the main table, use `main` as the alias
-  sqlExpression:
-    'SELECT COUNT(*) FROM orders WHERE orders.user_id = main.id'
-}
-```
-
-After defining the calculated columns, you can use them in the [`customColumns`](/table/table-page-component#customcolumns) prop of the `TablePage` component. This allows you to display the calculated values alongside other data in the table.
-
-```tsx title="Example of a page with calculated columns"
-import { TablePage } from '@kottster/react';
+```js title="app/pages/users/api.server.js"
 import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/mysql';
 import pageSettings from './settings.json';
 
-export const action = app.defineTableController(dataSource, {
+export default app.defineTableController(dataSource, {
   ...pageSettings,
   rootTable: {
     ...pageSettings.rootTable,
@@ -109,6 +82,12 @@ export const action = app.defineTableController(dataSource, {
     ],
   }
 });
+```
+
+After defining the calculated columns, you can use them in the [`customColumns`](/table/table-page-component#customcolumns) prop of the `TablePage` component. This allows you to display the calculated values alongside other data in the table.
+
+```jsx title="app/pages/users/index.jsx"
+import { TablePage } from '@kottster/react';
 
 export default () => (
   <TablePage

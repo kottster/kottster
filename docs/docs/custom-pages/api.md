@@ -2,19 +2,18 @@
 sidebar_position: 2
 ---
 
-# API Reference
+# Server API
 
 ## Custom controller
 
-The `defineCustomController` function sets up a custom controller to handle request from the page. Inside the controller you can define multiple server-side actions that could be used to fetch data from the database, [external API](/custom-pages/using-external-api), or perform any other operation on the backend.
+The `defineCustomController` function sets up a custom controller to handle requests from the page. Inside the controller you can define multiple server-side functions that can be used to fetch data from the database, [external API](/custom-pages/using-external-api), or perform any other operation on the backend.
 
-The object returned by `defineCustomController` **should always** be exported as `action` from the file.
+The controller **should always** be exported as default from the `api.server.js` file.
 
-```typescript title="Example"
-import { Page } from '@kottster/react';
+```typescript title="app/pages/products/api.server.js"
 import { app } from '../../_server/app';
 
-export const action = app.defineCustomController({
+const controller = app.defineCustomController({
   getProduct: async () => {
     // Inside this function you can fetch data 
     // from the database, external API, static file, etc.
@@ -28,21 +27,14 @@ export const action = app.defineCustomController({
   },
 });
 
-// Frontend part
-export default () => {
-  return (
-    <Page title='My custom page'>
-      {/* Custom page content */}
-    </Page>
-  );
-};
+export default controller;
 ```
 
-Each action function should be defined inside the object passed to `defineCustomController`. The function should be `async` and return data that will be sent to the frontend.
+Each function should be defined inside the object passed to `defineCustomController`. The function should be `async` and return data that will be sent to the frontend.
 
 ### Arguments
 
-Each action function can accept two arguments:
+Each function can accept two arguments:
 
 - `input`: An object with parameters passed from the frontend.
 - `ctx`: An object with the request context, including `user`:
@@ -51,8 +43,10 @@ Each action function can accept two arguments:
 
 ### Examples
 
-```typescript title="Example of an action with arguments"
-export const action = app.defineCustomController({
+**Example of a server procedure with input parameters:**
+
+```typescript title="app/pages/products/api.server.js"
+const controller = app.defineCustomController({
   getProduct: async ({ id }) => {
     // Fetch product by id from the database
     const product = await db.products.findOne({ id });
@@ -61,22 +55,30 @@ export const action = app.defineCustomController({
     return product;
   },
 });
+
+export default controller;
 ```
 
-```typescript title="Example of an action with context"
-export const action = app.defineCustomController({
-  getProductOfCurrentUser: async ({ id }, { user }) => {
-    // Fetch product by id from the database
-    const product = await db.products.findOne({ id, userId: user.id });
+**Example of a server procedure with context access:**
 
-    // Return product data to the frontend
-    return product;
+```typescript title="app/pages/products/api.server.js"
+const controller = app.defineCustomController({
+  getAddedProducts: async (_, { user }) => {
+    // Fetch products added by the current user
+    const products = await db.products.find({ userId: user.id });
+
+    // Return products data to the frontend
+    return products;
   },
 });
+
+export default controller;
 ```
 
-```typescript title="Example of an action withouth arguments"
-export const action = app.defineCustomController({
+**Example of a server procedure without any arguments:**
+
+```typescript title="app/pages/products/api.server.js"
+const controller = app.defineCustomController({
   getProducts: async () => {
     // Fetch all products from the database
     const products = await db.products.find();
@@ -85,39 +87,53 @@ export const action = app.defineCustomController({
     return products;
   },
 });
+
+export default controller;
 ```
 
-## Client-side usage
+### Type-safety
 
-To call the action from the frontend, use the `executeCustomAction` function. 
+If you are using TypeScript, you can define your API functions with type safety. This allows you to specify the types of input parameters and return values, which helps catch errors at compile time and provides better IntelliSense support in your IDE.
 
-### Arguments
+Example of a TypeScript controller with typed functions:
 
-The function accepts two arguments:
-- `actionName`: The name of the action defined in the custom controller.
-- `input`: An object with parameters that will be passed to the action.
-
-### Examples
-
-```typescript title="Example"
+```typescript title="app/pages/products/api.server.ts"
 import { app } from '../../_server/app';
-import { executeCustomAction } from '@kottster/react';
 
-export const action = app.defineCustomController({
-  getProduct: async ({ id }) => {/* ... */},
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  userId: string;
+}
+
+interface GetProductInput {
+  id: number;
+}
+
+const controller = app.defineCustomController({
+  getProduct: async ({ id }: GetProductInput): Promise<Product | null> => {
+    const product = await db.products.findOne({ id });
+    return product;
+  },
+  
+  getProducts: async (): Promise<Product[]> => {
+    const products = await db.products.find();
+    return products;
+  },
+  
+  createProduct: async ({ name, price }: { name: string; price: number }, { user }): Promise<Product> => {
+    const product = await db.products.create({
+      name,
+      price,
+      userId: user.id,
+    });
+    return product;
+  },
 });
 
-export default () => {
-  const fetchProduct = async () => {
-    // Call the getProduct action with id parameter
-    const product = await executeCustomAction('getProduct', { id: 1 });
-    console.log(product);
-  };
+// Export types for frontend usage
+export type Procedures = typeof controller.procedures;
 
-  return (
-    <Page title='My custom page'>
-      <button onClick={fetchProduct}>Fetch product</button>
-    </Page>
-  );
-};
+export default controller;
 ```

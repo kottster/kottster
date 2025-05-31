@@ -8,30 +8,38 @@ This section explains the purpose of each file and folder in your project. Here'
 
 - ## `app/`
 
-    The main directory where your Remix app's core logic resides.
+    The main directory where your Kottster app lives. It contains all the files and folders needed to run your app.
 
-  - ### `entry.client.jsx`
+  - ### `index.html`
 
-        The entry point for client-side rendering. It initializes the Remix app in the browser. [Learn more](https://remix.run/docs/en/main/file-conventions/entry.client)
-
-  - ### `root.jsx`
-
-        The root component of your app. It defines the app’s layout, handles global styles, and manages shared logic like error boundaries. [Learn more](https://remix.run/docs/en/main/file-conventions/root)
-
-  - ### `service-route.js`
-
-        A special route file that handles internal API requests. **Please avoid modifying this file since it can break the app's functionality.**
-
-
-  - ### `tailwind.css`
-
-      The global CSS file for your app. It includes Tailwind directives and custom styles, if any.
+        The HTML template for your app. It defines the structure of the HTML document, including the `<head>` and `<body>` sections.
   
+  - ### `main.jsx`
+
+        The root component of your React application. It initializes the app and renders the main component tree.
+
   - ### `pages/`
 
-      Contains all your app’s pages. Each file or folder corresponds to a route or a nested route in the app.
+      Contains all your app's pages. Each folder corresponds to a page in the app. The folder name is used as the URL path.
+
+      Each page consists of two files:
+      - `api.server.js` - Contains the backend controller logic
+      - `index.jsx` - Contains the frontend React component
+
+      Example structure:
+      ```
+      pages/
+      ├── users/
+      │   ├── api.server.js
+      │   ├── index.jsx
+      │   └── settings.json
+      └── orders/
+          ├── api.server.js
+          ├── index.jsx
+          └── settings.json
+      ```
   
-  - ### `server/`
+  - ### `_server/`
 
       Contains server-side files.
 
@@ -39,42 +47,30 @@ This section explains the purpose of each file and folder in your project. Here'
 
           The file with app initialization logic. It creates a new Kottster app instance and sets up data sources.
 
+      - #### `server.js`
+
+          The file that imports the app instance and starts the server.
+
       - #### `data-sources/`
 
-          Contains data source files. Each folder corresponds to a data source in the app. [Learn more](/data-sources)
+          Contains data source files. [Learn more](/data-sources)
 
-- ## `public/`
+  - ### `public/`
 
-    The optonal directory where you store static assets like images, fonts, and other files.
+      The optional directory where you store static assets like images, fonts, and other files.
 
 - ## `kottster-app.json`
 
-    A JSON file that contains the Kottster app schema.
+    A JSON file that contains the Kottster app schema including the app's metadata and navigation structure.
 
 - ## `vite.config.js`
 
-    The configuration file for Vite, the build tool used by Remix. [Learn more](https://remix.run/docs/en/main/file-conventions/vite-config)
+    The configuration file for Vite build tool. It defines how your app is built and served, including plugins and optimizations.
 
 - ## `package.json`
 
-    Defines the app’s dependencies, scripts, and metadata. Essential for managing npm tasks and project setup.
+    Specifies the packages your app needs to run and how to build or start it.
 
 - ## `tsconfig.json`
 
     Specifies TypeScript configuration options, such as type-checking rules, paths, and compiler settings. You only need this file if you're using TypeScript.
-
-- ## `tailwind.config.js`
-
-    Customizes the Tailwind CSS setup for your app. This includes themes, colors, and utilities. [Learn more](https://tailwindcss.com/docs/configuration)
-
-
-
-
-
-
-
-
-
-
-
-

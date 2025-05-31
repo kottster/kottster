@@ -8,19 +8,18 @@ By default, Kottster manages data fetching internally. You can also define custo
 
 To do this, pass an `executeQuery` function to [`defineTableController`](/table/configuration/api):
 
-```typescript title="app/pages/users/index.jsx"
-import { TablePage } from '@kottster/react'; 
+```js title="app/pages/users/api.server.js"
 import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/postgres';
 
-export const action = app.defineTableController(dataSource, {
+export default app.defineTableController(dataSource, {
   rootTable: {
     executeQuery: async () => {
       // Fetch data here
       const sampleRecords = [
-        { id: 1, 'user1@example.com' },
-        { id: 2, 'user1@example.com' },
-        { id: 3, 'user1@example.com' },
+        { id: 1, email: 'user1@example.com' },
+        { id: 2, email: 'user2@example.com' },
+        { id: 3, email: 'user3@example.com' },
       ];
 
       // Return the records
@@ -36,16 +35,12 @@ export const action = app.defineTableController(dataSource, {
     ],
   },
 });
-
-export default () => (
-  <TablePage />
-);
 ```
 
 To enabling pagination, pass a `pageSize` property and return the `totalRecords` property in the `executeQuery` function:
 
-```typescript
-export const action = app.defineTableController(dataSource, {
+```js title="app/pages/users/api.server.js"
+export default app.defineTableController(dataSource, {
   rootTable: {
     pageSize: 25,
     executeQuery: async ({ page }) => {
@@ -60,16 +55,16 @@ export const action = app.defineTableController(dataSource, {
 
 To enable CRUD operations and other built-in table features, the `table` property must be set:
 
-```typescript
-export const action = app.defineTableController(dataSource, {
+```js title="app/pages/users/api.server.js"
+export default app.defineTableController(dataSource, {
   rootTable: {
     table: 'users',
     executeQuery: async () => {
       // Fetch data here
       const sampleRecords = [
-        { id: 1, 'user1@example.com' },
-        { id: 2, 'user1@example.com' },
-        { id: 3, 'user1@example.com' },
+        { id: 1, email: 'user1@example.com' },
+        { id: 2, email: 'user2@example.com' },
+        { id: 3, email: 'user3@example.com' },
       ];
 
       // Return the records
@@ -106,15 +101,14 @@ Here we extend the existing table configuration to include a custom query for fe
 <details>
   <summary>MySQL example</summary>
   
-  ```typescript title="app/pages/users/index.jsx"
-  import { TablePage } from '@kottster/react';
+  ```js title="app/pages/users/api.server.js"
   import { app } from '../../_server/app';
   import dataSource from '../../_server/data-sources/mysql';
   import pageSettings from './settings.json';
 
   const pageSize = 25;
 
-  export const action = app.defineTableController(dataSource, {
+  export default app.defineTableController(dataSource, {
     ...pageSettings,
     rootTable: {
       ...pageSettings.rootTable,
@@ -145,6 +139,10 @@ Here we extend the existing table configuration to include a custom query for fe
       }
     }
   });
+  ```
+
+  ```jsx title="app/pages/users/index.jsx"
+  import { TablePage } from '@kottster/react'; 
 
   export default () => (
     <TablePage />
@@ -155,15 +153,14 @@ Here we extend the existing table configuration to include a custom query for fe
 <details>
   <summary>PostgreSQL example</summary>
   
-  ```typescript title="app/pages/users/index.jsx"
-  import { TablePage } from '@kottster/react';
+  ```js title="app/pages/users/api.server.js"
   import { app } from '../../_server/app';
   import dataSource from '../../_server/data-sources/postgres';
   import pageSettings from './settings.json';
 
   const pageSize = 25;
 
-  export const action = app.defineTableController(dataSource, {
+  export default app.defineTableController(dataSource, {
     ...pageSettings,
     rootTable: {
       ...pageSettings.rootTable,
@@ -194,6 +191,10 @@ Here we extend the existing table configuration to include a custom query for fe
       }
     }
   });
+  ```
+
+  ```jsx title="app/pages/users/index.jsx"
+  import { TablePage } from '@kottster/react'; 
 
   export default () => (
     <TablePage />
@@ -204,15 +205,14 @@ Here we extend the existing table configuration to include a custom query for fe
 <details>
   <summary>Sqlite example</summary>
   
-  ```typescript
-  import { TablePage } from '@kottster/react';
+  ```js title="app/pages/users/api.server.js"
   import { app } from '../../_server/app';
   import dataSource from '../../_server/data-sources/sqlite';
   import pageSettings from './settings.json';
 
   const pageSize = 25;
 
-  export const action = app.defineTableController(dataSource, {
+  export default app.defineTableController(dataSource, {
     ...pageSettings,
     rootTable: {
       ...pageSettings.rootTable,
@@ -243,6 +243,10 @@ Here we extend the existing table configuration to include a custom query for fe
       }
     }
   });
+  ```
+
+  ```jsx title="app/pages/users/index.jsx"
+  import { TablePage } from '@kottster/react'; 
 
   export default () => (
     <TablePage />
@@ -250,29 +254,28 @@ Here we extend the existing table configuration to include a custom query for fe
   ```
 </details>
 
-> Please notice that in the examples above, we are using the `raw` method from Knex to execute raw SQL queries. This method has diffirent return for each database adapter. For MySQL, it returns an array of records, while for PostgreSQL, it returns an object with a `rows` property containing the records.
+> Please notice that in the examples above, we are using the `raw` method from Knex to execute raw SQL queries. This method has different return formats for each database adapter. For MySQL, it returns an array of records, while for PostgreSQL, it returns an object with a `rows` property containing the records.
 
 ## Custom fetching logic
 
 You can also define completely custom fetching logic. For example, you can fetch data from an external API or a different database.
 
-```typescript title="app/pages/users/index.jsx"
-import { TablePage } from '@kottster/react';
+```js title="app/pages/users/api.server.js"
 import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/postgres';
 
 const pageSize = 25;
 
-export const action = app.defineTableController(dataSource, {
+export default app.defineTableController(dataSource, {
   rootTable: {
     pageSize,
     
     executeQuery: async ({ page }) => {
       // Fetch data here
       const sampleRecords = [
-        { id: 1, 'user1@example.com' },
-        { id: 2, 'user1@example.com' },
-        { id: 3, 'user1@example.com' },
+        { id: 1, email: 'user1@example.com' },
+        { id: 2, email: 'user2@example.com' },
+        { id: 3, email: 'user3@example.com' },
       ];
       
       return {
@@ -288,8 +291,4 @@ export const action = app.defineTableController(dataSource, {
     ],
   }
 });
-
-export default () => (
-  <TablePage />
-);
 ```

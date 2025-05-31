@@ -14,29 +14,10 @@ If you want to update the displaying of existing columns, you can use the [`colu
 
 Add the `columnOverrides` prop to the `TablePage` component. This prop accepts an object where each key is the column name and the value is a function that takes the existing column configuration and returns the modified column configuration.
 
-```tsx title="Example of modifying email column"
-email: column => ({
-  ...column,
+**Example of a page with a modified column:**
 
-  // The custom display label for the column
-  label: 'Email address',
-
-  // Optional render function to display the column content
-  render: ({ email }) => <a href={`mailto:${email}`}>{email}</a>,
-})
-```
-
-Learn more about **columns and their parameters** in the [API reference](/table/configuration/api#columns-1).
-
-```tsx title="Example of a page with a modified column"
+```jsx title="app/pages/users/index.jsx"
 import { TablePage } from '@kottster/react';
-import { app } from '../../_server/app';
-import dataSource from '../../_server/data-sources/mysql';
-import pageSettings from './settings.json';
-
-export const action = app.defineTableController(dataSource, {
-  ...pageSettings,
-});
 
 export default () => (
   <TablePage
@@ -44,10 +25,16 @@ export default () => (
       // Modifying the email column
       email: column => ({
         ...column,
+
+        // The custom display label for the column
         label: 'Email address',
+
+        // Optional render function to display the column content
         render: ({ email }) => <a href={`mailto:${email}`}>{email}</a>,
       }),
     }}
   />
 );
 ```
+
+Learn more about **columns and their parameters** in the [API reference](/table/configuration/api#columns-1).

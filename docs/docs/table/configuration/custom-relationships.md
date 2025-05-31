@@ -39,15 +39,14 @@ Imagine we want to create a page to view and manage data in the `users` table. B
 
 This also simplifies forms for creating or updating users. Instead of typing a `workspace_id`, people can select a workspace from a dropdown or list, making the form more intuitive and reducing errors.
 
-**Here’s an example of the page file:**
+**Here's an example of the page files:**
 
-```typescript title="app/pages/users/index.jsx"
-import { TablePage } from '@kottster/react';
+```js title="app/pages/users/api.server.js"
 import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/postgres';
 import pageSettings from './settings.json';
 
-export const action = app.defineTableController(dataSource, {
+export default app.defineTableController(dataSource, {
   ...pageSettings,
   rootTable: {
     ...pageSettings.rootTable,
@@ -62,6 +61,10 @@ export const action = app.defineTableController(dataSource, {
     ],
   },
 });
+```
+
+```jsx title="app/pages/users/index.jsx"
+import { TablePage } from '@kottster/react';
 
 export default () => (
   <TablePage />
@@ -104,15 +107,14 @@ For example, consider a `projects` table and a `tasks` table, where each project
 
 Imagine we want to create a page to view data in the `projects` table. By defining a one-to-many relationship, we can display an additional column showing how many tasks are associated with each project and their details.
 
-**Here’s how the page file might look:**
+**Here's how the page files might look:**
 
-```typescript title="app/pages/projects/index.jsx"
-import { TablePage } from '@kottster/react';
+```js title="app/pages/projects/api.server.js"
 import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/postgres';
 import pageSettings from './settings.json';
 
-export const action = app.defineTableController(dataSource, {
+export default app.defineTableController(dataSource, {
   ...pageSettings,
   rootTable: {
     ...pageSettings.rootTable,
@@ -129,6 +131,10 @@ export const action = app.defineTableController(dataSource, {
     ],
   },
 });
+```
+
+```jsx title="app/pages/projects/index.jsx"
+import { TablePage } from '@kottster/react';
 
 export default () => (
   <TablePage />
@@ -178,20 +184,19 @@ Consider an `authors` table and a `books` table, where an author can write multi
 
 Imagine we want to create a page to view data in the `books` table. By defining a many-to-many relationship with authors as the target table and `author_books` as the junction table, we can add a column to show how many and which authors are associated with each book.
 
-**Here’s how the page file might look:**
+**Here's how the page files might look:**
 
-```typescript title="app/pages/books/index.jsx"
-import { TablePage } from '@kottster/react';
+```js title="app/pages/books/api.server.js"
 import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/postgres';
 import pageSettings from './settings.json';
 
-export const action = app.defineTableController(dataSource, {
+export default app.defineTableController(dataSource, {
   ...pageSettings,
   rootTable: {
     ...pageSettings.rootTable,
     relationships: [
-      book_authors: {
+      {
         relation: 'manyToMany',
         key: 'book_authors',
 
@@ -209,6 +214,10 @@ export const action = app.defineTableController(dataSource, {
     ],
   },
 });
+```
+
+```jsx title="app/pages/books/index.jsx"
+import { TablePage } from '@kottster/react';
 
 export default () => (
   <TablePage />

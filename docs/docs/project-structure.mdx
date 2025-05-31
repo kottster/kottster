@@ -23,20 +23,19 @@ This section explains the purpose of each file and folder in your project. Here'
       Contains all your app's pages. Each folder corresponds to a page in the app. The folder name is used as the URL path.
 
       Each page consists of two files:
-      - `api.server.js` - Contains the backend controller logic
       - `index.jsx` - Contains the frontend React component
+      - `api.server.js` - Contains the backend controller logic
 
       Example structure:
       ```
       pages/
       ├── users/
-      │   ├── api.server.js
       │   ├── index.jsx
+      │   ├── api.server.js
       │   └── settings.json
-      └── orders/
-          ├── api.server.js
+      └── dashboard/
           ├── index.jsx
-          └── settings.json
+          └── api.server.js
       ```
   
   - ### `_server/`

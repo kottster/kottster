@@ -11,7 +11,7 @@ Once you've defined your custom controller in the `api.server.js` file, you can 
 The `useCallProcedure` hook provides a simple way to call your backend procedures from React components:
 
 ```tsx title="app/pages/products/index.jsx"
-import { useCallProcedure } from '@kottster/react';
+import { useCallProcedure, Page } from '@kottster/react';
 
 export default () => {
   const callProcedure = useCallProcedure();
@@ -23,9 +23,11 @@ export default () => {
   };
 
   return (
-    <button onClick={handleClick}>
-      Load Products
-    </button>
+    <Page>
+      <button onClick={handleClick}>
+        Load Products
+      </button>
+    </Page>
   );
 };
 ```
@@ -36,7 +38,7 @@ You can pass parameters to your backend procedures as the second argument:
 
 ```tsx title="app/pages/products/index.jsx"
 import { useState } from 'react';
-import { useCallProcedure } from '@kottster/react';
+import { useCallProcedure, Page } from '@kottster/react';
 
 export default () => {
   const callProcedure = useCallProcedure();
@@ -48,7 +50,7 @@ export default () => {
   };
 
   return (
-    <div>
+    <Page>
       <button onClick={() => loadProduct(1)}>
         Load Product 1
       </button>
@@ -58,7 +60,7 @@ export default () => {
           <p>Price: ${product.price}</p>
         </div>
       )}
-    </div>
+    </Page>
   );
 };
 ```
@@ -69,7 +71,7 @@ Always wrap your API calls in try-catch blocks to handle potential errors:
 
 ```tsx title="app/pages/products/index.jsx"
 import { useState } from 'react';
-import { useCallProcedure } from '@kottster/react';
+import { useCallProcedure, Page } from '@kottster/react';
 
 export default () => {
   const callProcedure = useCallProcedure();
@@ -93,7 +95,7 @@ export default () => {
   };
 
   return (
-    <div>
+    <Page>
       <button onClick={loadProducts} disabled={loading}>
         {loading ? 'Loading...' : 'Load Products'}
       </button>
@@ -105,7 +107,7 @@ export default () => {
           <li key={product.id}>{product.name}</li>
         ))}
       </ul>
-    </div>
+    </Page>
   );
 };
 ```
@@ -263,7 +265,7 @@ For queries that depend on parameters, use the parameter as part of the query ke
 
 ```tsx title="app/pages/product-details/index.tsx"
 import { useQuery } from '@tanstack/react-query';
-import { useCallProcedure, usePage } from '@kottster/react';
+import { useCallProcedure, usePage, Page } from '@kottster/react';
 import { type Procedures } from './api.server';
 
 export default () => {
@@ -279,10 +281,10 @@ export default () => {
   if (isLoading) return <div>Loading...</div>;
 
   return (
-    <div>
+    <Page>
       <h1>{product?.name}</h1>
       <p>Price: ${product?.price}</p>
-    </div>
+    </Page>
   );
 };
 ```

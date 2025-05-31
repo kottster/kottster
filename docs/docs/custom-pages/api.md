@@ -6,7 +6,7 @@ sidebar_position: 2
 
 ## Custom controller
 
-The `defineCustomController` function sets up a custom controller to handle requests from the page. Inside the controller you can define multiple server-side functions that can be used to fetch data from the database, [external API](/custom-pages/using-external-api), or perform any other operation on the backend.
+The `defineCustomController` function sets up a custom controller to handle requests from the page. Inside the controller you can define multiple server-side functions that can be used to fetch data from the database, external API, or perform any other operation on the backend.
 
 The controller **should always** be exported as default from the `api.server.js` file.
 

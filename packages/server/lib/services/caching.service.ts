@@ -34,7 +34,6 @@ export class CachingService {
       return JSON.parse(data);
     }
 
-    // Return null if the cache file does not exist
     return null;
   }
 }

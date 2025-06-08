@@ -4,7 +4,7 @@
  * @example transformToReadable('snake_case') => 'Snake case'
  */
 export function transformToReadable(text: string, capitalizeFirst: boolean = true): string {
-  let result = text.replace(/([A-Z])/g, ' $1').trim();
+  let result = text.replace(/([A-Z])/g, (match) => ' ' + match.toLowerCase()).trim();
   result = result.replace(/_/g, ' ').replace(/(\d+)/g, ' $1 ');
   result = result.replace(/\s+/g, ' ').trim();
   

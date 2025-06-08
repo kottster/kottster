@@ -1,6 +1,7 @@
 import { Knex } from "knex";
 import { DataSourceAdapterType, FieldInput, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TablePageInputDelete, TablePageInputInsert, TablePageInputSelect, TablePageInputUpdate, TablePageResultInsertDTO, TablePageResultSelectDTO, TablePageResultSelectRecord, TablePageResultUpdateDTO, TablePageResultSelectRecordLinkedDTO, defaultTablePageSize, TablePageInputSelectUsingExecuteQuery, TablePageInputSelectSingle, TablePageResultSelectSingleDTO, findRelationship, DataSourceTablesConfig, getTableData, TablePageConfig, FilterItem, OneToOneRelationship, OneToManyRelationship, ManyToManyRelationship } from "@kottster/common";
 import { KottsterApp } from "../core/app";
+import { CachingService } from "../services/caching.service";
 
 /**
  * The base class for all data source adapters
@@ -12,6 +13,7 @@ export abstract class DataSourceAdapter {
   private app: KottsterApp;
   private tablesConfig: DataSourceTablesConfig;
   private cachedFullDatabaseSchemaSchema: RelationalDatabaseSchema | null = null;
+  private cachingService = new CachingService();
 
   constructor(protected client: Knex) {}
 
@@ -83,6 +85,9 @@ export abstract class DataSourceAdapter {
    */
   async getDatabaseSchema(): Promise<RelationalDatabaseSchema> {
     let databaseSchema: RelationalDatabaseSchema;
+    const slug = `datasource_dbschema_${this.type}`;
+    
+    this.cachedFullDatabaseSchemaSchema = this.cachingService.readValueFromCache(slug) as RelationalDatabaseSchema | null;
   
     if (this.cachedFullDatabaseSchemaSchema) {
       databaseSchema = this.cachedFullDatabaseSchemaSchema;
@@ -91,6 +96,8 @@ export abstract class DataSourceAdapter {
       
       // Save the full database schema in the cache
       this.cachedFullDatabaseSchemaSchema = this.removeExcludedTablesAndColumns(databaseSchema);
+      this.cachingService.saveValueToCache(slug, this.cachedFullDatabaseSchemaSchema);
+      
       console.log('Database schema cached');
       
       return this.cachedFullDatabaseSchemaSchema;

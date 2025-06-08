@@ -1,8 +1,9 @@
 import { ChildProcess } from 'child_process';
 import spawn from 'cross-spawn';
-import { HttpFreePortFinder } from '../services/httpFreePortFinder.service';
 import { checkTsUsage } from '@kottster/common';
 import chalk from 'chalk';
+import fs from 'fs';
+import portfinder from 'portfinder';
 
 interface Options {
   debug?: boolean;
@@ -15,27 +16,44 @@ export async function startProjectDev(options: Options): Promise<void> {
   const usingTsc = checkTsUsage();
 
   // Look for a free port for the API server
-  const httpFreePortFinder = new HttpFreePortFinder(5481, 6500);
-  const serverPort = await httpFreePortFinder.findFreePort();
-  const serverPortStr = serverPort.toString();
-  const serverUrl = `http://localhost:${serverPort}`;
+  let devApiServerPort: number;
+  if (process.env.DEV_API_SERVER_PORT) {
+    devApiServerPort = +process.env.DEV_API_SERVER_PORT;
+    if (isNaN(devApiServerPort) || devApiServerPort < 1 || devApiServerPort > 65535) {
+      throw new Error(`Invalid DEV_API_SERVER_PORT: ${process.env.DEV_API_SERVER_PORT}`);
+    }
+  } else {
+    // If DEV_API_SERVER_PORT is not set, find a free port in the range 5481-6500
+    devApiServerPort = await portfinder.getPortPromise({
+      port: 5481,
+      stopPort: 6500,
+    });
+  }
+  const devApiServerPortStr = devApiServerPort.toString();
+  const devApiServerUrl = `http://localhost:${devApiServerPort}`;
+
+  // Remove .cache directory if it exists
+  const cacheDir = './.cache';
+  if (fs.existsSync(cacheDir)) {
+    fs.rmSync(cacheDir, { recursive: true, force: true });
+  };
 
   let serverProcess: ChildProcess | null = null;
   let viteProcess: ChildProcess | null = null;
 
-  function startServer(restarted: boolean = false) {
+  function startServer() {
     const serverEnv = { 
       ...process.env,
 
       NODE_ENV: 'development',
       
-      SERVER_PORT: serverPortStr,
-      VITE_SERVER_PORT: serverPortStr,
-
-      SERVER_RESTARTED: restarted ? 'true' : undefined,
+      DEV_API_SERVER_PORT: devApiServerPortStr,
+      VITE_DEV_API_SERVER_PORT: devApiServerPortStr,
       
-      SERVER_URL: serverUrl,
-      VITE_SERVER_URL: serverUrl,
+      DEV_API_DEV_API_SERVER_URL: devApiServerUrl,
+      VITE_DEV_API_SERVER_URL: devApiServerUrl,
+
+      CACHE_KEY: `${Date.now()}${process.pid.toString()}`,
       
       DEBUG_MODE: options.debug ? 'true' : undefined,
       
@@ -74,6 +92,7 @@ export async function startProjectDev(options: Options): Promise<void> {
         '--include', './app/_server/**/*.js',
         '--include', './app/pages/**/api.server.ts',
         '--include', './app/pages/**/api.server.js',
+        '--include', './app/pages/**/settings.json',
         usingTsc ? './app/_server/server.ts' : './app/_server/server.js'
       ],
       {
@@ -83,6 +102,10 @@ export async function startProjectDev(options: Options): Promise<void> {
     );
     serverProcess.on('error', (error) => {
       console.error(`${chalk.red('Server error:')}`, error);
+    });
+    serverProcess.on('spawn', () => {
+      // Show server info on startup
+      console.info(`  ${chalk.green('➜')}  ${chalk.bold('API server')} is running on port ${chalk.bold(serverEnv.DEV_API_SERVER_PORT)}`);
     });
   };
 

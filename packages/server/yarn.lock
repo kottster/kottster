@@ -801,10 +801,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@kottster/common@^2.0.1":
-  version "2.0.1"
-  resolved "https://registry.yarnpkg.com/@kottster/common/-/common-2.0.1.tgz#70c2dbed2ee9accc1954d5f4d7a09472a9a8dd04"
-  integrity sha512-pi7BWvst9+mU9wPyVu6LSkTg+ok0cLfkhVDac/qlJhEq9frHxcov+eaXJF7XBCdVfUnBnuH0JqzGQrwmrnbD1g==
+"@kottster/common@^2.0.2":
+  version "2.0.2"
+  resolved "https://registry.yarnpkg.com/@kottster/common/-/common-2.0.2.tgz#03f7bfdff145c85bbde8cacd9f4b58997f6e5aee"
+  integrity sha512-LUomwna2f8D98GkrzcD6TsDh+WS3EHA9xavWnVMQ9VbSgUjROOk5lPfKcNRmUs2Gf98KrWcd6eA8YZKqyNjFDg==
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"

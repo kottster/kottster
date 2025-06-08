@@ -1,6 +1,6 @@
 {
   "name": "@kottster/cli",
-  "version": "2.7.6",
+  "version": "2.7.8",
   "description": "CLI for Kottster",
   "main": "dist/index.js",
   "license": "Apache-2.0",
@@ -24,6 +24,7 @@
     "inquirer": "^11.0.1",
     "nanospinner": "^1.1.0",
     "nodemon": "^2",
+    "portfinder": "^1.0.37",
     "sync-fetch": "^0.5.2"
   },
   "devDependencies": {
@@ -31,7 +32,7 @@
     "@babel/traverse": "^7.24.1",
     "@babel/types": "^7.24.0",
     "@eslint/js": "^9.2.0",
-    "@kottster/common": "^2.0.1",
+    "@kottster/common": "^2.0.2",
     "@types/babel__traverse": "^7.20.5",
     "@types/cross-spawn": "^6.0.6",
     "@types/dotenv": "^8.2.0",

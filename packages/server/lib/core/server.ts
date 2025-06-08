@@ -22,10 +22,10 @@ export class KottsterServer {
     app, 
   }: KottsterServerOptions) {
     const isDevelopment = app.stage === Stage.development;
-    const serverPort = isDevelopment ? process.env.SERVER_PORT : process.env.PORT;
+    const serverPort = isDevelopment ? process.env.DEV_API_SERVER_PORT : process.env.PORT;
 
     if (isDevelopment && !serverPort) {
-      throw new Error("SERVER_PORT environment variable is required in development mode.");
+      throw new Error("DEV_API_SERVER_PORT environment variable is required in development mode.");
     }
     
     this.app = app;
@@ -132,12 +132,9 @@ export class KottsterServer {
     this.setupStaticFiles();
 
     this.server = this.expressApp.listen(this.port, () => {
-      if (process.env.SERVER_RESTARTED) {
-        console.info(`The API server has been restarted`);
-      } else {
+      if (this.app.stage === Stage.production) {
         // Show server info on startup
-        console.info(`  ${chalk.green('➜')}  ${chalk.bold('API server')} is running on port ${chalk.bold(this.port)}`);
-        console.info(``);
+        console.info(`Server is running on ${chalk.bold(`http://localhost:${this.port}`)} in production mode`);
       }
     });
   }

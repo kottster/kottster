@@ -5,13 +5,7 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![GitHub last commit](https://img.shields.io/github/last-commit/kottster/kottster)
 
-A simple Node.js admin panel for your app. Create pages to view and manage data in your database, or build fully custom pages from scratch.
-
-- **Easy to set up**: Create an app in minutes.
-- **No configuration**: Just connect your database and start building.
-- **Secure & Self-hosted**: Your data stays private and secure.
-- **Customizable**: Build custom pages and components to fit your needs.
-- **Deploy anywhere**: Run on your server or in the cloud in minutes.
+A simple Node.js admin panel for your app. Create pages to view and manage data in your database, or build fully custom pages from scratch. Secure, self-hosted, and easy to set up.
 
 [Get Started](https://kottster.app/docs/) • [Live Demo](https://demo.kottster.app) • [Our Website](https://kottster.app) • [Docs](https://kottster.app/docs/)
 
@@ -41,14 +35,14 @@ This will run the app locally in development mode. You can access it at [http://
 
 #### 2. Create an account.
 
-After running the project, you'll need to log in to your account or create a new one. Once logged in, create an app by specifying its name.
+After running the project, you'll need to log in to your account or create a new one.
 
 #### 3. Connect the app to your database.
 
 #### 4. Start building your app:
 
-- Add pages for viewing and managing data in your database.
-- Or, build fully custom pages from scratch.
+- Add pages for viewing and managing data in your database table.
+- Or, build fully custom pages from scratch (dashboards, charts, forms, etc.).
 
 #### 5. [Deploy your app](https://kottster.app/docs/deploying) when it's ready.
 

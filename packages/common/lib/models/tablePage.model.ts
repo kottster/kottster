@@ -118,8 +118,25 @@ export interface TablePageConfigColumn {
   /** Client-side index of the column in the table */
   position?: number;
 
-  /** Client-side custom render function for the column */
-  render?: (row: TablePageResultSelectRecord) => any;
+  /** 
+   * Client-side custom render function for the column 
+   * 
+   * @param record - The record object containing all columns
+   * @param recordIndex - The index of the record in the current page
+   * @param data - Additional data including all records and total count
+   * 
+   * @example render: (record) => <span>{record.first_name} {record.last_name}</span>
+   * 
+   * @returns The rendered React element or content for the column
+   */
+  render?: (
+    record: TablePageResultSelectRecord,
+    recordIndex: number, 
+    data: {
+      records: TablePageResultSelectRecord[];
+      totalRecords: number;
+    }
+  ) => any;
 
   /** Client-side custom width for the column */
   width?: number;

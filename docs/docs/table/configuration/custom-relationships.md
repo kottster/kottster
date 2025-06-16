@@ -46,7 +46,7 @@ import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/postgres';
 import pageSettings from './settings.json';
 
-export default app.defineTableController(dataSource, {
+const controller = app.defineTableController(dataSource, {
   ...pageSettings,
   rootTable: {
     ...pageSettings.rootTable,
@@ -61,6 +61,8 @@ export default app.defineTableController(dataSource, {
     ],
   },
 });
+
+export default controller;
 ```
 
 ```jsx title="app/pages/users/index.jsx"
@@ -114,7 +116,7 @@ import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/postgres';
 import pageSettings from './settings.json';
 
-export default app.defineTableController(dataSource, {
+const controller = app.defineTableController(dataSource, {
   ...pageSettings,
   rootTable: {
     ...pageSettings.rootTable,
@@ -131,6 +133,8 @@ export default app.defineTableController(dataSource, {
     ],
   },
 });
+
+export default controller;
 ```
 
 ```jsx title="app/pages/projects/index.jsx"
@@ -191,7 +195,7 @@ import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/postgres';
 import pageSettings from './settings.json';
 
-export default app.defineTableController(dataSource, {
+const controller = app.defineTableController(dataSource, {
   ...pageSettings,
   rootTable: {
     ...pageSettings.rootTable,
@@ -214,6 +218,8 @@ export default app.defineTableController(dataSource, {
     ],
   },
 });
+
+export default controller;
 ```
 
 ```jsx title="app/pages/books/index.jsx"

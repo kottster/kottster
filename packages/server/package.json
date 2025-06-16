@@ -1,6 +1,6 @@
 {
   "name": "@kottster/server",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "Instant admin panel for your project",
   "keywords": [
     "admin",
@@ -34,7 +34,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.2.0",
-    "@kottster/common": "^2.0.2",
+    "@kottster/common": "^2.0.3",
     "@trpc/server": "^10.45.2",
     "@types/dotenv": "^8.2.0",
     "@types/express": "^5.0.2",

@@ -56,7 +56,7 @@ import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/mysql';
 import pageSettings from './settings.json';
 
-export default app.defineTableController(dataSource, {
+const controller = app.defineTableController(dataSource, {
   ...pageSettings,
   rootTable: {
     ...pageSettings.rootTable,
@@ -82,6 +82,8 @@ export default app.defineTableController(dataSource, {
     ],
   }
 });
+
+export default controller;
 ```
 
 After defining the calculated columns, you can use them in the [`customColumns`](/table/table-page-component#customcolumns) prop of the `TablePage` component. This allows you to display the calculated values alongside other data in the table.

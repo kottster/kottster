@@ -31,6 +31,33 @@ The component is tightly connected to the [`defineTableController`](/table/confi
 
   Learn more: [Columns](/table/configuration/api#columns-1)
 
+- ### customActions
+
+  `TableAction[]`, optional
+
+  An array of custom actions to be added as buttons in the table. These actions can be used to perform custom logic on records.
+
+  **Contains the following properties**:
+
+  - `label`: The label of the action button.
+  - `onClick`: A function that will be called when the action button is clicked. It receives the current record as an argument.
+  - `procedure`: A string representing the name of a server procedure to be called when the action button is clicked. The procedure will be executed automatically, and you can handle the result using the `onResult` callback.
+  - `onResult`: A function that will be called with the result of the server procedure. It receives the result object as an argument.
+
+- ### customBulkActions
+
+  `TableBulkAction[]`, optional
+
+  An array of custom bulk actions to be added to the table. These actions can be used to perform custom logic on multiple records at once. They will appear if the user selects one or more records in the table.
+
+  **Contains the following properties**:
+
+  - `label`: The label of the bulk action button.
+  - `onClick`: A function that will be called when the bulk action button is clicked. It receives an array of selected records as an argument.
+  - `procedure`: A string representing the name of a server procedure to be called when the bulk action button is clicked. The procedure will be executed automatically, and you can handle the result using the `onResult` callback.
+  - `onResult`: A function that will be called with the result of the server procedure. It receives the result object as an argument.
+  - `disableSelectionReset`: A boolean indicating whether the selection should be reset after the bulk action is executed. Defaults to `false`.
+
 - ### columnTransformer
 
   `(columns: TableColumn[]) => TableColumn[]`, optional

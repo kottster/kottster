@@ -12,7 +12,7 @@ To do this, pass an `executeQuery` function to [`defineTableController`](/table/
 import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/postgres';
 
-export default app.defineTableController(dataSource, {
+const controller = app.defineTableController(dataSource, {
   rootTable: {
     executeQuery: async () => {
       // Fetch data here
@@ -35,12 +35,14 @@ export default app.defineTableController(dataSource, {
     ],
   },
 });
+
+export default controller;
 ```
 
 To enabling pagination, pass a `pageSize` property and return the `totalRecords` property in the `executeQuery` function:
 
 ```js title="app/pages/users/api.server.js"
-export default app.defineTableController(dataSource, {
+const controller = app.defineTableController(dataSource, {
   rootTable: {
     pageSize: 25,
     executeQuery: async ({ page }) => {
@@ -51,12 +53,14 @@ export default app.defineTableController(dataSource, {
     },
   },
 });
+
+export default controller;
 ```
 
 To enable CRUD operations and other built-in table features, the `table` property must be set:
 
 ```js title="app/pages/users/api.server.js"
-export default app.defineTableController(dataSource, {
+const controller = app.defineTableController(dataSource, {
   rootTable: {
     table: 'users',
     executeQuery: async () => {
@@ -74,6 +78,8 @@ export default app.defineTableController(dataSource, {
     },
   },
 });
+
+export default controller;
 ```
 
 ## executeQuery
@@ -108,7 +114,7 @@ Here we extend the existing table configuration to include a custom query for fe
 
   const pageSize = 25;
 
-  export default app.defineTableController(dataSource, {
+  const controller = app.defineTableController(dataSource, {
     ...pageSettings,
     rootTable: {
       ...pageSettings.rootTable,
@@ -139,6 +145,8 @@ Here we extend the existing table configuration to include a custom query for fe
       }
     }
   });
+
+  export default controller;
   ```
 
   ```jsx title="app/pages/users/index.jsx"
@@ -160,7 +168,7 @@ Here we extend the existing table configuration to include a custom query for fe
 
   const pageSize = 25;
 
-  export default app.defineTableController(dataSource, {
+  const controller = app.defineTableController(dataSource, {
     ...pageSettings,
     rootTable: {
       ...pageSettings.rootTable,
@@ -191,6 +199,8 @@ Here we extend the existing table configuration to include a custom query for fe
       }
     }
   });
+
+  export default controller;
   ```
 
   ```jsx title="app/pages/users/index.jsx"
@@ -212,7 +222,7 @@ Here we extend the existing table configuration to include a custom query for fe
 
   const pageSize = 25;
 
-  export default app.defineTableController(dataSource, {
+  const controller = app.defineTableController(dataSource, {
     ...pageSettings,
     rootTable: {
       ...pageSettings.rootTable,
@@ -243,6 +253,8 @@ Here we extend the existing table configuration to include a custom query for fe
       }
     }
   });
+
+  export default controller;
   ```
 
   ```jsx title="app/pages/users/index.jsx"
@@ -266,7 +278,7 @@ import dataSource from '../../_server/data-sources/postgres';
 
 const pageSize = 25;
 
-export default app.defineTableController(dataSource, {
+const controller = app.defineTableController(dataSource, {
   rootTable: {
     pageSize,
     
@@ -291,4 +303,6 @@ export default app.defineTableController(dataSource, {
     ],
   }
 });
+
+export default controller;
 ```

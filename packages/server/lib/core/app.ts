@@ -225,7 +225,6 @@ export class KottsterApp {
       }
 
       const body = await newRequest.body as RpcActionBody<'custom'>;
-      const action = body.action;
       const { procedure, procedureInput } = body.input;
 
       if (procedure in procedures) {
@@ -246,7 +245,7 @@ export class KottsterApp {
         }
       }
 
-      res.status(404).json({ error: `Unknown procedure: ${action}` });
+      res.status(404).json({ error: `Procedure "${procedure}" not found` });
       return;
     };
 
@@ -262,13 +261,21 @@ export class KottsterApp {
    * @param pageSettings The page settings
    * @returns The express request handler
    */
-  public defineTableController(
+  public defineTableController<T extends Record<string, (input: any) => any>>(
     dataSource: DataSource, 
     pageSettings: SafePageSettings,
-  ): RequestHandler {
+    procedures?: T
+  ): RequestHandler  & { procedures: T } {
     const typesPageSettings = pageSettings as PageSettings;
 
-    const func: RequestHandler = async (req, res) => {
+    const func: RequestHandler = async (req, res, next) => {
+      // If the request is a custom one, handle it by the custom controller
+      const body = await req.body as RpcActionBody<'custom'>;
+      const action = body.action;
+      if (action === 'custom') {
+        return this.defineCustomController(procedures as T)(req, res, next);
+      }
+
       try {
         const result = await this.processTableControllerRequest(dataSource, req, typesPageSettings);
         res.json({
@@ -288,8 +295,11 @@ export class KottsterApp {
         return;
       }
     };
-    
-    return func;
+
+    // Attach the procedures to the function for later reference
+    (func as any).procedures = procedures;
+
+    return func as RequestHandler & { procedures: T };
   };
 
   private async processTableControllerRequest(dataSource: DataSource, request: Request, pageSettings: PageSettings): Promise<any> {

@@ -34,12 +34,14 @@ import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/postgres';
 import pageSettings from './settings.json';
 
-export default app.defineTableController(dataSource, {
+const controller = app.defineTableController(dataSource, {
   ...pageSettings,
   rootTable: {
     ...pageSettings.rootTable,
   },
 });
+
+export default controller;
 ```
 
 **If you need more customization, beyound what visual editor provides**, you can extend the imported `settings.json` configuration with your own settings. This is useful for advanced users who want more control over table configuration.

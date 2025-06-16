@@ -1,7 +1,7 @@
 {
   "name": "@kottster/common",
   "description": "Common types and utilities for Kottster",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "main": "dist/index.js",
   "license": "Apache-2.0",
   "scripts": {

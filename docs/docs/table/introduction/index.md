@@ -30,11 +30,13 @@ import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/postgres';
 
 // Default export the controller for handling table requests
-export default app.defineTableController(dataSource, {
+const controller = app.defineTableController(dataSource, {
   rootTable: {
     table: 'users'
   }
 });
+
+export default controller;
 ```
 
 If your page was auto-generated using the visual editor, the `api.server.js` file will look like this:
@@ -44,12 +46,14 @@ import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/postgres';
 import pageSettings from './settings.json';
 
-export default app.defineTableController(dataSource, {
+const controller = app.defineTableController(dataSource, {
   ...pageSettings,
   rootTable: {
     ...pageSettings.rootTable,
   }
 });
+
+export default controller;
 ```
 
 This version imports configuration from a `settings.json` file. The `settings.json` file contains the table page configuration and is automatically managed by the visual editor. You can still override or rewrite the configuration directly in the `api.server.js` file if needed. 

@@ -323,16 +323,16 @@ export class KottsterApp {
           const result = await dataSourceAdapter.getTableRecords(body.input as TablePageInputSelect, databaseSchema, tablePageConfig);
           return result;
         } else if (body.action === 'table_selectOne') {
-          const result = await dataSourceAdapter.getOneTableRecord(body.input as TablePageInputSelectSingle, databaseSchema);
+          const result = await dataSourceAdapter.getOneTableRecord(body.input as TablePageInputSelectSingle, databaseSchema, tablePageConfig);
           return result;
         } else if (body.action === 'table_insert') {
-          const result = await dataSourceAdapter.insertTableRecord(body.input as TablePageInputInsert, databaseSchema);
+          const result = await dataSourceAdapter.insertTableRecord(body.input as TablePageInputInsert, databaseSchema, tablePageConfig);
           return result;
         } else if (body.action === 'table_update') {
-          const result = await dataSourceAdapter.updateTableRecords(body.input as TablePageInputUpdate, databaseSchema);
+          const result = await dataSourceAdapter.updateTableRecords(body.input as TablePageInputUpdate, databaseSchema, tablePageConfig);
           return result;
         } else if (body.action === 'table_delete') {
-          const result = await dataSourceAdapter.deleteTableRecords(body.input as TablePageInputDelete, databaseSchema);
+          const result = await dataSourceAdapter.deleteTableRecords(body.input as TablePageInputDelete, databaseSchema, tablePageConfig);
           return result;
         };
       }

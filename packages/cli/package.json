@@ -32,7 +32,7 @@
     "@babel/traverse": "^7.24.1",
     "@babel/types": "^7.24.0",
     "@eslint/js": "^9.2.0",
-    "@kottster/common": "^2.0.3",
+    "@kottster/common": "/Users/arthur/Projects/kottster/kottster/packages/common",
     "@types/babel__traverse": "^7.20.5",
     "@types/cross-spawn": "^6.0.6",
     "@types/dotenv": "^8.2.0",

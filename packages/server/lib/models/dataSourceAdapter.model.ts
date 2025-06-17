@@ -1,5 +1,5 @@
 import { Knex } from "knex";
-import { DataSourceAdapterType, FieldInput, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TablePageInputDelete, TablePageInputInsert, TablePageInputSelect, TablePageInputUpdate, TablePageResultInsertDTO, TablePageResultSelectDTO, TablePageResultSelectRecord, TablePageResultUpdateDTO, TablePageResultSelectRecordLinkedDTO, defaultTablePageSize, TablePageInputSelectUsingExecuteQuery, TablePageInputSelectSingle, TablePageResultSelectSingleDTO, findRelationship, DataSourceTablesConfig, getTableData, TablePageConfig, FilterItem, OneToOneRelationship, OneToManyRelationship, ManyToManyRelationship } from "@kottster/common";
+import { DataSourceAdapterType, FieldInput, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TablePageInputDelete, TablePageInputInsert, TablePageInputSelect, TablePageInputUpdate, TablePageResultInsertDTO, TablePageResultSelectDTO, TablePageResultSelectRecord, TablePageResultUpdateDTO, TablePageResultSelectRecordLinkedDTO, defaultTablePageSize, TablePageInputSelectUsingExecuteQuery, TablePageInputSelectSingle, TablePageResultSelectSingleDTO, findRelationship, DataSourceTablesConfig, getTableData, TablePageConfig, FilterItem, OneToOneRelationship, OneToManyRelationship, ManyToManyRelationship, Stage } from "@kottster/common";
 import { KottsterApp } from "../core/app";
 import { CachingService } from "../services/caching.service";
 
@@ -87,7 +87,9 @@ export abstract class DataSourceAdapter {
     let databaseSchema: RelationalDatabaseSchema;
     const slug = `datasource_dbschema_${this.type}`;
     
-    this.cachedFullDatabaseSchemaSchema = this.cachingService.readValueFromCache(slug) as RelationalDatabaseSchema | null;
+    if (this.app.stage === Stage.development) {
+      this.cachedFullDatabaseSchemaSchema = this.cachingService.readValueFromCache(slug) as RelationalDatabaseSchema | null;
+    }
   
     if (this.cachedFullDatabaseSchemaSchema) {
       databaseSchema = this.cachedFullDatabaseSchemaSchema;
@@ -96,7 +98,9 @@ export abstract class DataSourceAdapter {
       
       // Save the full database schema in the cache
       this.cachedFullDatabaseSchemaSchema = this.removeExcludedTablesAndColumns(databaseSchema);
-      this.cachingService.saveValueToCache(slug, this.cachedFullDatabaseSchemaSchema);
+      if (this.app.stage === Stage.development) {
+        this.cachingService.saveValueToCache(slug, this.cachedFullDatabaseSchemaSchema);
+      }
       
       console.log('Database schema cached');
       
@@ -436,8 +440,9 @@ export abstract class DataSourceAdapter {
    * @description Used for one-to-one RecordSelect fields
    * @returns The table record
    */
-  async getOneTableRecord(input: TablePageInputSelectSingle, databaseSchema: RelationalDatabaseSchema): Promise<TablePageResultSelectSingleDTO> {
-    const { relationshipKey, primaryKeyValues, forPreview, tablePageConfig } = input;
+  async getOneTableRecord(input: TablePageInputSelectSingle, databaseSchema: RelationalDatabaseSchema, tablePageConfigDefault: TablePageConfig): Promise<TablePageResultSelectSingleDTO> {
+    const { relationshipKey, primaryKeyValues, forPreview } = input;
+    const tablePageConfig = input.tablePageConfig ?? tablePageConfigDefault;
     const { 
       tableSchema,
       tablePageProcessedConfig: {
@@ -514,8 +519,8 @@ export abstract class DataSourceAdapter {
    * Insert the table records (Table RPC)
    * @returns The table records
    */
-  async insertTableRecord(input: TablePageInputInsert, databaseSchema: RelationalDatabaseSchema): Promise<TablePageResultInsertDTO> {
-    const { tablePageConfig } = input;
+  async insertTableRecord(input: TablePageInputInsert, databaseSchema: RelationalDatabaseSchema, tablePageConfigDefault: TablePageConfig): Promise<TablePageResultInsertDTO> {
+    const tablePageConfig = input.tablePageConfig ?? tablePageConfigDefault;
     const { 
       tableSchema, 
       tablePageProcessedConfig,
@@ -562,8 +567,8 @@ export abstract class DataSourceAdapter {
    * Update the table records (Table RPC)
    * @returns The table records
    */
-  async updateTableRecords(input: TablePageInputUpdate, databaseSchema: RelationalDatabaseSchema): Promise<TablePageResultUpdateDTO> {
-    const { tablePageConfig } = input;
+  async updateTableRecords(input: TablePageInputUpdate, databaseSchema: RelationalDatabaseSchema, tablePageConfigDefault: TablePageConfig): Promise<TablePageResultUpdateDTO> {
+    const tablePageConfig = input.tablePageConfig ?? tablePageConfigDefault;
     const { 
       tableSchema, 
       tablePageProcessedConfig 
@@ -612,8 +617,8 @@ export abstract class DataSourceAdapter {
    * Delete the table records (Table RPC)
    * @returns The table records
    */
-  async deleteTableRecords(input: TablePageInputDelete, databaseSchema: RelationalDatabaseSchema): Promise<true> {
-    const { tablePageConfig } = input;
+  async deleteTableRecords(input: TablePageInputDelete, databaseSchema: RelationalDatabaseSchema, tablePageConfigDefault: TablePageConfig): Promise<true> {
+    const tablePageConfig = input.tablePageConfig ?? tablePageConfigDefault;
     const { tablePageProcessedConfig } = getTableData({ tablePageConfig, databaseSchema });
     const table = tablePageConfig.table;
 

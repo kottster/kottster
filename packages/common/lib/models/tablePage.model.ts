@@ -30,7 +30,7 @@ export interface TablePageInputSelectUsingExecuteQuery extends TablePageInputBas
 }
 
 export interface TablePageInputSelectSingle extends TablePageInputBase {
-  tablePageConfig: TablePageConfig;
+  tablePageConfig?: TablePageConfig;
 
   /** If selecting records from linked table */
   relationshipKey?: string;
@@ -42,20 +42,18 @@ export interface TablePageInputSelectSingle extends TablePageInputBase {
 }
 
 export interface TablePageInputInsert extends TablePageInputBase {
-  tablePageConfig: TablePageConfig;
-
+  tablePageConfig?: TablePageConfig;
   values: Record<string, any>;
 }
 
 export interface TablePageInputUpdate extends TablePageInputBase {
-  tablePageConfig: TablePageConfig;
-
+  tablePageConfig?: TablePageConfig;
   primaryKeys: (string | number)[];
   values: Record<string, any>;
 }
 
 export interface TablePageInputDelete extends TablePageInputBase {
-  tablePageConfig: TablePageConfig;
+  tablePageConfig?: TablePageConfig;
   primaryKeys: any[];
 }
 

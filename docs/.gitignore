@@ -131,3 +131,5 @@ dist
 
 # Others
 .DS_Store
+docs/.vitepress/cache
+docs/.vitepress/dist

@@ -1,3 +1,7 @@
+---
+description: "Add custom bulk actions to Kottster table pages to enhance workflows. Learn how to create client-side actions, auto-calling server procedures, and manually calling server procedures."
+---
+
 # Add custom bulk actions
 
 ![Example of custom bulk actions in Kottster](./example-custom-bulk-actions.png)

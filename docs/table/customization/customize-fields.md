@@ -1,3 +1,7 @@
+---
+description: "Customize fields in Kottster table pages to enhance data input. Learn how to modify existing fields and add custom field inputs."
+---
+
 # Customize fields
 
 In Kottster, **all fields are basically table columns**. If you need to customize fields in the form, you need to update columns configuration in the table configuration.

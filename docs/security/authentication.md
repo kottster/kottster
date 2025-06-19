@@ -1,3 +1,7 @@
+---
+description: "User authentication and access control in Kottster apps. Learn how authentication works, the benefits of centralized authentication, and how to implement custom security middleware."
+---
+
 # Authentication
 
 While your Kottster app is self-hosted and keeps all database credentials, connections, and business logic within your own app, user authentication and access control are handled by our platform.

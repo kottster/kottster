@@ -1,3 +1,7 @@
+---
+description: "Connect to your database in Kottster. Learn how to add data sources, configure tables, and manage permissions."
+---
+
 # Connect to database
 
 In Kottster, data sources are the primary way to connect to your database. They allow you to define connections to various databases and configure how Kottster interacts with them.

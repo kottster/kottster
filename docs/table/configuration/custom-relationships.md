@@ -1,3 +1,7 @@
+---
+description: "Define custom relationships between tables in Kottster. Learn how to set up one-to-one, one-to-many, and many-to-many relationships."
+---
+
 # Custom relationships
 
 By default, Kottster detects relationships between tables based on foreign keys. However, you can also define custom relationships if you need to override the default behavior or if your database schema doesn't follow the standard conventions.

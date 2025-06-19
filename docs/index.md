@@ -1,3 +1,7 @@
+---
+description: "Create a Kottster project in minutes with the CLI. Start building your admin panel or internal tool with ease."
+---
+
 # Quickstart
 
 **To create a new project, run the following command:**

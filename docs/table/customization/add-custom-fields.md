@@ -1,3 +1,7 @@
+---
+description: "Add custom fields to Kottster table pages to enhance data management. Learn how to create custom columns and render components in forms."
+---
+
 # Add custom fields
 
 In Kottster, **all fields are basically table columns**. If you need to add custom fields to the form, you need to add custom columns to the table configuration.

@@ -1,3 +1,7 @@
+---
+description: "Table page component for displaying and managing data with search, sorting, and custom actions."
+---
+
 # TablePage component
 
 The `TablePage` component displays a dynamic table for viewing and managing data from a database table. It includes features like search, sorting, filtering, and a form for inserting or updating records.

@@ -1,3 +1,7 @@
+---
+description: "Table pages in Kottster let you view and manage data in your database tables. Learn how to create and configure them."
+---
+
 # Table pages
 
 Kottster table pages let you **view and manage data** in your database tables.

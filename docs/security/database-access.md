@@ -1,3 +1,7 @@
+---
+description: "Learn how Kottster securely accesses your database, ensuring complete control and privacy."
+---
+
 # Access to database
 
 The Kottster app is designed with security and privacy as core principles. As a self-hosted solution, your database credentials and connection details remain completely within your control and never leave your app environment.

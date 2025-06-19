@@ -1,3 +1,7 @@
+---
+description: "Deploy your Kottster app from local development to production. Learn how to prepare your admin panel and explore hosting options."
+---
+
 # Deploying
 
 This guide walks you through deploying your Kottster app from local development to a production environment. You'll learn how to prepare your admin panel for deployment and explore common hosting options.

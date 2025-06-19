@@ -1,3 +1,7 @@
+---
+description: "Page component for displaying content with a title and custom sections."
+---
+
 # Page component
 
 The `Page` component displays a simple page with a title and content.

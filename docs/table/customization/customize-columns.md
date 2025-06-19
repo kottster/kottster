@@ -1,3 +1,7 @@
+---
+description: "Customize existing columns in Kottster table pages to enhance data display. Learn how to modify column labels and render functions."
+---
+
 # Customize columns
 
 There are many ways to customize existing columns in the table.

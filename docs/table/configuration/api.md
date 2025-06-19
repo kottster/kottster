@@ -1,3 +1,7 @@
+---
+description: "Define a table controller in Kottster to handle server-side requests for table pages. Customize table settings, relationships, and more."
+---
+
 # API Reference
 
 The `defineTableController` function sets up server-side endpoint to handle request from the page with the table component. It connects to a database and defines what data available for the table and how it behaves. It also allows to define configuration for nested tables.

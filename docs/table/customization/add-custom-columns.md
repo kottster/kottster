@@ -1,3 +1,7 @@
+---
+description: "Add custom columns to Kottster table pages to display additional data. Learn how to create client-side and calculated columns."
+---
+
 # Add custom columns
 
 There are many ways to add custom columns to the table. 

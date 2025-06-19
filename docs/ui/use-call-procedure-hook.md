@@ -1,3 +1,7 @@
+---
+description: "Call server procedures from client-side code using the useCallProcedure hook."
+---
+
 # useCallProcedure hook
 
 The `useCallProcedure` hook is a custom React hook that returns the function to call a server procedure of the current page. This hook is useful for manually invoking server procedures from client-side code.

@@ -1,3 +1,7 @@
+---
+description: "Overview of Kottster UI components and styling options available for building your app's frontend."
+---
+
 # UI Library
 
 Kottster includes a built-in package, `@kottster/react`, which provides essential UI components and React hooks for building your app’s frontend.

@@ -131,13 +131,13 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
       text: 'Getting Started',
       collapsed: false,
       items: [
-        { text: 'What is Kottster?', link: 'what-is-kottster' },
+        { text: 'What is Kottster?', link: '/what-is-kottster' },
         { text: 'Quickstart', link: '/' },
-        { text: 'Quickstart with Docker', link: 'quickstart-docker' },
-        { text: 'Project structure', link: 'project-structure' },
-        { text: 'Connect to database', link: 'data-sources' },
-        { text: 'Deploying', link: 'deploying' },
-        { text: 'Upgrading', link: 'upgrading' },
+        { text: 'Quickstart with Docker', link: '/quickstart-docker' },
+        { text: 'Project structure', link: '/project-structure' },
+        { text: 'Connect to database', link: '/data-sources' },
+        { text: 'Deploying', link: '/deploying' },
+        { text: 'Upgrading', link: '/upgrading' },
         
       ]
     },
@@ -145,34 +145,34 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
       text: 'Security & Privacy',
       collapsed: true,
       items: [
-        { text: 'Access to database', link: 'security/database-access' },
-        { text: 'Authentication', link: 'security/authentication' },
+        { text: 'Access to database', link: '/security/database-access' },
+        { text: 'Authentication', link: '/security/authentication' },
       ]
     },
     {
       text: 'Table Pages',
       collapsed: false,
       items: [
-        { text: 'Introduction', link: 'table/introduction' },
+        { text: 'Introduction', link: '/table/introduction' },
         { 
           text: 'Configuration', 
-          link: 'table/configuration/api',
+          link: '/table/configuration/api',
           items: [
-            { text: 'API Reference', link: 'table/configuration/api' },    
-            { text: 'Custom SQL and fetch logic', link: 'table/configuration/custom-queries' },    
-            { text: 'Custom relationships', link: 'table/configuration/custom-relationships' },    
+            { text: 'API Reference', link: '/table/configuration/api' },    
+            { text: 'Custom SQL and fetch logic', link: '/table/configuration/custom-queries' },    
+            { text: 'Custom relationships', link: '/table/configuration/custom-relationships' },    
           ],
         },
         { 
           text: 'Customization', 
-          link: 'table/customization/add-custom-columns',
+          link: '/table/customization/add-custom-columns',
           items: [
-            { text: 'Add custom columns', link: 'table/customization/add-custom-columns' },    
-            { text: 'Customize columns', link: 'table/customization/customize-columns' },    
-            { text: 'Add custom fields', link: 'table/customization/add-custom-fields' },    
-            { text: 'Customize fields', link: 'table/customization/customize-fields' },      
-            { text: 'Add custom actions', link: 'table/customization/add-custom-actions' },    
-            { text: 'Add custom bulk actions', link: 'table/customization/add-custom-bulk-actions' },    
+            { text: 'Add custom columns', link: '/table/customization/add-custom-columns' },    
+            { text: 'Customize columns', link: '/table/customization/customize-columns' },    
+            { text: 'Add custom fields', link: '/table/customization/add-custom-fields' },    
+            { text: 'Customize fields', link: '/table/customization/customize-fields' },      
+            { text: 'Add custom actions', link: '/table/customization/add-custom-actions' },    
+            { text: 'Add custom bulk actions', link: '/table/customization/add-custom-bulk-actions' },    
           ],
         },
       ]
@@ -181,32 +181,31 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
       text: 'Custom Pages',
       collapsed: false,
       items: [
-        { text: 'Introduction', link: 'custom-pages/introduction' },
-        { text: 'Server API', link: 'custom-pages/api' },
-        { text: 'Calling API', link: 'custom-pages/calling-api' },
+        { text: 'Introduction', link: '/custom-pages/introduction' },
+        { text: 'Server API', link: '/custom-pages/api' },
+        { text: 'Calling API', link: '/custom-pages/calling-api' },
       ]
     },
     // TODO: Remove this section when sidebar is fixed
     {
       text: 'UI Library',
       collapsed: true,
-      base: '/ui/',
       items: [
-        { text: 'Overview', link: '/' },
+        { text: 'Overview', link: '/ui/overview' },
         {
           text: 'Components',
           collapsed: false,
           items: [
-            { text: 'TablePage', link: 'table-page-component' },
-            { text: 'Page', link: 'page-component' },
+            { text: 'TablePage', link: '/ui/table-page-component' },
+            { text: 'Page', link: '/ui/page-component' },
           ]
         },
         {
           text: 'Hooks',
           collapsed: false,
           items: [
-            { text: 'usePage', link: 'use-page-hook' },
-            { text: 'useCallProcedure', link: 'use-call-procedure-hook' },
+            { text: 'usePage', link: '/ui/use-page-hook' },
+            { text: 'useCallProcedure', link: '/ui/use-call-procedure-hook' },
           ]
         },
       ]

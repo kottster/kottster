@@ -1,3 +1,7 @@
+---
+description: "Use the usePage hook to get the current page ID and navigation item in Kottster."
+---
+
 # usePage hook
 
 The `usePage` hook is a custom React hook that returns the current page ID and navigation item.

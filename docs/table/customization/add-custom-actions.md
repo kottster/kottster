@@ -1,3 +1,7 @@
+---
+description: "Add custom actions to Kottster table pages to enhance workflows. Learn how to create client-side actions, auto-calling server procedures, and manually calling server procedures."
+---
+
 # Add custom actions
 
 ![Example of custom actions in Kottster](./example-custom-actions.png)

@@ -7,11 +7,13 @@ import {
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
+  base: '/docs/',
+
   title: "Kottster Documentation",
   description: "A simple Node.js admin panel for your app. Build an admin panel in minutes.",
   cleanUrls: true,
   themeConfig: {
-    logo: { src: '/docs/img/logo.png', height: 20 },
+    logo: { src: '/img/logo.png', height: 20 },
     siteTitle: 'Kottster Docs',
 
     search: {
@@ -25,16 +27,21 @@ export default defineConfig({
 
     
     nav: [
-      { text: 'Docs', link: '/docs/' },
-      { text: 'UI Library', link: '/ui/' },
+      { text: 'Docs', link: '/' },
+      // TODO: Uncomment when sidebar is fixed
+      // { text: 'UI Library', link: '/ui/' },
       { text: 'Website', link: 'https://kottster.app/' },
       { text: 'Live Demo', link: 'https://demo.kottster.app/' },
     ],
 
-    sidebar: {
-      '/docs/': { base: '/docs/', items: sidebarDocs() },
-      '/ui/': { base: '/ui/', items: sidebarUILibrary() }
-    },
+    // TODO: Remove this when sidebar is fixed
+    sidebar: sidebarDocs(),
+
+    // TODO: Uncomment
+    // sidebar: [
+    //   '/': { base: '', items: sidebarDocs() },
+    //   // '/ui/': { base: '/ui/', items: sidebarUILibrary() }
+    // ],
 
     socialLinks: [
       { icon: 'github', link: 'https://github.com/kottster/kottster' }
@@ -179,33 +186,59 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
         { text: 'Calling API', link: 'custom-pages/calling-api' },
       ]
     },
+    // TODO: Remove this section when sidebar is fixed
+    {
+      text: 'UI Library',
+      collapsed: true,
+      base: '/ui/',
+      items: [
+        { text: 'Overview', link: '/' },
+        {
+          text: 'Components',
+          collapsed: false,
+          items: [
+            { text: 'TablePage', link: 'table-page-component' },
+            { text: 'Page', link: 'page-component' },
+          ]
+        },
+        {
+          text: 'Hooks',
+          collapsed: false,
+          items: [
+            { text: 'usePage', link: 'use-page-hook' },
+            { text: 'useCallProcedure', link: 'use-call-procedure-hook' },
+          ]
+        },
+      ]
+    },
   ]
 }
 
-function sidebarUILibrary(): DefaultTheme.SidebarItem[] {
-  return [
-    {
-      text: 'Introduction',
-      collapsed: false,
-      items: [
-        { text: 'Overview', link: '/' },
-      ]
-    },
-    {
-      text: 'Components',
-      collapsed: false,
-      items: [
-        { text: 'TablePage', link: 'table-page-component' },
-        { text: 'Page', link: 'page-component' },
-      ]
-    },
-    {
-      text: 'Hooks',
-      collapsed: false,
-      items: [
-        { text: 'usePage', link: 'use-page-hook' },
-        { text: 'useCallProcedure', link: 'use-call-procedure-hook' },
-      ]
-    },
-  ]
-}
+// TODO: Uncomment
+// function sidebarUILibrary(): DefaultTheme.SidebarItem[] {
+//   return [
+//     {
+//       text: 'Introduction',
+//       collapsed: false,
+//       items: [
+//         { text: 'Overview', link: '/' },
+//       ]
+//     },
+//     {
+//       text: 'Components',
+//       collapsed: false,
+//       items: [
+//         { text: 'TablePage', link: 'table-page-component' },
+//         { text: 'Page', link: 'page-component' },
+//       ]
+//     },
+//     {
+//       text: 'Hooks',
+//       collapsed: false,
+//       items: [
+//         { text: 'usePage', link: 'use-page-hook' },
+//         { text: 'useCallProcedure', link: 'use-call-procedure-hook' },
+//       ]
+//     },
+//   ]
+// }

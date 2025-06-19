@@ -1,0 +1,23 @@
+.content .main img {
+  border: solid 1px hsl(240, 2%, 89%);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.content .main p code {
+  white-space: nowrap;
+}
+
+.content .main iframe {
+  border-radius: 8px;
+  overflow: hidden;
+  height: calc(100vh *  0.4);
+  max-height: 400px;
+}
+
+@media screen and (max-width: 768px) {
+  .content .main iframe {
+    height: calc(100vh * 0.25);
+    max-height: 300px;
+  }
+}

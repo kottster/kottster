@@ -6,7 +6,7 @@ description: "Define custom queries for your Kottster table pages. Learn how to 
 
 By default, Kottster manages data fetching internally. You can also define custom fetching logic, such as using raw SQL or extracting data from an external resource.
 
-To do this, pass an `executeQuery` function to [`defineTableController`](../../table/introduction/index.md):
+To do this, pass an `executeQuery` function to [`defineTableController`](../../table/introduction.md):
 
 ```js title="app/pages/users/api.server.js"
 import { app } from '../../_server/app';

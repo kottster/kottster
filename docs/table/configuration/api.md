@@ -464,7 +464,7 @@ Each column can have the following properties:
 
 ## Field inputs
 
-By default, form fields are automatically generated based on your database schema and [`defineTableController`](../../table/introduction/index.md) settings. 
+By default, form fields are automatically generated based on your database schema and [`defineTableController`](../../table/introduction.md) settings. 
 
 But you can also define the form input explicitly using the `formInput` property in the [column configuration](#columns).
 

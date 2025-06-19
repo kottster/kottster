@@ -6,7 +6,7 @@ description: "Define custom relationships between tables in Kottster. Learn how 
 
 By default, Kottster detects relationships between tables based on foreign keys. However, you can also define custom relationships if you need to override the default behavior or if your database schema doesn't follow the standard conventions.
 
-To set this up, include the relationship configuration in the `relationships` object inside [`defineTableController`](../../table/introduction/index.md).
+To set this up, include the relationship configuration in the `relationships` object inside [`defineTableController`](../../table/introduction.md).
 
 ## One-to-one
 

@@ -1,3 +1,7 @@
+---
+description: "What is Kottster? Learn how Kottster helps you build admin panels and internal tools quickly and securely."
+---
+
 # What is Kottster?
 
 Kottster helps you build admin panels fast. Connect it to your database, create pages to view and manage data in your database, or build fully custom pages from scratch.

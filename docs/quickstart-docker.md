@@ -1,3 +1,7 @@
+---
+description: "Quickstart guide for Kottster using Docker. Learn how to set up your Kottster app with Docker Compose or Docker commands."
+---
+
 # Quickstart with Docker
 
 This guide provides two methods to get started with Kottster:

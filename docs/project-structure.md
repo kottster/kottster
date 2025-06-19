@@ -1,3 +1,7 @@
+---
+description: "Project structure overview for Kottster apps. Learn about the purpose of each file and folder in your Kottster project."
+---
+
 # Project structure
 
 This page explains the purpose of each file and folder in your project.

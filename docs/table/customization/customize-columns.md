@@ -6,7 +6,7 @@ There are many ways to customize existing columns in the table.
 
 **Using the `columnOverrides` in the `TablePage` component**
 
-If you want to update the displaying of existing columns, you can use the [`columnOverrides`](../../../ui/table-page-component.md#columnoverrides) prop. This is useful for adding custom render functions.
+If you want to update the displaying of existing columns, you can use the [`columnOverrides`](../../ui/table-page-component.md#columnoverrides) prop. This is useful for adding custom render functions.
 
 Add the `columnOverrides` prop to the `TablePage` component. This prop accepts an object where each key is the column name and the value is a function that takes the existing column configuration and returns the modified column configuration.
 

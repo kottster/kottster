@@ -75,7 +75,7 @@ The `defineTableController` function takes two required arguments:
     
 *   **`settings`**: A configuration object that defines the behavior of the table and its nested tables. The configuration for the main table is defined under the `rootTable` key.
 
-Alternatively, you can customize already defined configuration on the client side using methods like `customColumns`, `columnTransformer`, `columnOverrides` on the [`TablePage`](../../../ui/table-page-component.md) component. This approach is useful if you want to change **the way columns and fields are rendered**, or use **JSX components**.
+Alternatively, you can customize already defined configuration on the client side using methods like `customColumns`, `columnTransformer`, `columnOverrides` on the [`TablePage`](../../ui/table-page-component.md) component. This approach is useful if you want to change **the way columns and fields are rendered**, or use **JSX components**.
 
 ## Parameters
 

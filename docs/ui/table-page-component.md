@@ -2,7 +2,7 @@
 
 The `TablePage` component displays a dynamic table for viewing and managing data from a database table. It includes features like search, sorting, filtering, and a form for inserting or updating records.
 
-The component is tightly connected to the [`defineTableController`](../docs/table//configuration/api.md) settings, which manage both API interactions and table behavior. If you want extra control over **how the main table looks or works on the client side**, you need to use the `TablePage` component.
+The component is tightly connected to the [`defineTableController`](../table/configuration/api.md) settings, which manage both API interactions and table behavior. If you want extra control over **how the main table looks or works on the client side**, you need to use the `TablePage` component.
 
 
 ## Properties
@@ -17,7 +17,7 @@ The component is tightly connected to the [`defineTableController`](../docs/tabl
 
   `TableColumn[]`, optional
 
-  Learn more: [Columns](../docs/table/configuration/api.md#columns-1)
+  Learn more: [Columns](../table/configuration/api.md#columns-1)
 
 - ### customColumns
 
@@ -25,7 +25,7 @@ The component is tightly connected to the [`defineTableController`](../docs/tabl
 
   An array of custom columns to be added to the table. These columns will be merged with the automatically determined columns.
 
-  Learn more: [Columns](../docs/table/configuration/api.md#columns-1)
+  Learn more: [Columns](../table/configuration/api.md#columns-1)
 
 - ### customActions
 

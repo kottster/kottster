@@ -35,4 +35,4 @@ export default () => {
 };
 ```
 
-See more examples in [the documentation](../docs/custom-pages/calling-api.md).
+See more examples in [the documentation](../custom-pages/calling-api.md).

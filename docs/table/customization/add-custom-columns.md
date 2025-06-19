@@ -6,7 +6,7 @@ There are many ways to add custom columns to the table.
 
 **Using the `customColumns` in the `TablePage` component**
 
-If you want to just display a new column in the table, you can use the [`customColumns`](../../../ui/table-page-component.md#customcolumns) prop. This is useful for displaying additional information without modifying the existing columns or backend logic.
+If you want to just display a new column in the table, you can use the [`customColumns`](../../ui/table-page-component.md#customcolumns) prop. This is useful for displaying additional information without modifying the existing columns or backend logic.
 
 Add the `customColumns` prop to the `TablePage` component. This prop accepts an array of objects, each representing a custom column.
 
@@ -82,7 +82,7 @@ const controller = app.defineTableController(dataSource, {
 export default controller;
 ```
 
-After defining the calculated columns, you can use them in the [`customColumns`](../../../ui/table-page-component.md#customcolumns) prop of the [`TablePage`](../../../ui/table-page-component.md) component. This allows you to display the calculated values alongside other data in the table.
+After defining the calculated columns, you can use them in the [`customColumns`](../../ui/table-page-component.md#customcolumns) prop of the [`TablePage`](../../ui/table-page-component.md) component. This allows you to display the calculated values alongside other data in the table.
 
 ```jsx title="app/pages/users/index.jsx"
 import { TablePage } from '@kottster/react';

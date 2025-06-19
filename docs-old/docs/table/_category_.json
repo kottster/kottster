@@ -1,8 +1,0 @@
-{
-  "label": "Table",
-  "position": 5,
-  "link": {
-    "type": "generated-index",
-    "description": "Kottster tables let you view and manage data in your database tables."
-  }
-}

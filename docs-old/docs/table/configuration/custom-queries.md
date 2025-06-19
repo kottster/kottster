@@ -1,8 +1,12 @@
+---
+sidebar_position: 3
+---
+
 # Custom queries
 
 By default, Kottster manages data fetching internally. You can also define custom fetching logic, such as using raw SQL or extracting data from an external resource.
 
-To do this, pass an `executeQuery` function to [`defineTableController`](../../table/introduction/index.md):
+To do this, pass an `executeQuery` function to [`defineTableController`](/table/configuration/api):
 
 ```js title="app/pages/users/api.server.js"
 import { app } from '../../_server/app';
@@ -100,136 +104,167 @@ This example demonstrates how to use a raw SQL query with [Knex](https://knexjs.
 
 Here we extend the existing table configuration to include a custom query for fetching data from a MySQL, PostgreSQL, or SQLite database. The SQL query is executed using Knex's `raw` method, which allows for raw SQL execution.
 
-::: code-group
+<details>
+  <summary>MySQL example</summary>
+  
+  ```js title="app/pages/users/api.server.js"
+  import { app } from '../../_server/app';
+  import dataSource from '../../_server/data-sources/mysql';
+  import pageSettings from './settings.json';
 
-```js [MySQL]
-import { app } from '../../_server/app';
-import dataSource from '../../_server/data-sources/mysql';
-import pageSettings from './settings.json';
+  const pageSize = 25;
 
-const pageSize = 25;
-
-const controller = app.defineTableController(dataSource, {
-  ...pageSettings,
-  rootTable: {
-    ...pageSettings.rootTable,
-    pageSize,
-    executeQuery: async ({ page }) => {
-      const knex = dataSource.adapter.getClient();
-      const offset = page ? (page - 1) * pageSize : 0;
-      
-      const [records] = await knex.raw(`
-        SELECT 
-          id, first_name, email 
-        FROM 
-          users
-        LIMIT :pageSize OFFSET :offset
-      `, { pageSize, offset });
-
-      const [[{ count: totalRecords }]] = await knex.raw(`
-        SELECT 
-          COUNT(*) AS count 
-        FROM 
-          users
-      `);
-      
-      return {
-        records,
-        totalRecords,
+  const controller = app.defineTableController(dataSource, {
+    ...pageSettings,
+    rootTable: {
+      ...pageSettings.rootTable,
+      pageSize,
+      executeQuery: async ({ page }) => {
+        const knex = dataSource.adapter.getClient();
+        const offset = page ? (page - 1) * pageSize : 0;
+        
+        const [records] = await knex.raw(`
+          SELECT 
+            id, first_name, email 
+          FROM 
+            users
+          LIMIT :pageSize OFFSET :offset
+        `, { pageSize, offset });
+  
+        const [[{ count: totalRecords }]] = await knex.raw(`
+          SELECT 
+            COUNT(*) AS count 
+          FROM 
+            users
+        `);
+        
+        return {
+          records,
+          totalRecords,
+        }
       }
     }
-  }
-});
+  });
 
-export default controller;
-```
+  export default controller;
+  ```
 
-```js [PostgreSQL]
-import { app } from '../../_server/app';
-import dataSource from '../../_server/data-sources/postgres';
-import pageSettings from './settings.json';
+  ```jsx title="app/pages/users/index.jsx"
+  import { TablePage } from '@kottster/react'; 
 
-const pageSize = 25;
+  export default () => (
+    <TablePage />
+  );
+  ```
+</details>
 
-const controller = app.defineTableController(dataSource, {
-  ...pageSettings,
-  rootTable: {
-    ...pageSettings.rootTable,
-    pageSize,
-    executeQuery: async ({ page }) => {
-      const knex = dataSource.adapter.getClient();
-      const offset = page ? (page - 1) * pageSize : 0;
-      
-      const { rows: records } = await knex.raw(`
-        SELECT 
-          id, first_name, email 
-        FROM 
-          users
-        LIMIT :pageSize OFFSET :offset
-      `, { pageSize, offset });
+<details>
+  <summary>PostgreSQL example</summary>
+  
+  ```js title="app/pages/users/api.server.js"
+  import { app } from '../../_server/app';
+  import dataSource from '../../_server/data-sources/postgres';
+  import pageSettings from './settings.json';
 
-      const { rows: [{ count: totalRecords }] } = await knex.raw(`
-        SELECT 
-          COUNT(*) AS count 
-        FROM 
-          users
-      `);
-      
-      return {
-        records,
-        totalRecords,
+  const pageSize = 25;
+
+  const controller = app.defineTableController(dataSource, {
+    ...pageSettings,
+    rootTable: {
+      ...pageSettings.rootTable,
+      pageSize,
+      executeQuery: async ({ page }) => {
+        const knex = dataSource.adapter.getClient();
+        const offset = page ? (page - 1) * pageSize : 0;
+        
+        const { rows: records } = await knex.raw(`
+          SELECT 
+            id, first_name, email 
+          FROM 
+            users
+          LIMIT :pageSize OFFSET :offset
+        `, { pageSize, offset });
+  
+        const { rows: [{ count: totalRecords }] } = await knex.raw(`
+          SELECT 
+            COUNT(*) AS count 
+          FROM 
+            users
+        `);
+        
+        return {
+          records,
+          totalRecords,
+        }
       }
     }
-  }
-});
+  });
 
-export default controller;
-```
+  export default controller;
+  ```
 
-```js [SQLite]
-import { app } from '../../_server/app';
-import dataSource from '../../_server/data-sources/sqlite';
-import pageSettings from './settings.json';
+  ```jsx title="app/pages/users/index.jsx"
+  import { TablePage } from '@kottster/react'; 
 
-const pageSize = 25;
+  export default () => (
+    <TablePage />
+  );
+  ```
+</details>
 
-const controller = app.defineTableController(dataSource, {
-  ...pageSettings,
-  rootTable: {
-    ...pageSettings.rootTable,
-    pageSize,
-    executeQuery: async ({ page }) => {
-      const knex = dataSource.adapter.getClient();
-      const offset = page ? (page - 1) * pageSize : 0;
-      
-      const records = await knex.raw(`
-        SELECT 
-          id, first_name, email 
-        FROM 
-          users
-        LIMIT :pageSize OFFSET :offset
-      `, { pageSize, offset });
+<details>
+  <summary>Sqlite example</summary>
+  
+  ```js title="app/pages/users/api.server.js"
+  import { app } from '../../_server/app';
+  import dataSource from '../../_server/data-sources/sqlite';
+  import pageSettings from './settings.json';
 
-      const [{ count: totalRecords }] = await knex.raw(`
-        SELECT 
-          COUNT(*) AS count 
-        FROM 
-          users
-      `);
-      
-      return {
-        records,
-        totalRecords,
+  const pageSize = 25;
+
+  const controller = app.defineTableController(dataSource, {
+    ...pageSettings,
+    rootTable: {
+      ...pageSettings.rootTable,
+      pageSize,
+      executeQuery: async ({ page }) => {
+        const knex = dataSource.adapter.getClient();
+        const offset = page ? (page - 1) * pageSize : 0;
+        
+        const records = await knex.raw(`
+          SELECT 
+            id, first_name, email 
+          FROM 
+            users
+          LIMIT :pageSize OFFSET :offset
+        `, { pageSize, offset });
+  
+        const [{ count: totalRecords }] = await knex.raw(`
+          SELECT 
+            COUNT(*) AS count 
+          FROM 
+            users
+        `);
+        
+        return {
+          records,
+          totalRecords,
+        }
       }
     }
-  }
-});
+  });
 
-export default controller;
-```
+  export default controller;
+  ```
 
-:::
+  ```jsx title="app/pages/users/index.jsx"
+  import { TablePage } from '@kottster/react'; 
 
+  export default () => (
+    <TablePage />
+  );
+  ```
+</details>
 
 > Please notice that in the examples above, we are using the `raw` method from Knex to execute raw SQL queries. This method has different return formats for each database adapter. For MySQL, it returns an array of records, while for PostgreSQL, it returns an object with a `rows` property containing the records.
 

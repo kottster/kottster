@@ -1,8 +1,4 @@
----
-sidebar_position: 3
----
-
-# Data sources
+# Connect to database
 
 In Kottster, data sources are the primary way to connect to your database. They allow you to define connections to various databases and configure how Kottster interacts with them.
 
@@ -16,7 +12,7 @@ After creating an app, you’ll land on the "**Getting Started**" page, where yo
 
 ### 2. Using the CLI
 
-On the same "**Getting Started**" page, you can choose "**Edit file manually**" option to add a data source using the CLI. 
+On the same "**Getting Started**" page, you can choose "**Edit file manually**" option to get instructions on how to add a data source using the CLI.
 
 ### 3. Manually
 
@@ -38,6 +34,8 @@ The following table configuration options are available:
 - **`preventDelete`**: Prevents the delete operation. By default, delete operations are allowed.
 
 ```typescript title="Example"
+import { createDataSource } from '@kottster/server';
+
 const dataSource = createDataSource({
   type: DataSourceType.postgres,
   name: 'postgres',
@@ -65,6 +63,8 @@ const dataSource = createDataSource({
     },
   }
 });
+
+export default dataSource;
 ```
 
 By default, if table configuration is not provided, the table is included in all requests.

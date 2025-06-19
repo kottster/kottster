@@ -1,7 +1,3 @@
----
-sidebar_position: 2
----
-
 # Server API
 
 ## Custom controller
@@ -46,6 +42,8 @@ Each function can accept two arguments:
 **Example of a server procedure with input parameters:**
 
 ```typescript title="app/pages/products/api.server.js"
+import { app } from '../../_server/app';
+
 const controller = app.defineCustomController({
   getProduct: async ({ id }) => {
     // Fetch product by id from the database
@@ -78,6 +76,8 @@ export default controller;
 **Example of a server procedure without any arguments:**
 
 ```typescript title="app/pages/products/api.server.js"
+import { app } from '../../_server/app';
+
 const controller = app.defineCustomController({
   getProducts: async () => {
     // Fetch all products from the database

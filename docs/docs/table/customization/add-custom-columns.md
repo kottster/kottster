@@ -1,7 +1,3 @@
----
-sidebar_position: 1
----
-
 # Add custom columns
 
 There are many ways to add custom columns to the table. 
@@ -10,7 +6,7 @@ There are many ways to add custom columns to the table.
 
 **Using the `customColumns` in the `TablePage` component**
 
-If you want to just display a new column in the table, you can use the [`customColumns`](/table/table-page-component#customcolumns) prop. This is useful for displaying additional information without modifying the existing columns or backend logic.
+If you want to just display a new column in the table, you can use the [`customColumns`](../../../ui/table-page-component.md#customcolumns) prop. This is useful for displaying additional information without modifying the existing columns or backend logic.
 
 Add the `customColumns` prop to the `TablePage` component. This prop accepts an array of objects, each representing a custom column.
 
@@ -41,13 +37,13 @@ export default () => (
 );
 ```
 
-Learn more about **columns and their parameters** in the [API reference](/table/configuration/api#columns-1).
+Learn more about **columns and their parameters** in the [API reference](../configuration/api.md#columns-1).
 
 ## Calculated columns
 
 **Using the `calculatedColumns` in the `defineTableController` function**
 
-For more complex scenarios where you need to perform SQL calculations on the server side, you can use the [`calculatedColumns`](/table/configuration/api#calculatedcolumns) configuration. This is particularly useful for aggregate functions like counting related records or performing mathematical operations.
+For more complex scenarios where you need to perform SQL calculations on the server side, you can use the [`calculatedColumns`](../configuration/api.md#calculatedcolumns) configuration. This is particularly useful for aggregate functions like counting related records or performing mathematical operations.
 
 **Example of a server API with calculated columns:**
 
@@ -86,7 +82,7 @@ const controller = app.defineTableController(dataSource, {
 export default controller;
 ```
 
-After defining the calculated columns, you can use them in the [`customColumns`](/table/table-page-component#customcolumns) prop of the `TablePage` component. This allows you to display the calculated values alongside other data in the table.
+After defining the calculated columns, you can use them in the [`customColumns`](../../../ui/table-page-component.md#customcolumns) prop of the [`TablePage`](../../../ui/table-page-component.md) component. This allows you to display the calculated values alongside other data in the table.
 
 ```jsx title="app/pages/users/index.jsx"
 import { TablePage } from '@kottster/react';

@@ -1,3 +1,7 @@
+---
+sidebar_position: 2
+---
+
 # Add custom fields
 
 In Kottster, **all fields are basically table columns**. If you need to add custom fields to the form, you need to add custom columns to the table configuration.
@@ -6,7 +10,7 @@ In Kottster, **all fields are basically table columns**. If you need to add cust
 
 **Using the `customColumns` in the `TablePage` component**
 
-If you want to display a new field in the form, you can use the [`customColumns`](../../../ui/table-page-component.md#customcolumns) prop. This is useful for adding additional fields without modifying the existing columns or backend logic.
+If you want to display a new field in the form, you can use the [`customColumns`](/table/table-page-component#customcolumns) prop. This is useful for adding additional fields without modifying the existing columns or backend logic.
 
 Add the `customColumns` prop to the `TablePage` component. This prop accepts an array of objects, each representing a custom column.
 
@@ -57,4 +61,4 @@ export default () => (
 );
 ```
 
-Learn more about `fieldInput` and its parameters in the [API reference](../configuration/api.md).
+Learn more about `fieldInput` and its parameters in the [API reference](/table/configuration/api#field-inputs).

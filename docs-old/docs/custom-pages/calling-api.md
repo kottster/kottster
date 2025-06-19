@@ -1,3 +1,7 @@
+---
+sidebar_position: 3
+---
+
 # Calling API
 
 Once you've defined your custom controller in the `api.server.js` file, you can call those functions from your frontend component using the `useCallProcedure` hook.
@@ -10,11 +14,11 @@ The `useCallProcedure` hook provides a simple way to call your backend procedure
 import { useCallProcedure, Page } from '@kottster/react';
 
 export default () => {
-  const callProcedure = useCallProcedure(); // [!code highlight]
+  const callProcedure = useCallProcedure();
 
   const handleClick = async () => {
     // Call the backend procedure
-    const result = await callProcedure('getProducts'); // [!code highlight]
+    const result = await callProcedure('getProducts');
     console.log(result);
   };
 
@@ -37,11 +41,11 @@ import { useState } from 'react';
 import { useCallProcedure, Page } from '@kottster/react';
 
 export default () => {
-  const callProcedure = useCallProcedure(); // [!code highlight]
+  const callProcedure = useCallProcedure();
   const [product, setProduct] = useState(null);
 
   const loadProduct = async (productId) => {
-    const result = await callProcedure('getProduct', { id: productId }); // [!code highlight]
+    const result = await callProcedure('getProduct', { id: productId });
     setProduct(result);
   };
 
@@ -70,7 +74,7 @@ import { useState } from 'react';
 import { useCallProcedure, Page } from '@kottster/react';
 
 export default () => {
-  const callProcedure = useCallProcedure(); // [!code highlight]
+  const callProcedure = useCallProcedure();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [products, setProducts] = useState([]);
@@ -80,7 +84,7 @@ export default () => {
     setError(null);
     
     try {
-      const result = await callProcedure('getProducts'); // [!code highlight]
+      const result = await callProcedure('getProducts');
       setProducts(result);
     } catch (err) {
       setError('Failed to load products');
@@ -117,14 +121,14 @@ import { useEffect, useState } from 'react';
 import { useCallProcedure, Page } from '@kottster/react';
 
 export default () => {
-  const callProcedure = useCallProcedure(); // [!code highlight]
+  const callProcedure = useCallProcedure();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loadProducts = async () => {
       try {
-        const result = await callProcedure('getProducts'); // [!code highlight]
+        const result = await callProcedure('getProducts');
         setProducts(result);
       } catch (error) {
         console.error('Error loading products:', error);
@@ -171,7 +175,7 @@ interface Product {
 
 export default () => {
   // Get fully typed procedure calls
-  const callProcedure = useCallProcedure<Procedures>(); // [!code highlight]
+  const callProcedure = useCallProcedure<Procedures>();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -179,7 +183,7 @@ export default () => {
     const loadProducts = async () => {
       try {
         // TypeScript will validate function names and parameters
-        const result = await callProcedure('getProducts'); // [!code highlight]
+        const result = await callProcedure('getProducts');
         setProducts(result);
       } catch (error) {
         console.error('Error loading products:', error);
@@ -194,10 +198,10 @@ export default () => {
   const createProduct = async () => {
     try {
       // TypeScript will enforce the correct parameter structure
-      const newProduct = await callProcedure('createProduct', { // [!code highlight]
-        name: 'New Product', // [!code highlight]
-        price: 99.99 // [!code highlight]
-      }); // [!code highlight]
+      const newProduct = await callProcedure('createProduct', {
+        name: 'New Product',
+        price: 99.99
+      });
       setProducts([...products, newProduct]);
     } catch (error) {
       console.error('Error creating product:', error);
@@ -233,11 +237,11 @@ import { useCallProcedure, Page } from '@kottster/react';
 import { type Procedures } from './api.server';
 
 export default () => {
-  const callProcedure = useCallProcedure<Procedures>(); // [!code highlight]
+  const callProcedure = useCallProcedure<Procedures>();
 
   const { data: products, isLoading, error } = useQuery({
     queryKey: ['products'],
-    queryFn: () => callProcedure('getProducts'), // [!code highlight]
+    queryFn: () => callProcedure('getProducts'),
   });
 
   if (isLoading) return <Page><div>Loading products...</div></Page>;
@@ -265,12 +269,12 @@ import { useCallProcedure, usePage, Page } from '@kottster/react';
 import { type Procedures } from './api.server';
 
 export default () => {
-  const callProcedure = useCallProcedure<Procedures>(); // [!code highlight]
+  const callProcedure = useCallProcedure<Procedures>();
   const { pageId } = usePage();
 
   const { data: product, isLoading } = useQuery({
     queryKey: ['product', pageId],
-    queryFn: () => callProcedure('getProduct', { id: parseInt(pageId) }), // [!code highlight]
+    queryFn: () => callProcedure('getProduct', { id: parseInt(pageId) }),
     enabled: !!pageId, // Only run query if pageId exists
   });
 
@@ -295,12 +299,12 @@ import { useCallProcedure, Page } from '@kottster/react';
 import { type Procedures } from './api.server';
 
 export default () => {
-  const callProcedure = useCallProcedure<Procedures>(); // [!code highlight]
+  const callProcedure = useCallProcedure<Procedures>();
   const queryClient = useQueryClient();
 
   const { data: products, isLoading } = useQuery({
     queryKey: ['products'],
-    queryFn: () => callProcedure('getProducts'), // [!code highlight]
+    queryFn: () => callProcedure('getProducts'),
   });
 
   const createProductMutation = useMutation({

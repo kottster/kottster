@@ -1,6 +1,10 @@
-# Table pages
+---
+sidebar_position: 1
+---
 
-Kottster table pages let you **view and manage data** in your database tables.
+# Introduction
+
+Kottster tables let you **view and manage data** in your database tables.
 
 ![Table features in Kottster](table-explanation.png)
 
@@ -14,11 +18,11 @@ Kottster table pages let you **view and manage data** in your database tables.
 - Deleting records
 - Viewing and managing related records
 
-## Page structure
+## Page Structure
 
-With Kottster, you can set up a table page by creating two files in the `./app/pages/<page-id>` directory:
+With Kottster, you can set up all this functionality by creating two files in the `./app/pages/<page-id>` directory:
 
-### Backend controller
+### Backend Controller
 Create an `api.server.js` file that handles your table's backend logic:
 
 ```js title="app/pages/users/api.server.js"
@@ -56,8 +60,7 @@ This version imports configuration from a `settings.json` file. The `settings.js
 
 **Note:** The `settings.json` file should not be edited manually - it exists only for the visual editor to store your page settings.
 
-### Frontend part
-
+### Frontend Component
 Create an `index.jsx` file that defines your page's user interface:
 
 ```jsx title="app/pages/users/index.jsx"
@@ -68,7 +71,7 @@ export default () => (
 );
 ```
 
-## How it works
+## How It Works
 
 Each Kottster page consists of two separate parts:
 

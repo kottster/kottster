@@ -1,3 +1,7 @@
+---
+sidebar_position: 4
+---
+
 # Customize fields
 
 In Kottster, **all fields are basically table columns**. If you need to customize fields in the form, you need to update columns configuration in the table configuration.
@@ -6,7 +10,7 @@ In Kottster, **all fields are basically table columns**. If you need to customiz
 
 **Using the `columnOverrides` in the `TablePage` component**
 
-If you want to update existing fields, you can use the [`columnOverrides`](../../../ui/table-page-component.md#columnoverrides) prop. This is useful for adding custom render for field inputs.
+If you want to update existing fields, you can use the [`columnOverrides`](/table/table-page-component#columnoverrides) prop. This is useful for adding custom render for field inputs.
 
 Add the `columnOverrides` prop to the `TablePage` component. This prop accepts an object where each key is the column name and the value is a function that takes the existing column configuration and returns the modified column configuration.
 
@@ -47,4 +51,4 @@ export default () => (
 );
 ```
 
-Learn more about `fieldInput` and its parameters in the [API reference](../configuration/api.md#field-inputs).
+Learn more about `fieldInput` and its parameters in the [API reference](/table/configuration/api#field-inputs).

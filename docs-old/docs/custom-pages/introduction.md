@@ -1,3 +1,8 @@
+---
+sidebar_position: 1
+sidebar_label: Introduction
+---
+
 # Custom pages
 
 Kottster lets you create pages with custom content and business logic. You can use them to create dashboards, reports, forms, or any other type of page you need.

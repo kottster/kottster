@@ -1,7 +1,3 @@
----
-sidebar_position: 1
----
-
 # API Reference
 
 The `defineTableController` function sets up server-side endpoint to handle request from the page with the table component. It connects to a database and defines what data available for the table and how it behaves. It also allows to define configuration for nested tables.
@@ -79,7 +75,7 @@ The `defineTableController` function takes two required arguments:
     
 *   **`settings`**: A configuration object that defines the behavior of the table and its nested tables. The configuration for the main table is defined under the `rootTable` key.
 
-Alternatively, you can customize already defined configuration on the client side using methods like `customColumns`, `columnTransformer`, `columnOverrides` on the [`TablePage`](/table/table-page-component) component. This approach is useful if you want to change **the way columns and fields are rendered**, or use **JSX components**.
+Alternatively, you can customize already defined configuration on the client side using methods like `customColumns`, `columnTransformer`, `columnOverrides` on the [`TablePage`](../../../ui/table-page-component.md) component. This approach is useful if you want to change **the way columns and fields are rendered**, or use **JSX components**.
 
 ## Parameters
 
@@ -127,7 +123,7 @@ Alternatively, you can customize already defined configuration on the client sid
 
   Allow to define define custom logic for executing the query. This function is called with the query object and should return a promise that resolves to the query result.
 
-  Learn more: [Custom queries](/table/configuration/custom-queries)
+  Learn more: [Custom queries](./custom-queries.md)
 
 - ### allowInsert
 
@@ -295,13 +291,13 @@ Alternatively, you can customize already defined configuration on the client sid
     SELECT COUNT(*) FROM orders WHERE orders.user_id = main.id AND orders.status = 'completed'
     ```
 
-  Learn more: [Adding calculated columns](/table/customization/add-custom-columns#calculated-columns)
+  Learn more: [Adding calculated columns](../customization/add-custom-columns.md#calculated-columns)
 
 - ### relationships
 
   Specifies the configuration for the relationships the table has with other tables.
 
-  By default, Kottster detects relationships between tables based on foreign keys. But you can also define custom relationships: [Custom relationships](/table/configuration/custom-relationships)
+  By default, Kottster detects relationships between tables based on foreign keys. But you can also define custom relationships: [Custom relationships](./custom-relationships.md)
 
   Each relation should have `key` property, which specifies the name of the relation. The key is used to access the relation in the table configuration.
 
@@ -464,7 +460,7 @@ Each column can have the following properties:
 
 ## Field inputs
 
-By default, form fields are automatically generated based on your database schema and [`defineTableController`](/table/configuration/api) settings. 
+By default, form fields are automatically generated based on your database schema and [`defineTableController`](../../table/introduction/index.md) settings. 
 
 But you can also define the form input explicitly using the `formInput` property in the [column configuration](#columns).
 
@@ -505,108 +501,109 @@ Below is a list of supported field input types and their interfaces:
 
 - #### input
       
-      A single-line text input. 
+    A single-line text input. 
 
-      ```typescript
-      {
-        type: 'input'
-      }
-      ```
+    ```typescript
+    {
+      type: 'input'
+    }
+    ```
 
 - #### numberInput
 
-      A number-only input field.
+    A number-only input field.
 
-      ```typescript
-      {
-        type: 'numberInput',
-        
-        /** Determines whether decimal values are allowed, true by default */
-        allowDecimal?: boolean;
-      }
-      ```
+    ```typescript
+    {
+      type: 'numberInput',
+      
+      /** Determines whether decimal values are allowed, true by default */
+      allowDecimal?: boolean;
+    }
+    ```
 
 - #### textarea
       
-      A multi-line text input.
+    A multi-line text input.
 
-      ```typescript
-      {
-        type: 'textarea'
-      }
-      ```
+    ```typescript
+    {
+      type: 'textarea'
+    }
+    ```
 
 - #### select
 
-      A searchable dropdown menu.
+    A searchable dropdown menu.
 
-      ```typescript
-      {
-        type: 'select',
+    ```typescript
+    {
+      type: 'select',
+      
+      /** List of selectable options */
+      options: { 
+        /** Display label for the option */
+        label: string; 
         
-        /** List of selectable options */
-        options: { 
-          /** Display label for the option */
-          label: string; 
-          
-          /** Value associated with the option */
-          value: string; 
-        }[]
-      }
-      ```
+        /** Value associated with the option */
+        value: string; 
+      }[]
+    }
+    ```
+
 - #### checkbox
 
-      A checkbox for boolean input.
+    A checkbox for boolean input.
 
-      ```typescript
-      {
-        type: 'checkbox'
-      }
-      ```
+    ```typescript
+    {
+      type: 'checkbox'
+    }
+    ```
 
 - #### datePicker
 
-      An inline date (datetime) picker.
+    An inline date (datetime) picker.
 
-      ```typescript
-      {
-        type: 'datePicker',
-        
-        /** Adds time picker */
-        withTime: boolean,
-        
-        /** Adds seconds input to time picker */
-        timeWithSeconds: boolean
-      }
-      ```
+    ```typescript
+    {
+      type: 'datePicker',
+      
+      /** Adds time picker */
+      withTime: boolean,
+      
+      /** Adds seconds input to time picker */
+      timeWithSeconds: boolean
+    }
+    ```
 
 - #### timePicker
 
-      An inline time picker.
+    An inline time picker.
 
-      ```typescript
-      {
-        type: 'timePicker',
-        
-        /** Adds seconds input */
-        withSeconds: boolean;
-      }
-      ```
+    ```typescript
+    {
+      type: 'timePicker',
+      
+      /** Adds seconds input */
+      withSeconds: boolean;
+    }
+    ```
 
 - #### recordSelect
 
-      Select records from another table.
+    Select records from another table.
 
-      Requires a one-to-one relationship defined in the database schema or in the [`relationships`](#relationships) property of the table configuration.
+    Requires a one-to-one relationship defined in the database schema or in the [`relationships`](#relationships) property of the table configuration.
 
-      ```typescript
-      {
-        type: 'recordSelect',
-        
-        /** The key of the relationship */
-        relationshipKey?: string;
-      }
-      ```
+    ```typescript
+    {
+      type: 'recordSelect',
+      
+      /** The key of the relationship */
+      relationshipKey?: string;
+    }
+    ```
 
 ### Custom field input
 

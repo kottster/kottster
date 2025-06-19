@@ -1,12 +1,8 @@
----
-sidebar_position: 4
----
-
 # Custom relationships
 
 By default, Kottster detects relationships between tables based on foreign keys. However, you can also define custom relationships if you need to override the default behavior or if your database schema doesn't follow the standard conventions.
 
-To set this up, include the relationship configuration in the `relationships` object inside [`defineTableController`](/table/configuration/api).
+To set this up, include the relationship configuration in the `relationships` object inside [`defineTableController`](../../table/introduction/index.md).
 
 ## One-to-one
 
@@ -63,14 +59,6 @@ const controller = app.defineTableController(dataSource, {
 });
 
 export default controller;
-```
-
-```jsx title="app/pages/users/index.jsx"
-import { TablePage } from '@kottster/react';
-
-export default () => (
-  <TablePage />
-);
 ```
 
 As shown above, the page includes a `relationships` object with the key `"user_workspace"`. This key can have any name and is defined for convenience. 
@@ -135,14 +123,6 @@ const controller = app.defineTableController(dataSource, {
 });
 
 export default controller;
-```
-
-```jsx title="app/pages/projects/index.jsx"
-import { TablePage } from '@kottster/react';
-
-export default () => (
-  <TablePage />
-);
 ```
 
 ## Many-to-many
@@ -222,10 +202,3 @@ const controller = app.defineTableController(dataSource, {
 export default controller;
 ```
 
-```jsx title="app/pages/books/index.jsx"
-import { TablePage } from '@kottster/react';
-
-export default () => (
-  <TablePage />
-);
-```

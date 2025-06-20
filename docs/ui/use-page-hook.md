@@ -8,7 +8,7 @@ The `usePage` hook is a custom React hook that returns the current page ID and n
 
 Example usage:
 
-```jsx title="app/pages/example/index.jsx"
+```jsx [app/pages/example/index.jsx]
 import { Page, usePage } from '@kottster/react';
 
 export default () => {

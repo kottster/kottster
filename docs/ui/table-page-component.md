@@ -64,7 +64,7 @@ The component is tightly connected to the [`defineTableController`](../table/con
 
   A custom function used to transform the automatically determined columns.
 
-  ```typescript
+  ```typescript [Example]
   columnTransformer: columns => [
     ...columns,
     {
@@ -82,7 +82,7 @@ The component is tightly connected to the [`defineTableController`](../table/con
 
   A custom object used to override the automatically determined columns.
 
-  ```typescript title="Example"
+  ```typescript [Example]
   columnOverrides: {
     // Full replacement of the email column
     email: { 

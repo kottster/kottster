@@ -1,7 +1,11 @@
 .content .main img {
-  border: solid 1px hsl(240, 2%, 89%);
+  border: solid 1px #e2e2e4;
   border-radius: 8px;
   overflow: hidden;
+}
+
+html.dark .content .main img {
+  border: solid 1px #2e2e32;
 }
 
 .content .main p code {

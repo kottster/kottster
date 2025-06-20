@@ -16,7 +16,7 @@ Add the `customColumns` prop to the `TablePage` component. This prop accepts an 
 
 **Example of a page with a custom column:**
 
-```jsx title="app/pages/users/index.jsx"
+```jsx [app/pages/users/index.jsx]
 import { TablePage } from '@kottster/react';
 
 export default () => (
@@ -51,7 +51,7 @@ For more complex scenarios where you need to perform SQL calculations on the ser
 
 **Example of a server API with calculated columns:**
 
-```js title="app/pages/users/api.server.js"
+```js [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/mysql';
 import pageSettings from './settings.json';
@@ -88,7 +88,7 @@ export default controller;
 
 After defining the calculated columns, you can use them in the [`customColumns`](../../ui/table-page-component.md#customcolumns) prop of the [`TablePage`](../../ui/table-page-component.md) component. This allows you to display the calculated values alongside other data in the table.
 
-```jsx title="app/pages/users/index.jsx"
+```jsx [app/pages/users/index.jsx]
 import { TablePage } from '@kottster/react';
 
 export default () => (

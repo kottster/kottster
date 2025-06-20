@@ -25,7 +25,7 @@ With Kottster, you can set up a table page by creating two files in the `./app/p
 ### Backend controller
 Create an `api.server.js` file that handles your table's backend logic:
 
-```js title="app/pages/users/api.server.js"
+```js [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/postgres';
 
@@ -41,7 +41,7 @@ export default controller;
 
 If your page was auto-generated using the visual editor, the `api.server.js` file will look like this:
 
-```js title="app/pages/users/api.server.js"
+```js [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/postgres';
 import pageSettings from './settings.json';
@@ -64,7 +64,7 @@ This version imports configuration from a `settings.json` file. The `settings.js
 
 Create an `index.jsx` file that defines your page's user interface:
 
-```jsx title="app/pages/users/index.jsx"
+```jsx [app/pages/users/index.jsx]
 import { TablePage } from '@kottster/react'; 
 
 export default () => (

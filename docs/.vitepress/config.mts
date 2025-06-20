@@ -17,12 +17,13 @@ export default defineConfig({
     siteTitle: 'Kottster Docs',
 
     search: {
-      provider: 'algolia',
-      options: {
-        appId: '7AELTNFN60',
-        apiKey: 'eecd275adf7b1b1df986e55d32806f97',
-        indexName: 'kottster',
-      }
+      provider: 'local',
+      // provider: 'algolia',
+      // options: {
+      //   appId: '7AELTNFN60',
+      //   apiKey: 'eecd275adf7b1b1df986e55d32806f97',
+      //   indexName: 'kottster',
+      // }
     },
 
     
@@ -160,7 +161,7 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
           link: '/table/configuration/api',
           items: [
             { text: 'API Reference', link: '/table/configuration/api' },    
-            { text: 'Custom SQL and fetch', link: '/table/configuration/custom-queries' },
+            { text: 'Custom SQL and fetching', link: '/table/configuration/custom-queries' },
             { text: 'Custom relationships', link: '/table/configuration/custom-relationships' },    
           ],
         },

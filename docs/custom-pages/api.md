@@ -6,7 +6,7 @@ The `defineCustomController` function sets up a custom controller to handle requ
 
 The controller **should always** be exported as default from the `api.server.js` file.
 
-```typescript title="app/pages/products/api.server.js"
+```typescript [app/pages/products/api.server.js]
 import { app } from '../../_server/app';
 
 const controller = app.defineCustomController({
@@ -41,7 +41,7 @@ Each function can accept two arguments:
 
 **Example of a server procedure with input parameters:**
 
-```typescript title="app/pages/products/api.server.js"
+```typescript [app/pages/products/api.server.js]
 import { app } from '../../_server/app';
 
 const controller = app.defineCustomController({
@@ -59,7 +59,7 @@ export default controller;
 
 **Example of a server procedure with context access:**
 
-```typescript title="app/pages/products/api.server.js"
+```typescript [app/pages/products/api.server.js]
 const controller = app.defineCustomController({
   getAddedProducts: async (_, { user }) => {
     // Fetch products added by the current user
@@ -75,7 +75,7 @@ export default controller;
 
 **Example of a server procedure without any arguments:**
 
-```typescript title="app/pages/products/api.server.js"
+```typescript [app/pages/products/api.server.js]
 import { app } from '../../_server/app';
 
 const controller = app.defineCustomController({
@@ -97,7 +97,7 @@ If you are using TypeScript, you can define your API functions with type safety.
 
 Example of a TypeScript controller with typed functions:
 
-```typescript title="app/pages/products/api.server.ts"
+```typescript [app/pages/products/api.server.ts]
 import { app } from '../../_server/app';
 
 interface Product {

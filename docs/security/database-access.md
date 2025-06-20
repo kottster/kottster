@@ -54,9 +54,9 @@ The content of these connection files can be modified according to your developm
 
 For production deployments, we strongly recommend moving connection details (credentials or connection strings) to environment variables. This approach provides additional security and makes it easier to manage different environments.
 
-Here's an example of how to implement this:
+Here's an example data source configuration:
 
-```javascript
+```javascript [app/_server/data-sources/postgres.js]
 import { createDataSource, KnexPgAdapter } from '@kottster/server';
 import knex from 'knex';
 

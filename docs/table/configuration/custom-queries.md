@@ -8,7 +8,7 @@ By default, Kottster manages data fetching internally. You can also define custo
 
 To do this, pass an `executeQuery` function to [`defineTableController`](../../table/introduction.md):
 
-```js title="app/pages/users/api.server.js"
+```js [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/postgres';
 
@@ -41,7 +41,7 @@ export default controller;
 
 To enabling pagination, pass a `pageSize` property and return the `totalRecords` property in the `executeQuery` function:
 
-```js title="app/pages/users/api.server.js"
+```js [app/pages/users/api.server.js]
 const controller = app.defineTableController(dataSource, {
   rootTable: {
     pageSize: 25,
@@ -59,7 +59,7 @@ export default controller;
 
 To enable CRUD operations and other built-in table features, the `table` property must be set:
 
-```js title="app/pages/users/api.server.js"
+```js [app/pages/users/api.server.js]
 const controller = app.defineTableController(dataSource, {
   rootTable: {
     table: 'users',
@@ -241,7 +241,7 @@ export default controller;
 
 You can also define completely custom fetching logic. For example, you can fetch data from an external API or a different database.
 
-```js title="app/pages/users/api.server.js"
+```js [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/postgres';
 

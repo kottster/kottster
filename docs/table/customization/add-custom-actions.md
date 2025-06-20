@@ -16,7 +16,7 @@ Kottster provides default actions for working with records (view, edit, delete),
 
 Use client-side actions for simple interactions like showing alerts, opening modals, or navigating to other pages.
 
-```jsx title="app/pages/users/index.jsx"
+```jsx [app/pages/users/index.jsx]
 import { TablePage } from '@kottster/react';
 
 export default () => (
@@ -38,7 +38,7 @@ export default () => (
 
 Use this approach when you need server-side processing (like sending emails or updating data) and want the procedure to run automatically when the button is clicked.
 
-```jsx title="app/pages/users/index.jsx"
+```jsx [app/pages/users/index.jsx]
 import { TablePage } from '@kottster/react';
 import { notifications } from '@mantine/notifications';
 
@@ -65,7 +65,7 @@ export default () => (
 
 **Define the server procedure:**
 
-```js title="app/pages/users/api.server.js"
+```js [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/mysql';
 import pageSettings from './settings.json';
@@ -90,7 +90,7 @@ export default controller;
 
 Use this approach when you need custom logic before or after calling the server procedure, such as showing confirmation dialogs, validating data, custom error handling, or chaining multiple operations.
 
-```jsx title="app/pages/users/index.jsx"
+```jsx [app/pages/users/index.jsx]
 import { TablePage, useCallProcedure } from '@kottster/react';
 import { notifications } from '@mantine/notifications';
 import { modals } from '@mantine/modals';

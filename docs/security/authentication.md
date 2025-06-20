@@ -57,7 +57,7 @@ The `postAuthMiddleware` allows you to add custom security checks after the stan
 
 Example of custom middleware that validates user status with an external API:
 
-```javascript
+```javascript [app/_server/app.js]
 import { createApp } from '@kottster/server';
 import { dataSourceRegistry } from './data-sources/registry';
 import schema from '../../kottster-app.json';

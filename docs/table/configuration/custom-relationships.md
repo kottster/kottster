@@ -41,7 +41,7 @@ This also simplifies forms for creating or updating users. Instead of typing a `
 
 **Here's an example of the page files:**
 
-```js title="app/pages/users/api.server.js"
+```js [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/postgres';
 import pageSettings from './settings.json';
@@ -103,7 +103,7 @@ Imagine we want to create a page to view data in the `projects` table. By defini
 
 **Here's how the page files might look:**
 
-```js title="app/pages/projects/api.server.js"
+```js [app/pages/projects/api.server.js]
 import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/postgres';
 import pageSettings from './settings.json';
@@ -174,7 +174,7 @@ Imagine we want to create a page to view data in the `books` table. By defining 
 
 **Here's how the page files might look:**
 
-```js title="app/pages/books/api.server.js"
+```js [app/pages/books/api.server.js]
 import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/postgres';
 import pageSettings from './settings.json';

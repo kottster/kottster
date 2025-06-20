@@ -47,7 +47,9 @@ The following table configuration options are available:
 - **`preventUpdate`**: Prevents the update operation. By default, update operations are allowed.
 - **`preventDelete`**: Prevents the delete operation. By default, delete operations are allowed.
 
-```typescript title="Example"
+Example of a data source configuration:
+
+```typescript [app/_server/data-sources/postgres.js]
 import { createDataSource } from '@kottster/server';
 
 const dataSource = createDataSource({

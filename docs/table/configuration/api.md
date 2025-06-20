@@ -10,7 +10,7 @@ By default, all table pages generated with visual editor will contain a `setting
 
 Example of files for the table page for `users` table:
 
-```json title="app/pages/users/settings.json"
+```json [app/pages/users/settings.json]
 {
   "_version": "1",
   
@@ -29,7 +29,7 @@ Example of files for the table page for `users` table:
 }
 ```
 
-```tsx title="app/pages/users/api.server.js"
+```tsx [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/postgres';
 import pageSettings from './settings.json';
@@ -46,7 +46,7 @@ export default controller;
 
 **If you need more customization, beyound what visual editor provides**, you can extend the imported `settings.json` configuration with your own settings. This is useful for advanced users who want more control over table configuration.
 
-```typescript title="app/pages/users/api.server.js"
+```typescript [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/postgres';
 import pageSettings from './settings.json';
@@ -141,7 +141,7 @@ Alternatively, you can customize already defined configuration on the client sid
 
   A function executed on the record before it is inserted into the table. This function is often used to format data, add missing but required properties, or generate sensitive data that the user should not input directly (e.g., password hashes, access tokens).
 
-  ```typescript title="Example"
+  ```typescript [Example]
   beforeInsert: (record) => {
       const secret_token = generate_random_token();
       const created_at = new Date();
@@ -166,7 +166,7 @@ Alternatively, you can customize already defined configuration on the client sid
 
   If it returns `false` or throws an `Error`, the record is not inserted, and the user receives an error message.
 
-  ```typescript title="Example"
+  ```typescript [Example]
   canBeInserted: (record) => {
       if (!record.email.includes('@')) {
           throw new Error('Invalid email');
@@ -193,7 +193,7 @@ Alternatively, you can customize already defined configuration on the client sid
 
   A function executed on the record before it is updated in the table. This function is often used to format data, add missing but required properties, or generate sensitive data that the user should not input directly (e.g., password hashes, access tokens).
 
-  ```typescript title="Example"
+  ```typescript [Example]
   beforeUpdate: (record) => {
       return {
           ...record,
@@ -212,7 +212,7 @@ Alternatively, you can customize already defined configuration on the client sid
 
   If it returns `false` or throws an `Error`, the record is not updated, and the user receives an error message.
 
-  ```typescript title="Example"
+  ```typescript [Example]
   canBeUpdated: (record) => {
       if (!record.email.includes('@')) {
           throw new Error('Invalid email');
@@ -238,7 +238,7 @@ Alternatively, you can customize already defined configuration on the client sid
 
   If it returns `false` or throws an `Error`, the record is not deleted, and the user receives an error message.
 
-  ```typescript title="Example"
+  ```typescript [Example]
   canBeDeleted: (record) => {
       if (record.role === 'ADMIN') {
           throw new Error('Admin users cannot be deleted.');
@@ -255,13 +255,13 @@ Alternatively, you can customize already defined configuration on the client sid
   A function that modifies the Knex query before it is executed. This function is often used to add custom where clauses, joins, or other query modifications. 
   Learn more in the [Knex documentation](https://knexjs.org/guide/query-builder.html).
 
-  ```typescript title="Example with where clause"
+  ```typescript [Example with where clause]
   knexQueryModifier: (knex) => {
     return knex.where('is_active', true);
   }
   ```
 
-  ```typescript title="Example with group by"
+  ```typescript [Example with group by]
   knexQueryModifier: (knex) => {
     return knex.groupBy('user_id');
   }
@@ -292,7 +292,9 @@ Alternatively, you can customize already defined configuration on the client sid
     For example, if you want to count the number of orders for each user, you can use the following SQL expression:
 
     ```sql
-    SELECT COUNT(*) FROM orders WHERE orders.user_id = main.id AND orders.status = 'completed'
+    SELECT COUNT(*) 
+    FROM orders 
+    WHERE orders.user_id = main.id AND orders.status = 'completed'
     ```
 
   Learn more: [Adding calculated columns](../customization/add-custom-columns.md#calculated-columns)
@@ -326,7 +328,9 @@ Specifies the configuration for the columns in the table. Each column configurat
 If configuration or its properties are not specified, the default values will be used.
 The default values are determined automatically based on the database schema.
 
-```json title="Example"
+Example of a table configuration with columns:
+
+```json [app/pages/users/settings.json]
 {
   "_version": "1",
   
@@ -445,7 +449,7 @@ Each column can have the following properties:
 
   If the column is a foreign key and has a one-to-one relationship with another table, this property allows to specify the columns to display for linked record preview. The value is an array of column names to display. Works only for one-to-one linked relations.
 
-  ```json title="Example"
+  ```json [Example]
   relationshipPreviewColumns: ["id", "email"]
   ```
 - #### render
@@ -454,7 +458,7 @@ Each column can have the following properties:
 
   A custom function used to render content in the table cells. It receives the record data as an argument. This parameter only available on the client side.
 
-  ```typescript title="Example #1"
+  ```typescript [Example]
   {
     label: 'Full name',
     column: 'full_name',
@@ -468,7 +472,9 @@ By default, form fields are automatically generated based on your database schem
 
 But you can also define the form input explicitly using the `formInput` property in the [column configuration](#columns).
 
-```json title="Example"
+Example of a table configuration with form inputs:
+
+```json [app/pages/users/settings.json]
 {
   "_version": "1",
   
@@ -622,7 +628,7 @@ This function receives the following parameters:
   - `hasError`: A boolean indicating if the field has an error (e.g., validation error).
   - `readOnly`: A boolean indicating if the field is read-only.
 
-```tsx title="Example with custom textarea component"
+```tsx [Example with custom textarea component]
 {
   type: 'custom',
 

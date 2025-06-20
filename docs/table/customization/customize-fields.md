@@ -16,7 +16,7 @@ Add the `columnOverrides` prop to the `TablePage` component. This prop accepts a
 
 **Example of modifying email field:**
 
-```jsx title="app/pages/users/index.jsx"
+```jsx [app/pages/users/index.jsx]
 import { TablePage } from '@kottster/react';
 
 export default () => (

@@ -6,7 +6,7 @@ Once you've defined your custom controller in the `api.server.js` file, you can 
 
 The `useCallProcedure` hook provides a simple way to call your backend procedures from React components:
 
-```tsx title="app/pages/products/index.jsx"
+```tsx [app/pages/products/index.jsx]
 import { useCallProcedure, Page } from '@kottster/react';
 
 export default () => {
@@ -32,7 +32,7 @@ export default () => {
 
 You can pass parameters to your backend procedures as the second argument:
 
-```tsx title="app/pages/products/index.jsx"
+```tsx [app/pages/products/index.jsx]
 import { useState } from 'react';
 import { useCallProcedure, Page } from '@kottster/react';
 
@@ -65,7 +65,7 @@ export default () => {
 
 Always wrap your API calls in try-catch blocks to handle potential errors:
 
-```tsx title="app/pages/products/index.jsx"
+```tsx [app/pages/products/index.jsx]
 import { useState } from 'react';
 import { useCallProcedure, Page } from '@kottster/react';
 
@@ -112,7 +112,7 @@ export default () => {
 
 For data that needs to be loaded when the component mounts, use `useEffect`:
 
-```tsx title="app/pages/products/index.jsx"
+```tsx [app/pages/products/index.jsx]
 import { useEffect, useState } from 'react';
 import { useCallProcedure, Page } from '@kottster/react';
 
@@ -156,7 +156,7 @@ export default () => {
 
 For TypeScript projects, import the `Procedures` type from your API server to get full type safety:
 
-```tsx title="app/pages/products/index.tsx"
+```tsx [app/pages/products/index.tsx]
 import { useEffect, useState } from 'react';
 import { useCallProcedure, Page } from '@kottster/react';
 
@@ -227,7 +227,7 @@ export default () => {
 
 ### Basic query
 
-```tsx title="app/pages/products/index.tsx"
+```tsx [app/pages/products/index.tsx]
 import { useQuery } from '@tanstack/react-query';
 import { useCallProcedure, Page } from '@kottster/react';
 import { type Procedures } from './api.server';
@@ -259,7 +259,7 @@ export default () => {
 
 For queries that depend on parameters, use the parameter as part of the query key:
 
-```tsx title="app/pages/product-details/index.tsx"
+```tsx [app/pages/product-details/index.tsx]
 import { useQuery } from '@tanstack/react-query';
 import { useCallProcedure, usePage, Page } from '@kottster/react';
 import { type Procedures } from './api.server';
@@ -289,7 +289,7 @@ export default () => {
 
 Use `useMutation` for create, update, and delete operations:
 
-```tsx title="app/pages/products/index.tsx"
+```tsx [app/pages/products/index.tsx]
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useCallProcedure, Page } from '@kottster/react';
 import { type Procedures } from './api.server';

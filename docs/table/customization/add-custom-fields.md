@@ -16,7 +16,7 @@ Add the `customColumns` prop to the `TablePage` component. This prop accepts an 
 
 **Example of a page with a custom field:**
 
-```jsx title="app/pages/users/index.jsx"
+```jsx [app/pages/users/index.jsx]
 import { TablePage } from '@kottster/react';
 
 export default () => (

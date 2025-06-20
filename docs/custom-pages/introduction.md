@@ -8,7 +8,7 @@ Custom pages are organized in directories under `app/pages/<pageId>`. Each page 
 
 You can create a basic custom page with just the frontend component. This example creates a simple welcome page that displays a static message.
 
-```tsx title="app/pages/welcome/index.jsx"
+```tsx [app/pages/welcome/index.jsx]
 import { Page } from '@kottster/react';
 
 export default () => {
@@ -31,7 +31,7 @@ This example creates a page that displays the file path of the current page. It 
 
 First, create the backend controller that defines the API functions:
 
-```tsx title="app/pages/example/api.server.js"
+```tsx [app/pages/example/api.server.js]
 import { app } from '../../_server/app';
 
 const controller = app.defineCustomController({
@@ -50,7 +50,7 @@ The `getFilePath` function receives data from the frontend (in this case, the pa
 
 Then, create the frontend component that calls the backend API:
 
-```tsx title="app/pages/example/index.jsx"
+```tsx [app/pages/example/index.jsx]
 import { useEffect, useState } from 'react';
 import { Page, usePage, useCallProcedure } from '@kottster/react';
 import { Center, Stack, Text, Code, Loader } from '@mantine/core';
@@ -104,7 +104,7 @@ You can get full type safety for your API calls by exporting the controller type
 
 ### Backend with types
 
-```tsx title="app/pages/example/api.server.ts"
+```tsx [app/pages/example/api.server.ts]
 import { app } from '../../_server/app';
 
 const controller = app.defineCustomController({
@@ -121,7 +121,7 @@ export default controller;
 
 ### Frontend with type safety
 
-```tsx title="app/pages/example/index.tsx"
+```tsx [app/pages/example/index.tsx]
 import { useEffect, useState } from 'react';
 import { Page, usePage, useCallProcedure } from '@kottster/react';
 import { Center, Stack, Text, Code, Loader } from '@mantine/core';

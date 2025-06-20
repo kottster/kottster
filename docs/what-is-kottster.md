@@ -30,7 +30,7 @@ Want to see Kottster in action? Check out our <a href="https://demo.kottster.app
 
 Kottster makes building admin panels simple and fast.
 
-- **Quick Setup:** Run one CLI command to create your app. Connect your database and start generating admin pages right away.
+- **Quick Setup:** Run one CLI command to create your app. Connect your database and start [generating admin pages](https://kottster.app/generate-admin-panel) right away.
 
 - **Visual Editor:** Build pages without writing code using our visual editor. Or write custom code when you need more control.
 
@@ -66,4 +66,11 @@ Your data stays with you.
 
 - **Modern Stack**
 
-  Built with Node.js, React, Express, Vite and Mantine. Uses proven technologies that developers already know.
+  Uses proven technologies that developers already know:
+
+  - <a href="https://nodejs.org/" target="_blank" rel="nofollow">Node.js</a>
+  - <a href="https://react.dev/" target="_blank" rel="nofollow">React</a>
+  - <a href="https://expressjs.com/" target="_blank" rel="nofollow">Express</a>
+  - <a href="https://vitejs.dev/" target="_blank" rel="nofollow">Vite</a>
+  - <a href="https://mantine.dev/" target="_blank" rel="nofollow">Mantine</a>
+  - <a href="https://knexjs.org/" target="_blank" rel="nofollow">Knex.js</a>

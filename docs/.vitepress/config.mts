@@ -142,11 +142,12 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
       ]
     },
     {
-      text: 'Security & Privacy',
+      text: 'Security & Data Access',
       collapsed: true,
       items: [
         { text: 'Access to database', link: '/security/database-access' },
         { text: 'Authentication', link: '/security/authentication' },
+        { text: 'Database usage', link: '/security/database-usage' },
       ]
     },
     {
@@ -159,10 +160,11 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
           link: '/table/configuration/api',
           items: [
             { text: 'API Reference', link: '/table/configuration/api' },    
-            { text: 'Custom SQL and fetch logic', link: '/table/configuration/custom-queries' },    
+            { text: 'Custom SQL and fetch', link: '/table/configuration/custom-queries' },
             { text: 'Custom relationships', link: '/table/configuration/custom-relationships' },    
           ],
         },
+        { text: 'TablePage component', link: '/ui/table-page-component' },
         { 
           text: 'Customization', 
           link: '/table/customization/add-custom-columns',

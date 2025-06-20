@@ -8,19 +8,19 @@ The Kottster app is designed with security and privacy as core principles. As a 
 
 **This architecture ensures that:**
 
-- Your database credentials are never exposed to external services
-- No third-party service has direct access to your database
-- You maintain complete ownership and control over your data access
+- Your database credentials are **never exposed to external services**
+- Our platform **does not access your database**
+- You maintain **complete ownership and control** over your data access
 
 ## How database access works
 
 ### Local storage only
 
-When you add a data source to your Kottster app, all connection information is stored locally within your Kottster app. **The database connection and connection details are kept inside the app** and are **never shared with our platform or any external services**.
+When you add a data source to your Kottster app, all connection information is stored locally within your Kottster app. <span style="color: #099268;">**The database connection and connection details are kept inside the app**</span> and are <span style="color: #099268;">**never shared with our platform or any external services**</span>.
 
 ### Data flow
 
-**Your database is only accessible by your app’s backend.** When the frontend needs data, it sends a request to your backend, which then queries the database. This way, **all data goes through only your own app API**, keeping your database private and secure.
+<span style="color: #099268;">**Your database is only accessible by your app’s backend.**</span> When the frontend needs data, it sends a request to your backend, which then queries the database. This way, the data flow is <span style="color: #099268;">**entirely contained within your app**</span>, ensuring that your database remains private and secure.
 
 ### Database schema extraction
 
@@ -66,9 +66,9 @@ const dataSource = createDataSource({
   init: () => {
     const client = knex({
       client: 'pg',
-      connection: process.env.NODE_ENV === 'development' 
-        ? 'postgresql://myuser:mypassword@localhost:5432/mydatabase' 
-        : process.env.DB_CONNECTION,
+      connection: process.env.NODE_ENV === 'development' // [!code highlight]
+        ? 'postgresql://myuser:mypassword@localhost:5432/mydatabase' // [!code highlight]
+        : process.env.DB_CONNECTION, // [!code highlight]
       searchPath: ['public'],
     });
 
@@ -79,6 +79,8 @@ const dataSource = createDataSource({
 
 export default dataSource;
 ```
+
+Learn more about how to prepare your app for production in the [Deploying Kottster](../deploying.md#before-you-deploy) documentation.
 
 ### Additional security configurations
 

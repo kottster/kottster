@@ -96,7 +96,7 @@ This page component does the following:
 2. **Shows loading state**: Displays a spinner while waiting for the API response
 3. **Displays the result**: Shows the file path in a code block once loaded
 
-The backend procedures defined in your controller are accessible from the frontend using the `useCallProcedure` hook. This hook provides a clean way to make type-safe calls to your backend procedures.
+The backend procedures defined in your controller are accessible from the frontend using the [`useCallProcedure`](../ui/use-call-procedure-hook.md) hook. This hook provides a clean way to make type-safe calls to your backend procedures.
 
 ## Type-safe API calls
 

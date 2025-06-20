@@ -12,11 +12,12 @@ While your Kottster app is self-hosted and keeps all database credentials, conne
 
 User management functions are processed through our platform:
 
-- **User sign-in**: Handled by [web.kottster.app](https://web.kottster.app)
+- **User sign-in and sign-up**: Handled by [web.kottster.app](https://web.kottster.app)
 - **Session management**: JWT tokens issued by our platform
 - **User profile management**: Centralized user data storage
-- **Access control**: Basic role management
+- **Access control**: Assign roles and permissions to users
 - **Invitation system**: Invite users to join your app
+- **Billing management**: Manage billing and subscription plans
 
 ### Token-based flow
 

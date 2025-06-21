@@ -111,7 +111,7 @@ The `defineTableController` function takes two required arguments:
     
 *   **`settings`**: A configuration object that defines the behavior of the table and its nested tables. The configuration for the main table is defined under the `rootTable` key.
 
-*   **`customServerProcedures`**: An optional object that allows you to define custom server procedures for the page. These procedures can contain custom logic for handling specific requests, and be called from the client side using the `useServerProcedure` hook. Learn more in the [Custom pages](../../custom-pages/api.md) section.
+*   **`serverProcedures`**: An optional object that allows you to define custom server procedures for the page. See the [Custom server API](#custom-server-procedures) section for more details.
 
 If you only need to change the way columns and fields are rendered, you can use the [`TablePage`](../../ui/table-page-component.md) component's properties like [`customColumns`](../../ui/table-page-component.md#customcolumns), [`columnTransformer`](../../ui/table-page-component.md#columntransformer), or [`columnOverrides`](../../ui/table-page-component.md#columnoverrides). This approach is useful for modifying the display of columns and fields without changing the backend logic.
 
@@ -676,3 +676,78 @@ This function receives the following parameters:
   }
 }
 ```
+
+## Custom server API
+
+You can extend your table controller with [custom server procedures](../../custom-pages/api.md) to handle specific business logic that goes beyond standard table operations. These procedures can be called from the frontend using the [`useCallProcedure`](../../custom-pages/calling-api.md) hook.
+
+### Adding custom server procedures
+
+**Example:**
+
+```tsx [app/pages/users/api.server.js]
+import { app } from '../../_server/app';
+import dataSource from '../../_server/data-sources/postgres';
+
+const controller = app.defineTableController(dataSource, {
+  rootTable: {
+    table: 'users'
+  }
+}, {
+  // Custom server procedures
+  sendWelcomeEmail: async (data) => {
+    const { userEmail } = data;
+    
+    // Send email logic here
+    console.log(`[server] Sending welcome email to ${userEmail}`);
+    
+    return { success: true };
+  },
+});
+
+export default controller;
+```
+
+### Calling procedures from the frontend
+
+Use the [`useCallProcedure`](../../custom-pages/calling-api.md) hook to call your custom procedures from the table page:
+
+**Example:**
+
+```tsx [app/pages/users/index.jsx]
+import { TablePage, useCallProcedure } from '@kottster/react';
+import { Button } from '@mantine/core';
+
+export default () => {
+  const callProcedure = useCallProcedure();
+  
+  const handleSendWelcomeEmail = async (userEmail) => {
+    try {
+      const result = await callProcedure('sendWelcomeEmail', { userEmail });
+      if (result.success) {
+        console.log('Email sent successfully');
+      } else {
+        console.error('Failed to send email');
+      }
+    } catch (error) {
+      console.error('Failed to send email:', error);
+    }
+  };
+  
+  return (
+    <TablePage
+      customActions={[
+        {
+          label: 'Send Welcome Email',
+          onClick: (record) => {
+            handleSendWelcomeEmail(record.email);
+          },
+        },
+      ]}
+    />
+  );
+};
+```
+
+To learn more about defining custom server procedures, visit the [Custom API](../../custom-pages/api.md) and [Calling API](../../custom-pages/calling-api.md) sections.
+

@@ -4,11 +4,32 @@ description: "Define a table controller in Kottster to handle server-side reques
 
 # API Reference
 
-The `defineTableController` function sets up server-side endpoint to handle request from the page with the table component. It connects to a database and defines what data available for the table and how it behaves. It also allows to define configuration for nested tables.
+The `defineTableController` function creates a server-side controller that handles requests from table pages. It connects to your database and defines what data is available to the table component and how it behaves.
 
-By default, all table pages generated with visual editor will contain a `settings.json` file. This file contains configuration for the main table and its nested tables. It allows you to edit table settings using the visual editor.
+## Basic usage
 
-Example of files for the table page for `users` table:
+**Example:**
+
+```tsx [app/pages/users/api.server.js]
+import { app } from '../../_server/app';
+import dataSource from '../../_server/data-sources/postgres';
+
+const controller = app.defineTableController(dataSource, {
+  rootTable: {
+    table: 'users' // Specifies database table name
+  }
+});
+
+export default controller;
+```
+
+## Configuration with settings.json
+
+Table pages generated with the visual editor include a `settings.json` file that contains configuration for the main table and any nested tables. This allows you to modify table settings through the visual editor interface.
+
+### Settings file structure
+
+**Example:**
 
 ```json [app/pages/users/settings.json]
 {
@@ -29,6 +50,12 @@ Example of files for the table page for `users` table:
 }
 ```
 
+### Using settings in the controller
+
+When using the visual editor, your controller will import and apply the settings:
+
+**Example:**
+
 ```tsx [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
 import dataSource from '../../_server/data-sources/postgres';
@@ -43,6 +70,8 @@ const controller = app.defineTableController(dataSource, {
 
 export default controller;
 ```
+
+This approach allows the visual editor to manage your table configuration while still giving you the option to override or extend settings directly in the controller file.
 
 **If you need more customization, beyound what visual editor provides**, you can extend the imported `settings.json` configuration with your own settings. This is useful for advanced users who want more control over table configuration.
 
@@ -70,6 +99,9 @@ export default action = app.defineTableController(dataSource, {
 });
 ```
 
+::: info
+Please avoid editing the `settings.json` file manually. It exists solely for the visual editor to store your page settings. If you need to make changes, do so in the `api.server.js` file instead.
+:::
 
 ## Usage
 
@@ -79,7 +111,9 @@ The `defineTableController` function takes two required arguments:
     
 *   **`settings`**: A configuration object that defines the behavior of the table and its nested tables. The configuration for the main table is defined under the `rootTable` key.
 
-Alternatively, you can customize already defined configuration on the client side using methods like `customColumns`, `columnTransformer`, `columnOverrides` on the [`TablePage`](../../ui/table-page-component.md) component. This approach is useful if you want to change **the way columns and fields are rendered**, or use **JSX components**.
+*   **`customServerProcedures`**: An optional object that allows you to define custom server procedures for the page. These procedures can contain custom logic for handling specific requests, and be called from the client side using the `useServerProcedure` hook. Learn more in the [Custom pages](../../custom-pages/api.md) section.
+
+If you only need to change the way columns and fields are rendered, you can use the [`TablePage`](../../ui/table-page-component.md) component's properties like [`customColumns`](../../ui/table-page-component.md#customcolumns), [`columnTransformer`](../../ui/table-page-component.md#columntransformer), or [`columnOverrides`](../../ui/table-page-component.md#columnoverrides). This approach is useful for modifying the display of columns and fields without changing the backend logic.
 
 ## Parameters
 

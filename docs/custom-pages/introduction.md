@@ -2,11 +2,21 @@
 
 Kottster lets you create pages with custom content and business logic. You can use them to create dashboards, reports, forms, or any other type of page you need.
 
-Custom pages are organized in directories under `app/pages/<pageId>`. Each page directory contains an `index.jsx` file that exports a React component for the user interface. You can also add an `api.server.js` file to handle server API for that specific page.
+## Page structure
+
+Each custom page should have its own directory under `./app/pages/<page-id>` containing at least one file. The `<page-id>` becomes the URL path where your page will be accessible (e.g., `/dashboard` for a page in `./app/pages/dashboard/`).
+
+### Frontend component (`index.jsx`)
+This file defines your page's user interface and exports a React component.
+
+### Backend controller (`api.server.js`)
+This file handles server-side logic and API endpoints for your page. Only needed if your page requires backend functionality.
 
 ## Simple page
 
 You can create a basic custom page with just the frontend component. This example creates a simple welcome page that displays a static message.
+
+**Example:**
 
 ```tsx [app/pages/welcome/index.jsx]
 import { Page } from '@kottster/react';
@@ -23,13 +33,15 @@ export default () => {
 
 ## Page with API
 
-When you need to fetch data from a backend API, you can add a custom controller by creating an `api.server.js` file in the same directory as your page component.
+When you need to fetch data from a backend API, you can add a custom controller by creating an `api.server.js` file in the same directory as your page component. The controller uses [`defineCustomController`](./api.md) to set up custom API endpoints for your page.
 
 This example creates a page that displays the file path of the current page. It demonstrates how to call backend procedures from the frontend and handle loading states and errors.
 
 ### Backend controller
 
 First, create the backend controller that defines the API functions:
+
+**Example:**
 
 ```tsx [app/pages/example/api.server.js]
 import { app } from '../../_server/app';
@@ -50,14 +62,20 @@ The `getFilePath` function receives data from the frontend (in this case, the pa
 
 Then, create the frontend component that calls the backend API:
 
+**Example:**
+
 ```tsx [app/pages/example/index.jsx]
 import { useEffect, useState } from 'react';
 import { Page, usePage, useCallProcedure } from '@kottster/react';
 import { Center, Stack, Text, Code, Loader } from '@mantine/core';
 
 export default () => {
-  const callProcedure = useCallProcedure(); // Hook to call backend procedures for the current page
-  const { pageId } = usePage(); // Get the current page ID
+  // Hook to call backend procedures for the current page
+  const callProcedure = useCallProcedure();
+  
+  // Get the current page ID
+  const { pageId } = usePage();
+  
   const [filePath, setFilePath] = useState();
   const [loading, setLoading] = useState(true);
   
@@ -104,6 +122,8 @@ You can get full type safety for your API calls by exporting the controller type
 
 ### Backend with types
 
+**Example:**
+
 ```tsx [app/pages/example/api.server.ts]
 import { app } from '../../_server/app';
 
@@ -120,6 +140,8 @@ export default controller;
 ```
 
 ### Frontend with type safety
+
+**Example:**
 
 ```tsx [app/pages/example/index.tsx]
 import { useEffect, useState } from 'react';
@@ -165,3 +187,16 @@ export default () => {
 ```
 
 With this setup, TypeScript will provide autocomplete for function names, validate parameter types, and ensure return type safety for all your backend procedures.
+
+## Examples
+
+Here are some live examples of custom pages to see them in action:
+
+* **Analytics Dashboard** - Dashboard with stats and interactive charts  
+  [Live demo](https://demo.kottster.app/analyticsDashboard) | [Source code](https://github.com/kottster/live-demo/tree/main/app/pages/analyticsDashboard)
+
+* **Growth Chart** - Custom page featuring a detailed growth visualization  
+  [Live demo](https://demo.kottster.app/growthChart) | [Source code](https://github.com/kottster/live-demo/tree/main/app/pages/growthChart)
+
+* **Control Panel** - Settings page with various configuration options  
+  [Live demo](https://demo.kottster.app/controlPanel) | [Source code](https://github.com/kottster/live-demo/tree/main/app/pages/controlPanel)

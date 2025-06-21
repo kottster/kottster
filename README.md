@@ -5,11 +5,11 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![GitHub last commit](https://img.shields.io/github/last-commit/kottster/kottster)
 
-A simple Node.js admin panel for your app. Create pages to view and manage data in your database, or build fully custom pages from scratch. Secure, self-hosted, and easy to set up.
+Instant Node.js admin panel for your app. Create pages to **view and manage data in your database**, or **build fully custom pages** from scratch. Secure, self-hosted, and easy to set up.
 
 [Get Started](https://kottster.app/docs/) • [Live Demo](https://demo.kottster.app) • [Our Website](https://kottster.app) • [Docs](https://kottster.app/docs/)
 
-[![Kottster](/assets/intro-4.png)](https://youtu.be/JBpLVgkoj-k?si=GJ3IIBmzlgrCLKWs)
+[![Kottster](/assets/intro-5.png)](https://youtu.be/JBpLVgkoj-k?si=GJ3IIBmzlgrCLKWs)
 
 ## Getting started
 

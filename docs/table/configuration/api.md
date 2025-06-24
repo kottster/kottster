@@ -360,35 +360,17 @@ If you only need to change the way columns and fields are rendered, you can use 
 Specifies the configuration for the columns in the table. Each column configuration should have `column` property, which specifies the name of the column in the database table. 
   
 If configuration or its properties are not specified, the default values will be used.
-The default values are determined automatically based on the database schema.
-
-Example of a table configuration with columns:
-
-```json [app/pages/users/settings.json]
-{
-  "_version": "1",
-  
-  "rootTable": {
-    "table": "users",
-    
-    "columns": [
-      {
-        "column": "first_name",
-        "label": "Name"
-      },
-      {
-        "column": "balance",
-        "label": "Balance",
-        "prefix": "$"
-      }
-    ]
-  }
-}
-```
+The default values are determined automatically based on the database schema. 
 
 ### Parameters
 
 Each column can have the following properties:
+
+- #### column
+
+  `string`, required
+
+  Specifies the name of the column. Could be a real column name in the database table or a custom name for a calculated column.
 
 - #### label
 

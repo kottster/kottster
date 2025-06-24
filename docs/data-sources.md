@@ -12,7 +12,7 @@ In Kottster, data sources are the primary way to connect to your database. They 
 - **[MySQL](https://kottster.app/admin-panel-for-mysql)**
 - **MariaDB**
 - **Microsoft SQL Server**
-- **SQLite**
+- **[SQLite](https://kottster.app/admin-panel-for-sqlite)**
 
 ## Adding a data source
 

@@ -53,7 +53,11 @@ If your application requires additional security validation or custom authorizat
 
 ### Custom validation middleware
 
-The `postAuthMiddleware` allows you to add custom security checks after the standard JWT validation but before requests reach your application logic. It expects an Express-style middleware function that receives the request, response, and next callback.
+The `postAuthMiddleware` allows you to add custom security checks after the standard JWT validation but before requests reach your application logic. You should provide a function that performs additional validation and throws an error if the validation fails.
+
+**The middleware function receives two parameters**:
+- `user` - The authenticated user object containing `id` and `email` properties
+- `req` - The <a rel='nofollow' target='_blank' href='https://expressjs.com/en/api.html#req'>Express request object</a> with all standard Express request properties and methods
 
 Example of custom middleware that validates user status with an external API:
 
@@ -66,26 +70,15 @@ import axios from 'axios';
 export const app = createApp({
   schema,
   secretKey: process.env.SECRET_KEY,
-  postAuthMiddleware: async (req, res, next) => {
-    try {
-      const { user } = req; // User already attached by JWT middleware
-      
-      // Make request to your external API to validate user status
-      const response = await axios.get(`https://api.example.com/users/${user.id}/status`);
-      
-      if (!response.data.success) {
-        return res.status(403).json({ 
-          error: 'User not authorized by external service' 
-        });
-      }
-      
-      next();
-    } catch (error) {
-      console.error('External validation failed:', error.message);
-      return res.status(500).json({ 
-        error: 'Failed to validate user with external service' 
-      });
+  postAuthMiddleware: async (user, req) => {
+    // Make request to your external API to validate user status
+    const response = await axios.get(`https://api.example.com/users/${user.id}/status`);
+    
+    if (!response.data.success) {
+      throw new Error('User not authorized by external service');
     }
+
+    return true;
   }
 });
 

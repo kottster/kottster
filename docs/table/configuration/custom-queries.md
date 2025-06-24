@@ -275,3 +275,34 @@ const controller = app.defineTableController(dataSource, {
 
 export default controller;
 ```
+
+## Adding columns
+
+When using custom queries without specifying a `rootTable` configuration, you need to manually define which columns to display in your table. The [`TablePage`](../../ui/table-page-component.md) component cannot automatically determine the available columns, so you must explicitly configure them using the [`columns`](../../ui/table-page-component.md#columns) property.
+
+### Example implementation
+
+Here's an example of how to define columns using the `columns` prop:
+
+```jsx [app/pages/users/index.jsx]
+import { TablePage } from '@kottster/react';
+
+export default () => {
+  return (
+    <TablePage
+      columns={[
+        { label: 'ID', column: 'id', width: 170 },
+        { label: 'First name', column: 'name' },
+        { label: 'Email address', column: 'email' },
+        { 
+          label: 'Created at', 
+          column: 'created_at', 
+          render: (value) => {
+            return new Date(value).toLocaleDateString();
+          }
+        },
+      ]}
+    />
+  );
+};
+```

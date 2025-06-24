@@ -13,9 +13,18 @@ import { createServer } from '../factories/createServer';
 
 type RequestHandler = (req: Request, res: Response, next: NextFunction) => void;
 
+type PostAuthMiddleware = (user: User, request: Request) => void | Promise<void>;
+
 export interface KottsterAppOptions {
   secretKey?: string;
   schema: AppSchema | Record<string, never>;
+
+  /** 
+   * Custom validation middleware
+   * @description This middleware will be called after the JWT token is validated. You can use it to perform additional checks or modify the request object.
+   * @example https://kottster.app/docs/security/authentication#custom-validation-middleware 
+   */
+  postAuthMiddleware?: PostAuthMiddleware;
 
   /** Enable read-only mode */
   __readOnlyMode?: boolean;
@@ -42,6 +51,7 @@ export class KottsterApp {
   public dataSources: DataSource[] = [];
   public schema: AppSchema;
   private customEnsureValidToken?: (request: Request) => Promise<EnsureValidTokenResponse>;
+  private postAuthMiddleware?: PostAuthMiddleware;
   
   public extendContext: ExtendAppContextFunction;
 
@@ -51,6 +61,7 @@ export class KottsterApp {
     this.usingTsc = checkTsUsage(PROJECT_DIR);
     this.schema = !isSchemaEmpty(options.schema) ? options.schema : schemaPlaceholder;
     this.customEnsureValidToken = options.__ensureValidToken;
+    this.postAuthMiddleware = options.postAuthMiddleware;
     this.readOnlyMode = options.__readOnlyMode ?? false;
   }
 
@@ -386,6 +397,11 @@ export class KottsterApp {
       
       const newRequest = request as Request & { user?: User };
       newRequest.user = user;
+
+      // If a post-auth middleware is provided, call it
+      if (this.postAuthMiddleware) {
+        await this.postAuthMiddleware(user, newRequest);
+      }
       
       return { isTokenValid: true, newRequest };
     } catch (error) {

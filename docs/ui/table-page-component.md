@@ -15,7 +15,7 @@ The component is tightly connected to the [`defineTableController`](../table/con
 
   `string`, optional
 
-  The title displayed at the top of the page. If not provided, the nav item label will be used as the default.
+  The title displayed at the top of the page. If not provided, the [navigation item name](../app-configuration/sidebar.md) will be used as the default.
 
 - ### columns
 

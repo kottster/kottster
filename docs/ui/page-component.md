@@ -13,7 +13,7 @@ The `Page` component displays a simple page with a title and content.
 
   `string`, optional
 
-  The title displayed at the top of the page. If not provided, the nav item label will be used as the default.
+  The title displayed at the top of the page. If not provided, the [navigation item name](../app-configuration/sidebar.md) will be used as the default.
 
 - ### headerRightSection
 

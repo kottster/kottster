@@ -142,6 +142,18 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
         
       ]
     },
+
+    {
+      text: 'App Configuration',
+      collapsed: true,
+      items: [
+        { text: 'Brending', link: '/app-configuration/brendning' },
+        { text: 'Sidebar', link: '/app-configuration/sidebar' },
+        { text: 'Data sources', link: '/data-sources' },
+        { text: 'Authentication', link: '/security/authentication' },
+      ]
+    },
+
     {
       text: 'Security & Data Access',
       collapsed: true,

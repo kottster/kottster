@@ -276,7 +276,7 @@ const controller = app.defineTableController(dataSource, {
 export default controller;
 ```
 
-## Adding columns
+## Defining columns
 
 When using custom queries without specifying a `rootTable` configuration, you need to manually define which columns to display in your table. The [`TablePage`](../../ui/table-page-component.md) component cannot automatically determine the available columns, so you must explicitly configure them using the [`columns`](../../ui/table-page-component.md#columns) property.
 
@@ -306,3 +306,7 @@ export default () => {
   );
 };
 ```
+
+## Adding search
+
+To enable search functionality in your table, you can use the [`withSearch`](../../ui/table-page-component.md#withsearch) property.

@@ -99,6 +99,14 @@ The component is tightly connected to the [`defineTableController`](../table/con
   }
   ```
 
+- ### withSearch
+
+  `boolean`, optional
+
+  If `true`, enables the search functionality in the table. The search input will be displayed above the table, allowing users to filter records based on their input.
+
+  By default, it's turned on automatically if there are searchable columns defined in the table controller.
+
 - ### form
 
   Contains the configuration for the form for viewing, inserting, and updating records.

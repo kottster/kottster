@@ -33,11 +33,20 @@ type TemplateVars = {
       database: string;
     };
   };
-  'app/_server/data-sources/mssql/index.js': undefined;
   'app/_server/data-sources/sqlite/index.js': {
     connection?: {
       filename: string;
     };
+  };
+  'app/_server/data-sources/mssql/index.js': {
+    connection?: string | {
+      host: string;
+      port: number;
+      user: string;
+      password: string;
+      database: string;
+    };
+    searchPath?: string;
   };
   'app/_server/data-sources/registry.js': {
     dataSourceName: string;
@@ -167,11 +176,11 @@ export class FileTemplateManager {
           const client = knex({
             client: 'pg',
             connection: ${typeof vars.connection !== 'object' ? `'${vars.connection || 'postgresql://myuser:mypassword@localhost:5432/mydatabase'}',` : `{
-              host: '${vars.connection.host || ''}',
+              host: '${vars.connection.host || 'localhost'}',
               port: ${vars.connection.port ? Number(vars.connection.port) : '5432'},
-              user: '${vars.connection.user || ''}',
-              password: '${vars.connection.password || ''}',
-              database: '${vars.connection.database || ''}',
+              user: '${vars.connection.user || 'myuser'}',
+              password: '${vars.connection.password || 'mypassword'}',
+              database: '${vars.connection.database || 'mydatabase'}',
             },`}
             searchPath: ['${vars.searchPath || 'public'}'],
           });
@@ -244,27 +253,28 @@ export class FileTemplateManager {
       export default dataSource;
     `),
 
-    'app/_server/data-sources/mssql/index.js': (usingTsc) => stripIndent(`
+    'app/_server/data-sources/mssql/index.js': (usingTsc, vars) => stripIndent(`
       import { createDataSource, KnexTediousAdapter } from '@kottster/server';
       import knex from 'knex';
       ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
       const dataSource = createDataSource({
         type: ${usingTsc ? `DataSourceType.mssql` : `'mssql'`},
-        name: 'knex',
+        name: 'mssql',
         databaseSchemas: ['dbo'],
         init: () => {
           const client = knex({
             /**
-             * Read more at https://knexjs.org/guide/#configuration-options
+             * Learn more at https://knexjs.org/guide/#configuration-options
              */
             client: 'mssql',
-            connection: {
-              server: 'localhost',
-              port: 1433,
-              user: 'your_database_user',
-              password: 'your_database_password',
-              database: 'your_database',
-            },
+            connection: ${typeof vars.connection !== 'object' ? `'${vars.connection || 'mysql://myuser:mypassword@localhost:3306/mydatabase'}',` : `{
+              host: '${vars.connection.host || 'localhost'}',
+              port: ${vars.connection.port ? Number(vars.connection.port) : '5432'},
+              user: '${vars.connection.user || 'myuser'}',
+              password: '${vars.connection.password || 'mypassword'}',
+              database: '${vars.connection.database || 'mydatabase'}',
+            },`}
+            searchPath: ['${vars.searchPath || 'dbo'}'],
           });
 
           return new KnexTediousAdapter(client);

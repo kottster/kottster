@@ -9,7 +9,7 @@ import { CachingService } from "../services/caching.service";
  */
 export abstract class DataSourceAdapter {
   abstract type: DataSourceAdapterType;
-  protected databaseSchemas: string[];
+  protected databaseSchemas: string[] = [];
   private app: KottsterApp;
   private tablesConfig: DataSourceTablesConfig;
   private cachedFullDatabaseSchemaSchema: RelationalDatabaseSchema | null = null;

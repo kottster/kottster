@@ -40,10 +40,10 @@ export const dataSourcesTypeData: Record<string, DataSourceTypeData> = {
   [DataSourceType.mssql]: {
     packages: {
       ...knexPackages,
-      'tedious': '^11.0.0',
+      'tedious': '^18.0.0',
     },
     fileTemplateName: 'app/_server/data-sources/mssql/index.js',
-    knexClientStr: 'tedious',
+    knexClientStr: 'mssql',
   },
   [DataSourceType.sqlite]: {
     packages: {

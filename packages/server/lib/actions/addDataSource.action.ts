@@ -170,6 +170,8 @@ export class AddDataSource extends DSAction {
         return 'KnexMysql2Adapter';
       case DataSourceType.sqlite:
         return 'KnexBetterSqlite3Adapter';
+      case DataSourceType.mssql:
+        return 'KnexTediousAdapter';
       default:
         throw new Error(`Unsupported data source type: ${type}`);
     }

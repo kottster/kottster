@@ -27,9 +27,9 @@ export const dataSourceTypes: DataSourceTypeInfo[] = [
   },
   {
     type: DataSourceType.mssql,
-    name: 'MS SQL',
+    name: 'Microsoft SQL',
     icon: 'https://web.kottster.app/icons/mssql.svg',
-    isActive: false,
+    isActive: true,
   },
   {
     type: DataSourceType.mongodb,

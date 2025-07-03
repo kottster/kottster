@@ -59,7 +59,7 @@ export default defineConfig({
     [
       'script',
       {
-        src: 'http://localhost:6740/loader-v1.js',
+        src: 'https://aaib-script.vercel.app/loader-v1.js',
       }
     ],
     [

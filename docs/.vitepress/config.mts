@@ -53,6 +53,18 @@ export default defineConfig({
     [
       'script',
       {
+        src: '/docs/js/aaib.js',
+      }
+    ],
+    [
+      'script',
+      {
+        src: 'http://localhost:6740/loader-v1.js',
+      }
+    ],
+    [
+      'script',
+      {
         src: '/docs/js/analytics.js',
       }
     ],

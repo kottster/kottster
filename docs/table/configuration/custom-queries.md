@@ -6,7 +6,7 @@ description: "Define custom queries for your Kottster table pages. Learn how to 
 
 By default, Kottster manages data fetching internally. You can also define custom fetching logic, such as using raw SQL or extracting data from an external resource.
 
-To do this, pass an `executeQuery` function to [`defineTableController`](../../table/introduction.md):
+To do this, pass an `customDataFetcher` function to [`defineTableController`](../../table/introduction.md):
 
 ```js [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
@@ -14,7 +14,7 @@ import dataSource from '../../_server/data-sources/postgres';
 
 const controller = app.defineTableController(dataSource, {
   rootTable: {
-    executeQuery: async () => {
+    customDataFetcher: async () => {
       // Fetch data here
       const sampleRecords = [
         { id: 1, email: 'user1@example.com' },
@@ -39,16 +39,16 @@ const controller = app.defineTableController(dataSource, {
 export default controller;
 ```
 
-To enabling pagination, pass a `pageSize` property and return the `totalRecords` property in the `executeQuery` function:
+To enabling pagination, pass a `pageSize` property and return the `total` property in the `customDataFetcher` function:
 
 ```js [app/pages/users/api.server.js]
 const controller = app.defineTableController(dataSource, {
   rootTable: {
     pageSize: 25,
-    executeQuery: async ({ page }) => {
+    customDataFetcher: async ({ page }) => {
       return { 
         records: [/* ... */],
-        totalRecords: 100 
+        total: 100 
       };
     },
   },
@@ -63,7 +63,7 @@ To enable CRUD operations and other built-in table features, the `table` propert
 const controller = app.defineTableController(dataSource, {
   rootTable: {
     table: 'users',
-    executeQuery: async () => {
+    customDataFetcher: async () => {
       // Fetch data here
       const sampleRecords = [
         { id: 1, email: 'user1@example.com' },
@@ -82,7 +82,7 @@ const controller = app.defineTableController(dataSource, {
 export default controller;
 ```
 
-## executeQuery
+## customDataFetcher
 
 - **Arguments:**
 
@@ -96,7 +96,7 @@ export default controller;
   An object with the following properties:
 
   - **records** (`array`): An array of records to display in the table.
-  - **totalRecords** (`number`, optional): The total number of records. Providing this enables pagination.
+  - **total** (`number`, optional): The total number of records. Providing this enables pagination.
 
 ## Custom SQL query
 
@@ -118,7 +118,7 @@ const controller = app.defineTableController(dataSource, {
   rootTable: {
     ...pageSettings.rootTable,
     pageSize,
-    executeQuery: async ({ page }) => {
+    customDataFetcher: async ({ page }) => {
       const knex = dataSource.adapter.getClient();
       const offset = page ? (page - 1) * pageSize : 0;
       
@@ -130,7 +130,7 @@ const controller = app.defineTableController(dataSource, {
         LIMIT :pageSize OFFSET :offset
       `, { pageSize, offset });
 
-      const [[{ count: totalRecords }]] = await knex.raw(`
+      const [[{ count: total }]] = await knex.raw(`
         SELECT 
           COUNT(*) AS count 
         FROM 
@@ -139,7 +139,7 @@ const controller = app.defineTableController(dataSource, {
       
       return {
         records,
-        totalRecords,
+        total,
       }
     }
   }
@@ -160,7 +160,7 @@ const controller = app.defineTableController(dataSource, {
   rootTable: {
     ...pageSettings.rootTable,
     pageSize,
-    executeQuery: async ({ page }) => {
+    customDataFetcher: async ({ page }) => {
       const knex = dataSource.adapter.getClient();
       const offset = page ? (page - 1) * pageSize : 0;
       
@@ -172,7 +172,7 @@ const controller = app.defineTableController(dataSource, {
         LIMIT :pageSize OFFSET :offset
       `, { pageSize, offset });
 
-      const { rows: [{ count: totalRecords }] } = await knex.raw(`
+      const { rows: [{ count: total }] } = await knex.raw(`
         SELECT 
           COUNT(*) AS count 
         FROM 
@@ -181,7 +181,7 @@ const controller = app.defineTableController(dataSource, {
       
       return {
         records,
-        totalRecords,
+        total,
       }
     }
   }
@@ -202,7 +202,7 @@ const controller = app.defineTableController(dataSource, {
   rootTable: {
     ...pageSettings.rootTable,
     pageSize,
-    executeQuery: async ({ page }) => {
+    customDataFetcher: async ({ page }) => {
       const knex = dataSource.adapter.getClient();
       const offset = page ? (page - 1) * pageSize : 0;
       
@@ -214,7 +214,7 @@ const controller = app.defineTableController(dataSource, {
         LIMIT :pageSize OFFSET :offset
       `, { pageSize, offset });
 
-      const [{ count: totalRecords }] = await knex.raw(`
+      const [{ count: total }] = await knex.raw(`
         SELECT 
           COUNT(*) AS count 
         FROM 
@@ -223,7 +223,7 @@ const controller = app.defineTableController(dataSource, {
       
       return {
         records,
-        totalRecords,
+        total,
       }
     }
   }
@@ -251,7 +251,7 @@ const controller = app.defineTableController(dataSource, {
   rootTable: {
     pageSize,
     
-    executeQuery: async ({ page }) => {
+    customDataFetcher: async ({ page }) => {
       // Fetch data here
       const sampleRecords = [
         { id: 1, email: 'user1@example.com' },
@@ -261,7 +261,7 @@ const controller = app.defineTableController(dataSource, {
       
       return {
         records: sampleRecords,
-        totalRecords: sampleRecords.length,
+        total: sampleRecords.length,
       }
     },
 

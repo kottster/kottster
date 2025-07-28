@@ -121,7 +121,7 @@ If you only need to change the way columns and fields are rendered, you can use 
 
   `string`, optional
 
-  Specifies the name of the database table. If not specified, the `executeQuery` function should be provided to define the query.
+  Specifies the name of the database table. If not specified, the `customDataFetcher` function should be provided to define the query.
 
 - ### primaryKeyColumn
 
@@ -155,7 +155,7 @@ If you only need to change the way columns and fields are rendered, you can use 
   
   Learn more: [Columns](#columns-1)
 
-- ### executeQuery
+- ### customDataFetcher
 
   `function`, optional
 

@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { AppSchema, PageFileStructure, stripIndent } from "@kottster/common";
+import { AppSchema, Page, PageFileStructure, stripIndent } from "@kottster/common";
 import { rimrafSync } from 'rimraf';
 import { PROJECT_DIR } from "../constants/projectDir";
 
@@ -19,11 +19,33 @@ export class FileWriter {
   }
 
   /**
-   * Remove page directory and all its files
-   * @param pageId The page ID
+   * Update the page config file
+   * @param pageKey The page ID
+   * @param pageConfig The page config to update
    */
-  public removePage(pageId: string): void {
-    const dir = `${PROJECT_DIR}/app/pages/${pageId}`;
+  public updatePageConfig(pageKey: string, pageConfig: Page): void {
+    const filePath = `${PROJECT_DIR}/app/pages/${pageKey}/page.json`;
+
+    // Create directory if it doesn't exist
+    const dirPath = path.dirname(filePath);
+    if (!fs.existsSync(dirPath)) {
+      fs.mkdirSync(dirPath, { recursive: true });
+    }
+
+    // Write the updated config to the file
+    const updatedConfig = {
+      ...pageConfig,
+      key: undefined, // id should not be included in the config file, since it's derived from the directory name
+    };
+    fs.writeFileSync(filePath, JSON.stringify(updatedConfig, null, 2));
+  }
+
+  /**
+   * Remove page directory and all its files
+   * @param pageKey The page ID
+   */
+  public removePage(pageKey: string): void {
+    const dir = `${PROJECT_DIR}/app/pages/${pageKey}`;
 
     // Check if the directory exists
     if (fs.existsSync(dir)) {
@@ -42,12 +64,12 @@ export class FileWriter {
 
   /**
    * Rename page directory
-   * @param oldPageId The old page ID
-   * @param newPageId The new page ID
+   * @param oldPageKey The old page ID
+   * @param newPageKey The new page ID
    */
-  public renamePage(oldPageId: string, newPageId: string): void {
-    const currentDir = `${PROJECT_DIR}/app/pages/${oldPageId}`;
-    const newDir = `${PROJECT_DIR}/app/pages/${newPageId}`;
+  public renamePage(oldPageKey: string, newPageKey: string): void {
+    const currentDir = `${PROJECT_DIR}/app/pages/${oldPageKey}`;
+    const newDir = `${PROJECT_DIR}/app/pages/${newPageKey}`;
 
     // Check if the directory exists
     if (fs.existsSync(currentDir)) {
@@ -67,7 +89,7 @@ export class FileWriter {
    * Write the page to the file
    * @param page The page to write
    */
-  public writePageToFile({ dirPath, entryFile, files }: PageFileStructure): void {
+  public writePageToFile({ dirPath, files }: PageFileStructure): void {
     const dir = dirPath && `${PROJECT_DIR}/${dirPath}`;
     
     // Create the directory
@@ -79,13 +101,10 @@ export class FileWriter {
       }
     }
 
-    // Write the other files
+    // Write the files
     files?.forEach(file => {
       this.writeFile(`${PROJECT_DIR}/${file.filePath}`, file.fileContent);
     });
-
-    // Write the entry file
-    this.writeFile(`${PROJECT_DIR}/${entryFile.filePath}`, entryFile.fileContent);
   }
 
   /**
@@ -120,7 +139,6 @@ export class FileWriter {
   writeAppServerFileWithSecretKey(secretKey: string): void {
     const content = stripIndent(`
       import { createApp } from '@kottster/server';
-      import { dataSourceRegistry } from './data-sources/registry';
       import schema from '../../kottster-app.json';
 
       export const app = createApp({
@@ -132,12 +150,24 @@ export class FileWriter {
          */
         secretKey: '${secretKey}',
       });
-
-      app.registerDataSources(dataSourceRegistry);
     `);
 
     const filePath = `${PROJECT_DIR}/app/_server/app.${this.usingTsc ? 'ts' : 'js'}`;
     this.writeFile(filePath, content);
+  }
+
+  /**
+   * Remove data source directory
+   * @param dataSourceName The data source name
+   */
+  public removeDataSource(dataSourceName: string): void {
+    const dir = `${PROJECT_DIR}/app/_server/data-sources/${dataSourceName}`;
+
+    // Check if the directory exists
+    if (fs.existsSync(dir)) {
+      rimrafSync(dir);
+      return;
+    }
   }
 
   /**

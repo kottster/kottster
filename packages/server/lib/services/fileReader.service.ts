@@ -1,7 +1,7 @@
 import fs from "fs";
 import { PROJECT_DIR } from "../constants/projectDir";
 import path from "path";
-import { PageFileStructure, File, AppSchema } from "@kottster/common";
+import { PageFileStructure, File, AppSchema, Page, DataSource } from "@kottster/common";
 
 /**
  * Service for reading files
@@ -49,31 +49,102 @@ export class FileReader {
   }
 
   /**
+   * Get existing data source directories
+   * @returns The data source directories
+   */
+  public getDataSourceDirectories(): string[] {
+    const dir = `${PROJECT_DIR}/app/_server/data-sources`;
+    if (!fs.existsSync(dir)) {
+      return [];
+    }
+
+    return this.getDirectorySubdirectories(dir);
+  }
+
+  /**
+   * Get existing data source configs
+   * @returns The data source configs
+   */
+  public getDataSourceConfigs(): Omit<DataSource, 'status' | 'adapter'>[] {
+    const dataSourceDirectories = this.getDataSourceDirectories();
+    const result: Omit<DataSource, 'status' | 'adapter'>[] = [];
+
+    for (const dir of dataSourceDirectories) {
+      const dataSourceJsonPath = path.join(PROJECT_DIR, `app/_server/data-sources/${dir}/dataSource.json`);
+      if (!fs.existsSync(dataSourceJsonPath)) {
+        console.warn(`Data source config not found for directory: ${dir}`);
+        continue;
+      }
+
+      try {
+        const content = fs.readFileSync(dataSourceJsonPath, 'utf8');
+        const config = JSON.parse(content);
+        result.push({ 
+          version: config.version,
+          name: dir, 
+          type: config.type,
+          tablesConfig: config.tablesConfig || {},
+        });
+      } catch (error) {
+        console.warn(`Error reading data source config for directory ${dir}:`, error);
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Get existing page configs
+   * @returns The page configs
+   */
+  public getPageConfigs(): Page[] {
+    const pageDirectories = this.getPagesDirectories();
+    const result: Page[] = [];
+
+    for (const pageKey of pageDirectories) {
+      const pageFileStructure = this.getPageFileStructure(pageKey);
+      if (!pageFileStructure) {
+        console.warn(`Page structure not found for page: ${pageKey}`);
+        continue;
+      }
+      
+      const pageJsonFile = pageFileStructure?.files?.find((f) => f.fileName === 'page.json');
+      if (!pageJsonFile) {
+        console.warn(`Page JSON file not found for page: ${pageFileStructure?.pageKey}`);
+        continue;
+      }
+
+      try {
+        const pageJsonContent = JSON.parse(pageJsonFile.fileContent) as Omit<Page, 'id'>;
+        
+        result.push({
+          ...pageJsonContent,
+          key: pageFileStructure.pageKey,
+        } as Page);
+      } catch (error) {
+        console.warn(`Error parsing page JSON file for page: ${pageFileStructure?.pageKey}. Error: ${error.message}`);
+        continue;
+      }
+    }
+
+    return result;
+  }
+
+  /**
    * Get page structure
-   * @param pageId The page ID
+   * @param pageKey The page ID
    * @returns The page structure or null if the page does not exist
    */
-  public getPageFileStructure(pageId: string): PageFileStructure | null {
-    const dirPath = `app/pages/${pageId}`;
+  public getPageFileStructure(pageKey: string): PageFileStructure | null {
+    const dirPath = `app/pages/${pageKey}`;
     const absoluteDirPath = `${PROJECT_DIR}/${dirPath}`;
     
-    // Get the entry file path
-    let entryFilePath = fs.existsSync(`${absoluteDirPath}.tsx`) ? `${absoluteDirPath}.tsx` : `${absoluteDirPath}.jsx`;
-    if (!fs.existsSync(entryFilePath)) {
-      entryFilePath = fs.existsSync(`${absoluteDirPath}/index.tsx`) ? `${absoluteDirPath}/index.tsx` : `${absoluteDirPath}/index.jsx`;
-    }
-    if (!fs.existsSync(entryFilePath)) {
-      return null;
-    }
-    
     const filePaths = this.getAllFilePathsInDirectory(absoluteDirPath);
-    const entryFile: File = this.getFileByPath(entryFilePath);
-    const files: File[] = filePaths.map((filePath) => this.getFileByPath(filePath)).filter((file) => file.filePath !== entryFilePath);
+    const files: File[] = filePaths.map((filePath) => this.getFileByPath(filePath));
 
     const pageStructure: PageFileStructure = {
-      pageId,
+      pageKey,
       dirPath,
-      entryFile,
       files,
     };
 

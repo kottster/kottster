@@ -1,27 +1,29 @@
-import { DSAction } from "../models/action.model";
+import { DevAction } from "../models/action.model";
 import { FileReader } from "../services/fileReader.service";
 import { FileWriter } from "../services/fileWriter.service";
 
 interface Data {
-  id: string;
+  key: string;
 }
 
 /**
  * Delete a page
  */
-export class DeletePage extends DSAction {
-  public async execute(data: Data) {
+export class DeletePage extends DevAction {
+  public async executeDevAction(data: Data) {
     const fileWriter = new FileWriter({ usingTsc: this.app.usingTsc });
     const fileReader = new FileReader();
-    const { id } = data;
+    const { key } = data;
     const appSchema = fileReader.readSchemaJsonFile();
     
-    // Remove nav item from app schema
-    appSchema.navItems = appSchema.navItems.filter(item => item.id !== id);
-    fileWriter.writeSchemaJsonFile(appSchema);
-    
     // Remove page directory or file
-    fileWriter.removePage(id);
+    fileWriter.removePage(key);
+
+    // Remove page ID from menuPageOrder if it exists
+    if (appSchema.menuPageOrder?.includes(key)) {
+      appSchema.menuPageOrder = appSchema.menuPageOrder.filter(pageKey => pageKey !== key);
+      fileWriter.writeSchemaJsonFile(appSchema);
+    }
     
     return null;
   }

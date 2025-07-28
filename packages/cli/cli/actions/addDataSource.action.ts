@@ -9,6 +9,9 @@ interface Options {
 
   /** The stringified JSON data with connection details */
   data?: string;
+
+  /** The name of the data source, if not provided, it will be generated based on the type */
+  name?: string;
 }
 
 /**
@@ -35,8 +38,8 @@ export async function addDataSource (dataSourceType: DataSourceType, options: Op
     }
 
     // Add the data source to the project
-    const pathToFile = fileCreator.addDataSource(dataSourceType, data);
-    
+    const pathToFile = fileCreator.addDataSource(dataSourceType, options.name, data);
+
     console.log(chalk.green(`${dataSourceTypeInfo?.name} data source added successfully.`));
     console.log(`Update the connection details in the generated file: \n${chalk.blue(pathToFile)}`);
   }

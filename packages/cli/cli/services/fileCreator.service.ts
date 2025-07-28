@@ -79,7 +79,6 @@ export class FileCreator {
     this.createFileFromTemplate('app/main.jsx', path.join(this.projectDir, `app/main.${this.jsxExt}`));
     this.createFileFromTemplate('app/_server/app.js', path.join(this.projectDir, `app/_server/app.${this.jsExt}`));
     this.createFileFromTemplate('app/_server/server.js', path.join(this.projectDir, `app/_server/server.${this.jsExt}`));
-    this.createFileFromTemplate('app/_server/data-sources/registry.js', path.join(this.projectDir, `app/_server/data-sources/registry.${this.jsExt}`));
     if (this.usingTsc) {
       this.createFileFromTemplate('tsconfig.json', path.join(this.projectDir, 'tsconfig.json'));
     }
@@ -105,22 +104,28 @@ export class FileCreator {
    * @param dataSourceType The type of the data source.
    * @returns The path to the data source file.
    */
-  public addDataSource (dataSourceType: DataSourceType, data: Record<string, unknown> = {}): string {
+  public addDataSource (dataSourceType: DataSourceType, dataSourceName?: string, data: Record<string, unknown> = {}): string {
     const dataSourceTypeData = dataSourcesTypeData[dataSourceType];
     const { fileTemplateName } = dataSourceTypeData;
 
-    // Create directory
-    this.createDir(`app/_server/data-sources/${dataSourceType}`)
+    const finalDataSourceName = dataSourceName || `${dataSourceType}-db`;
+    const directory = `app/_server/data-sources/${finalDataSourceName}`;
 
-    // Create file
-    const filePath = path.join(this.projectDir, `app/_server/data-sources/${dataSourceType}`, `index.${this.jsExt}`)
+    // Create directory
+    this.createDir(directory);
+
+    // Create file with adapter
+    const filePath = path.join(directory, `index.${this.jsExt}`)
     const fileContent = this.fileTemplateManager.getTemplate(fileTemplateName as keyof typeof FileTemplateManager.templates, data);
     this.writeFile(filePath, fileContent)
 
-    // Update app/_server/data-sources/registry.ts
-    const registryFilePath = path.join(this.projectDir, 'app/_server/data-sources', `registry.${this.jsExt}`)
-    const registryFileContent = this.fileTemplateManager.getTemplate('app/_server/data-sources/registry.js', { dataSourceName: dataSourceType });
-    this.writeFile(registryFilePath, registryFileContent);
+    // Create dataSource.json file
+    const dataSourceJsonPath = path.join(directory, 'dataSource.json');
+    const dataSourceJsonContent = JSON.stringify({
+      type: dataSourceType,
+      tablesConfig: {},
+    }, null, 2);
+    this.writeFile(dataSourceJsonPath, dataSourceJsonContent);
 
     return filePath;
   }
@@ -156,15 +161,10 @@ export class FileCreator {
         'react-dom': '^19.x',
         "react-router-dom": "^7.x",
 
-        '@kottster/common': KOTTSTER_COMMON_DEP_VER ?? '^2.x',
-        '@kottster/cli': KOTTSTER_CLI_DEP_VER ?? '^2.x',
-        '@kottster/server': KOTTSTER_SERVER_DEP_VER ?? '^2.x',
-        '@kottster/react': KOTTSTER_REACT_DEP_VER ?? '^2.x',
-
-        '@mantine/core': '^8.x',
-        '@mantine/hooks': '^8.x',
-        '@mantine/modals': '^8.x',
-        '@mantine/notifications': '^8.x',
+        '@kottster/common': KOTTSTER_COMMON_DEP_VER ?? '^3.x',
+        '@kottster/cli': KOTTSTER_CLI_DEP_VER ?? '^3.x',
+        '@kottster/server': KOTTSTER_SERVER_DEP_VER ?? '^3.x',
+        '@kottster/react': KOTTSTER_REACT_DEP_VER ?? '^3.x',
         
         ...(options.dependencies ?? {}),
       },

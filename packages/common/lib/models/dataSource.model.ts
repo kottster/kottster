@@ -24,20 +24,30 @@ export interface DataSourceTypeInfo {
   isActive: boolean;
 }
 
+enum DataSourceStatus {
+  idle = 'idle',
+  loading = 'loading',
+  loaded = 'loaded',
+  error = 'error',
+}
+
 export interface DataSource<T = any> {
+  version: string;
   type: DataSourceType;
   name: string;
   adapter: T;
   tablesConfig: DataSourceTablesConfig;
+  status: keyof typeof DataSourceStatus;
 
   // Only for database data sources
   databaseSchemas?: string[];
 }
 
-// Available in the public API
+// Available on the client side
 export interface PublicDataSource extends Omit<DataSource, 'adapter'> {
+  name: string;
   adapterType: DataSourceAdapterType;
-  databaseSchema: RelationalDatabaseSchema;
+  databaseSchema?: RelationalDatabaseSchema;
 }
 
 export type DataSourceTablesConfig = Record<string, DataSourceTableConfig>;
@@ -45,6 +55,9 @@ export type DataSourceTablesConfig = Record<string, DataSourceTableConfig>;
 export type DataSourceTableConfig = {
   /** Exclude the table */
   excluded?: boolean;
+
+  /** Include the table */
+  included?: boolean;
 
   /** Exclude the columns */
   excludedColumns?: string[];

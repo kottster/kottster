@@ -25,17 +25,6 @@ interface ReturnType {
   tablePageProcessedConfig: ReturnTypeFinalData;
 }
 
-const emptyData: ReturnType = {
-  tablePageProcessedConfig: {
-    selectableColumns: [],
-    searchableColumns: [],
-    sortableColumns: [],
-    filterableColumns: [],
-    hiddenColumns: [],
-    hiddenRelationships: [],
-  },
-};
-
 export function getDefaultColumnData(
   tableName: string, 
   columnName: string, 
@@ -95,6 +84,19 @@ export function getTableData(params: {
   tablePageConfig?: TablePageConfig;
   databaseSchema?: RelationalDatabaseSchema;
 }): ReturnType {
+  const emptyData: ReturnType = {
+    tablePageProcessedConfig: {
+      dataSource: '',
+      fetchStrategy: 'databaseTable',
+      selectableColumns: [],
+      searchableColumns: [],
+      sortableColumns: [],
+      filterableColumns: [],
+      hiddenColumns: [],
+      hiddenRelationships: [],
+    },
+  };
+
   const { tablePageConfig, databaseSchema } = params;
   if (!tablePageConfig) {
     return emptyData;
@@ -164,10 +166,16 @@ export function getTableData(params: {
   return {
     tableSchema,
     tablePageProcessedConfig: {
+      dataSource: tablePageConfig.dataSource,
+      fetchStrategy: tablePageConfig.fetchStrategy,
+
       table: tablePageConfig.table,
       primaryKeyColumn,
       
       columns: sortedColumns,
+      
+      calculatedColumns: tablePageConfig.calculatedColumns,
+
       selectableColumns,
       searchableColumns,
       sortableColumns,
@@ -178,9 +186,12 @@ export function getTableData(params: {
       hiddenRelationships,
   
       allowInsert,
+      allowedRoleIdsToInsert: tablePageConfig?.allowedRoleIdsToInsert,
       allowUpdate,
+      allowedRoleIdsToUpdate: tablePageConfig?.allowedRoleIdsToUpdate,
       allowDelete,
-  
+      allowedRoleIdsToDelete: tablePageConfig?.allowedRoleIdsToDelete,
+
       pageSize: tablePageConfig?.pageSize ?? defaultTablePageSize,
 
       defaultSortColumn: tablePageConfig?.defaultSortColumn ?? primaryKeyColumn,

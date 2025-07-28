@@ -1,44 +1,43 @@
-import { PublicDataSource } from "./dataSource.model";
-import { NavItem } from "./navItem.model";
+import { DataSourceType } from "./dataSource.model";
+import { PublicPage } from "./page.model";
 
-// App schema that will be stored in the file
+export interface PublicAppSchemaDataSourceConfig {
+  name: string;
+  type: keyof typeof DataSourceType;
+}
+
+// App schema that is stored in the configuration file
 export interface AppSchema {
   id: string;
+
   meta: {
     name: string;
     icon: string;
   };
-  navItems: NavItem[];
+
+  /**
+   * The order of pages in the menu.
+   */
+  menuPageOrder?: string[];
 }
 
-// App schema that will be returned to the client
-export interface FullAppSchema extends AppSchema {
-  id: string;
-  dataSources: PublicDataSource[];
-  usingTsc: boolean;
-  sandbox: {
-    // Only available in development mode
-    developmentServerUrl?: string;
-  };
+// App schema that is passed to the client.
+export interface ClientAppSchema extends Pick<AppSchema, 'id' | 'meta' | 'menuPageOrder'> {
+  dataSources: PublicAppSchemaDataSourceConfig[];
 
-  // Only available in development mode
-  serverUrl?: string;
-  os?: {
-    platform: string;
-    type: string;
-    release: string;
-  };
-  absoluteDirPath?: string;
-  dependencies?: Record<string, string>;
-  devDependencies?: Record<string, string>;
+  /**
+   * Defined pages in the project.
+   */
+  pages: PublicPage[];
 }
 
 // When the schema is empty, app will use this placeholder
-export const schemaPlaceholder: AppSchema = {
+export const schemaPlaceholder: AppSchema | ClientAppSchema = {
   id: '', 
   meta: {
     name: 'Kottster App',
     icon: 'https://web.kottster.app/icon.png',
   },
-  navItems: [],
+  pages: [],
+  dataSources: [],
 };

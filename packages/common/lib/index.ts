@@ -1,8 +1,8 @@
 // Models
 export * from './models/user.model';
+export * from './models/appData.model';
 export * from './models/appSchema.model';
 export * from './models/page.model';
-export * from './models/navItem.model';
 export * from './models/stage.model';
 export * from './models/dataSource.model';
 export * from './models/file.model';
@@ -14,7 +14,6 @@ export * from './models/tablePage.model';
 export * from './models/fieldInput.model';
 export * from './models/js.model';
 export * from './models/relationship.model';
-export * from './models/pageSettings.model';
 export * from './models/filter.model';
 export * from './models/template.model';
 
@@ -38,6 +37,7 @@ export * from './utils/getTableData';
 export * from './utils/getRelationshipKeyByColumn';
 export * from './utils/getRelationshipByColumn';
 export * from './utils/transformToKebabCase';
+export * from './utils/getPageTitle';
 
 // Constants
 export * from './constants/dataSourceTypes';
@@ -46,7 +46,6 @@ export * from './constants/postgres';
 export * from './constants/mysql';
 export * from './constants/sqlite';
 export * from './constants/table';
-export * from './constants/pageSettings';
 export * from './constants/mssql';
 
 // Types

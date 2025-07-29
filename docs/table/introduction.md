@@ -19,29 +19,54 @@ Kottster table pages let you **view and manage data** in your database tables.
 
 ## Page structure
 
-Each table page should have its own directory under `app/pages/<pageId>` containing two files. The `<pageId>` becomes the URL path where your page will be accessible (e.g., `/users` for a page in `./app/pages/users/`).
+Each table page requires a `page.json` configuration file in its own directory under `app/pages/<pageId>`. The `<pageId>` becomes the URL path where your page will be accessible (e.g., `/users` for a page in `./app/pages/users/`).
 
-### Backend controller (`api.server.js`)
-This file handles your table's backend logic and database interactions.
+### Configuration file (`page.json`)
+This file defines the table page configuration and is the only required file. You can edit it using the visual editor or modify the file manually.
+
+**Example:**
+
+```json [app/pages/users/page.json]
+{
+  "type": "table",
+  "title": "User Management",
+  ...
+  "config": {
+    // Table configuration goes here
+    "table": "users",
+    "dataSource": "postgres-db-1",
+    "fetchStrategy": "databaseTable",
+    ...
+  }
+}
+```
+
+### Optional customization files
+
+If you need additional customization beyond what the visual editor provides, you can add these optional files:
+
+#### Backend controller (`api.server.js`)
+This file handles custom backend logic and database interactions. Use this when you need custom fetching logic, validations, or hooks beyond what's configured in `page.json`.
 
 **Example:**
 
 ```js [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
-import dataSource from '../../_server/data-sources/postgres';
+import page from './page.json';
 
 // Default export the controller for handling table requests
-const controller = app.defineTableController(dataSource, {
-  rootTable: {
-    table: 'users' // Specifies which database table this page manages
-  }
+const controller = app.defineTableController({
+  ...page.config,
+  // Add custom configuration or logic here
 });
 
 export default controller;
 ```
 
-### Frontend component (`index.jsx`)
-This file defines your page's user interface.
+The backend controller uses [`defineTableController`](./configuration/api.md) to extend the base configuration from `page.json` with custom logic.
+
+#### Frontend component (`index.jsx`)
+This file defines custom user interface components. Use this when you need to customize the table display or add custom functionality.
 
 **Example:**
 
@@ -53,9 +78,7 @@ export default () => (
 );
 ```
 
-The backend controller uses [`defineTableController`](./configuration/api.md) to configure the table including its name, primary key, and available actions like selecting, inserting, updating, and deleting records. The frontend component returns the [`TablePage`](../ui/table-page-component.md) component, which displays the table and forms.
-
-The frontend part is tightly integrated with the backend controller, so you don't need to pass any additional parameters to the `TablePage` component. It automatically connects to the backend API defined in `api.server.js`.
+The frontend component returns the [`TablePage`](../ui/table-page-component.md) component, which automatically connects to your backend configuration. You don't need to pass additional parameters as it's tightly integrated with the backend API.
 
 ## Creating table pages
 
@@ -67,32 +90,15 @@ The fastest way to create table pages is using Kottster's visual editor. It conn
 
 ![Adding a table page using the visual editor](./adding-table-page.png)
 
-When you use the visual editor, your `api.server.js` file will include an import for a `settings.json`:
-
-```js [app/pages/users/api.server.js]
-import { app } from '../../_server/app';
-import dataSource from '../../_server/data-sources/postgres';
-import pageSettings from './settings.json';
-
-const controller = app.defineTableController(dataSource, {
-  ...pageSettings,
-  rootTable: {
-    ...pageSettings.rootTable,
-  }
-});
-
-export default controller;
-```
-
-The `settings.json` file contains your page configuration and is automatically managed by the visual editor. You can still override or customize the configuration directly in the `api.server.js` file if needed.
+When you use the visual editor, it creates a `page.json` file with your table configuration. It contains your page configuration and is automatically managed by the visual editor. If you need additional customization beyond what the visual editor offers, you can create optional `api.server.js` and `index.jsx` files as described above.
 
 ::: info
-Please avoid editing the `settings.json` file manually. It exists solely for the visual editor to store your page settings. If you need to make changes, do so in the `api.server.js` file instead.
+The visual editor manages the `page.json` file automatically. Even though you can edit it manually, it's recommended to use the visual editor for creating and configuring table pages. This ensures that all necessary configurations are correctly set up and reduces the risk of errors.
 :::
 
 ### Option 2: Manual creation
 
-For more control or custom requirements, you can manually create the two files (`api.server.js` and `index.jsx`) in your `./app/pages/<page-id>` directory using the structure shown above.
+For more control or custom requirements, you can manually create the `page.json` file in your `./app/pages/<pageId>` directory. Add optional `api.server.js` and `index.jsx` files only if you need additional customization beyond the base table functionality.
 
 ## Examples
 

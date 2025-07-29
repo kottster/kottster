@@ -2,9 +2,9 @@
 description: "Define custom relationships between tables in Kottster. Learn how to set up one-to-one, one-to-many, and many-to-many relationships."
 ---
 
-# Custom relationships
+# Relationships
 
-By default, Kottster detects relationships between tables based on foreign keys. However, you can also define custom relationships if you need to override the default behavior or if your database schema doesn't follow the standard conventions.
+By default, **Kottster automatically detects relationships between tables based on their foreign keys**. However, you can also define relationships manually if you need to override the default behavior or if your database schema doesn't follow the standard conventions.
 
 To set this up, include the relationship configuration in the `relationships` object inside [`defineTableController`](../../table/introduction.md).
 
@@ -43,23 +43,19 @@ This also simplifies forms for creating or updating users. Instead of typing a `
 
 ```js [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
-import dataSource from '../../_server/data-sources/postgres';
-import pageSettings from './settings.json';
+import page from './page.json';
 
-const controller = app.defineTableController(dataSource, {
-  ...pageSettings,
-  rootTable: {
-    ...pageSettings.rootTable,
-    relationships: [
-      {
-        relation: 'oneToOne',
-        key: 'user_workspace',
-        foreignKeyColumn: 'workspace_id',    
-        targetTable: 'workspaces',
-        targetTableKeyColumn: 'id'
-      },
-    ],
-  },
+const controller = app.defineTableController({
+  ...page.config,
+  relationships: [
+    {
+      relation: 'oneToOne',
+      key: 'user_workspace',
+      foreignKeyColumn: 'workspace_id',    
+      targetTable: 'workspaces',
+      targetTableKeyColumn: 'id'
+    },
+  ],
 });
 
 export default controller;
@@ -105,25 +101,21 @@ Imagine we want to create a page to view data in the `projects` table. By defini
 
 ```js [app/pages/projects/api.server.js]
 import { app } from '../../_server/app';
-import dataSource from '../../_server/data-sources/postgres';
-import pageSettings from './settings.json';
+import page from './page.json';
 
-const controller = app.defineTableController(dataSource, {
-  ...pageSettings,
-  rootTable: {
-    ...pageSettings.rootTable,
-    relationships: [
-      {
-        relation: 'oneToMany',
-        key: 'project_tasks',
-        targetTable: 'tasks',
-        targetTableKeyColumn: 'id',
-        targetTableForeignKeyColumn: 'project_id',
-        columns: ['id', 'title', 'status'],
-        searchableColumns: ['title', 'status'],
-      },
-    ],
-  },
+const controller = app.defineTableController({
+  ...page.config,
+  relationships: [
+    {
+      relation: 'oneToMany',
+      key: 'project_tasks',
+      targetTable: 'tasks',
+      targetTableKeyColumn: 'id',
+      targetTableForeignKeyColumn: 'project_id',
+      columns: ['id', 'title', 'status'],
+      searchableColumns: ['title', 'status'],
+    },
+  ],
 });
 
 export default controller;
@@ -176,31 +168,27 @@ Imagine we want to create a page to view data in the `books` table. By defining 
 
 ```js [app/pages/books/api.server.js]
 import { app } from '../../_server/app';
-import dataSource from '../../_server/data-sources/postgres';
-import pageSettings from './settings.json';
+import page from './page.json';
 
-const controller = app.defineTableController(dataSource, {
-  ...pageSettings,
-  rootTable: {
-    ...pageSettings.rootTable,
-    relationships: [
-      {
-        relation: 'manyToMany',
-        key: 'book_authors',
+const controller = app.defineTableController({
+  ...page.config,
+  relationships: [
+    {
+      relation: 'manyToMany',
+      key: 'book_authors',
 
-        // Junction table details
-        junctionTable: 'author_books',
-        junctionTableSourceKeyColumn: 'book_id',
-        junctionTableTargetKeyColumn: 'author_id',
+      // Junction table details
+      junctionTable: 'author_books',
+      junctionTableSourceKeyColumn: 'book_id',
+      junctionTableTargetKeyColumn: 'author_id',
 
-        // Target table details
-        targetTable: 'authors',
-        targetTableKeyColumn: 'id',
-        columns: ['id', 'full_name'],
-        searchableColumns: ['full_name'],
-      },
-    ],
-  },
+      // Target table details
+      targetTable: 'authors',
+      targetTableKeyColumn: 'id',
+      columns: ['id', 'full_name'],
+      searchableColumns: ['full_name'],
+    },
+  ],
 });
 
 export default controller;

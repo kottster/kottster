@@ -4,77 +4,37 @@ description: "Customize your Kottster app's sidebar navigation with unique items
 
 # Sidebar
 
-The sidebar navigation is the main way users move through your Kottster app. You can customize the navigation items to match your app's structure and functionality.
+The sidebar navigation is the main way users move through your Kottster app. You can customize the navigation items to match your app's structure and functionality. The sidebar will only show pages that users have access to based on their assigned roles.
 
 ## Managing navigation items
 
 ### Visual interface
 
-The easiest way to customize your sidebar is through the visual interface, where you can add, sort, edit, and delete navigation items.
+The easiest way to customize your sidebar is through the visual interface, where you can add, edit, and manage pages while specifying whether each page should be visible in the sidebar along with its icon.
 
 ### Manual configuration
 
-You can also edit navigation items directly in the `kottster-app.json` file by modifying the `navItems` array.
+You can also control sidebar visibility directly in each page's `page.json` config file located in `app/pages/<key>/page.json`. Here you can specify the icon and whether the page should be visible in the sidebar.
 
-## Navigation item structure
+## Page configuration
 
-Each navigation item contains three required properties:
+Each page can be configured with sidebar settings in its `page.json` file:
 
 ```json
 {
-  "id": "users",
-  "name": "Users", 
-  "icon": "users"
+  "type": "custom",
+  "title": "Analytics Dashboard",
+  "icon": "pieChart", // [!code highlight]
+  "hideInSidebar": false, // [!code highlight]
+  ...
 }
 ```
 
-- **`id`** - Unique identifier for the navigation item
-- **`name`** - Display name shown in the sidebar
-- **`icon`** - Icon displayed next to the name
+- `icon` - Icon displayed next to the page name in the sidebar
+- `hideInSidebar` - Set to `true` to hide the page from sidebar navigation
+
+By default, any page is visible in the sidebar and gets a default icon.
 
 ## Available icons
 
 You can choose from the following built-in icons for your navigation items: `users`, `award`, `box`, `briefcase`, `pieChart`, `barChart2`, `shoppingBag`, `creditCard`, `cloud`, `mapPin`, `bookOpen`, `table`, and `sliders`.
-
-## Example configuration
-
-Here's a complete example of a sidebar configuration:
-
-```json
-{
-  "id": "123",
-  "meta": {
-    "name": "Admin Panel",
-    "logo": "/logo.png"
-  },
-  "navItems": [
-    {
-      "id": "dashboard",
-      "name": "Dashboard",
-      "icon": "pieChart"
-    },
-    {
-      "id": "users",
-      "name": "Users",
-      "icon": "users"
-    },
-    {
-      "id": "orders",
-      "name": "Orders",
-      "icon": "shoppingBag"
-    },
-    {
-      "id": "settings",
-      "name": "Settings",
-      "icon": "sliders"
-    }
-  ]
-}
-```
-
-## Page titles
-
-By default, pages automatically use the title from their corresponding navigation item's `name`. If there's no matching navigation item, you'll need to specify the title explicitly:
-
-- For [`Page`](../ui/page-component.md) components, use the [`title`](../ui/page-component.md#title) prop
-- For [`TablePage`](../ui/table-page-component.md) components, use the [`title`](../ui/table-page-component.md#title) prop

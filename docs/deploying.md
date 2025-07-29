@@ -35,7 +35,6 @@ Open `app/_server/app.js` file and update it to use separate keys based on the e
 
 ```javascript [app/_server/app.js]
 import { createApp } from '@kottster/server';
-import { dataSourceRegistry } from './data-sources/registry';
 import schema from '../../kottster-app.json';
 
 export const app = createApp({
@@ -44,8 +43,6 @@ export const app = createApp({
     ? '<your-dev-secret-key>' // [!code highlight]
     : process.env.SECRET_KEY, // [!code highlight]
 });
-
-app.registerDataSources(dataSourceRegistry);
 ```
 
 > **Note:** The `NODE_ENV` variable is set to `development` by default when running `npm run dev`. When you run `npm run start`, it’s set to `production`.

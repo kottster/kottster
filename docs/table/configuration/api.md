@@ -6,122 +6,95 @@ description: "Define a table controller in Kottster to handle server-side reques
 
 The `defineTableController` function creates a server-side controller that handles requests from table pages. It connects to your database and defines what data is available to the table component and how it behaves.
 
+This function is used in the optional `api.server.js` file within a page directory and should be exported as the default export.
+
 ## Basic usage
 
 **Example:**
 
 ```tsx [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
-import dataSource from '../../_server/data-sources/postgres';
+import page from './page.json';
 
-const controller = app.defineTableController(dataSource, {
-  rootTable: {
-    table: 'users' // Specifies database table name
-  }
+const controller = app.defineTableController({
+  ...page.config,
 });
 
 export default controller;
 ```
 
-## Configuration with settings.json
+### Extending page configuration
 
-Table pages generated with the visual editor include a `settings.json` file that contains configuration for the main table and any nested tables. This allows you to modify table settings through the visual editor interface.
-
-### Settings file structure
-
-**Example:**
-
-```json [app/pages/users/settings.json]
-{
-  "_version": "1",
-  
-  // Configuration for the main table (users)
-  "rootTable": {
-    "table": "users",
-    "allowDelete": false
-  },
-  
-  // Configuration for the nested table (e.g. orders)
-  "rootTable_ordersByUserIdTable": {
-    "table": "orders",
-    "allowInsert": false,
-    "allowDelete": false
-  }
-}
-```
-
-### Using settings in the controller
-
-When using the visual editor, your controller will import and apply the settings:
+When you need customization beyond what the visual editor provides, you can add additional configuration to the `page.json` settings in the controller file.
 
 **Example:**
 
 ```tsx [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
-import dataSource from '../../_server/data-sources/postgres';
-import pageSettings from './settings.json';
+import page from './page.json';
 
-const controller = app.defineTableController(dataSource, {
-  ...pageSettings,
-  rootTable: {
-    ...pageSettings.rootTable,
+const controller = app.defineTableController({
+  ...page.config,
+  // Add additional configuration here
+});
+
+export default controller;
+```
+
+**For customization of nested tables:**
+
+```typescript [app/pages/users/api.server.js]
+import { app } from '../../_server/app';
+import page from './page.json';
+
+const controller = app.defineTableController({
+  ...page.config,
+  // Add additional configuration for the main table
+
+  nested: {
+    ...page.config.nested,
+    ordersByUserIdTable: {
+      ...page.config.nested.ordersByUserIdTable,
+      // Add additional configuration for the nested table
+    },
   },
 });
 
 export default controller;
 ```
 
-This approach allows the visual editor to manage your table configuration while still giving you the option to override or extend settings directly in the controller file.
-
-**If you need more customization, beyound what visual editor provides**, you can extend the imported `settings.json` configuration with your own settings. This is useful for advanced users who want more control over table configuration.
-
-```typescript [app/pages/users/api.server.js]
-import { app } from '../../_server/app';
-import dataSource from '../../_server/data-sources/postgres';
-import pageSettings from './settings.json';
-
-export default action = app.defineTableController(dataSource, {
-  ...pageSettings,
-
-  // Configuration for the main table 
-  rootTable: {
-    ...pageSettings.rootTable,
-
-    // Add custom configuration here...
-  },
-
-  // Configuration for the nested table
-  rootTable_ordersByUserIdTable: {
-    ...pageSettings.rootTable_ordersByUserIdTable,
-    
-    // Add custom configuration here...
-  },
-});
-```
-
-::: info
-Please avoid editing the `settings.json` file manually. It exists solely for the visual editor to store your page settings. If you need to make changes, do so in the `api.server.js` file instead.
-:::
-
 ## Usage
 
-The `defineTableController` function takes two required arguments:
-
-*   **`dataSource`**: A data source. Typically, imported from the `app/_server/data-sources` directory.
+The `defineTableController` function takes two arguments:
     
-*   **`settings`**: A configuration object that defines the behavior of the table and its nested tables. The configuration for the main table is defined under the `rootTable` key.
+*   `config`: A configuration object that defines the behavior of the table and its nested tables.
 
-*   **`serverProcedures`**: An optional object that allows you to define custom server procedures for the page. See the [Custom server API](#custom-server-procedures) section for more details.
+*   `serverProcedures`: An optional object that allows you to define custom server procedures for the page. See the [Custom server API](#custom-server-procedures) section for more details.
 
 If you only need to change the way columns and fields are rendered, you can use the [`TablePage`](../../ui/table-page-component.md) component's properties like [`customColumns`](../../ui/table-page-component.md#customcolumns), [`columnTransformer`](../../ui/table-page-component.md#columntransformer), or [`columnOverrides`](../../ui/table-page-component.md#columnoverrides). This approach is useful for modifying the display of columns and fields without changing the backend logic.
 
 ## Parameters
 
+- ### fetchStrategy
+
+  `"databaseTable" | "rawSqlQuery" | "customFetch"`, required
+
+  Specifies the strategy for fetching data for the table. The available options are:
+  - `"databaseTable"`: Fetches data directly from a database table.
+  - `"rawSqlQuery"`: Executes a raw SQL query to fetch data.
+  - `"customFetch"`: Uses a custom data fetcher function (`customDataFetcher`) to retrieve data.
+
+- ### dataSource
+
+  `string`, optional
+
+  Used to specify the data source for the table. This is required if you are using the `databaseTable` or `rawSqlQuery` fetch strategies. The value should match the name of a data source defined in your project.
+
 - ### table
 
   `string`, optional
 
-  Specifies the name of the database table. If not specified, the `customDataFetcher` function should be provided to define the query.
+  Specifies the name of the database table. This is required if you are using the `databaseTable` fetch strategy.
 
 - ### primaryKeyColumn
 
@@ -129,6 +102,7 @@ If you only need to change the way columns and fields are rendered, you can use 
 
   Specifies the primary key column in the table. Typically, this is set to `"id"`.
 
+<!-- TODO: remove -->
 - ### pageSize
 
   `number`, optional
@@ -159,7 +133,8 @@ If you only need to change the way columns and fields are rendered, you can use 
 
   `function`, optional
 
-  Allow to define define custom logic for executing the query. This function is called with the query object and should return a promise that resolves to the query result.
+  <!-- Allow to define define custom logic for executing the query. This function is called with the query object and should return a promise that resolves to the query result. -->
+  Defines a custom function to retrieve data for the table. This function is required if you are using the `customFetch` fetch strategy.
 
   Learn more: [Custom queries](./custom-queries.md)
 
@@ -169,49 +144,60 @@ If you only need to change the way columns and fields are rendered, you can use 
 
   Allows users to insert new records into the table. If not specified, the default value is `true`.
 
-- ### beforeInsert
+- ### allowedRoleIdsToInsert
+
+  `string[]`, optional
+
+  Specifies the role IDs that are allowed to insert records into the table. If not specified, all users can insert records unless `allowInsert` is set to `false`.
+
+- ### validateRecordBeforeInsert
 
   `function`, optional
 
-  A function executed on the record before it is inserted into the table. This function is often used to format data, add missing but required properties, or generate sensitive data that the user should not input directly (e.g., password hashes, access tokens).
+  Defines a function to validate the record values before they are inserted into the table. This function is called with the record values and should return a boolean indicating whether the values are valid.
+
+  It can also throw an error with a message to indicate why the record is invalid.
 
   ```typescript [Example]
-  beforeInsert: (record) => {
-      const secret_token = generate_random_token();
-      const created_at = new Date();
-      const updated_at = new Date();    
-  
-      return {
-          ...record,
-          secret_token,
-          created_at,
-          updated_at
-      }
+  validateRecordBeforeInsert: (values) => {
+    if (!record.email.includes('@')) {
+      throw new Error('Invalid email');
+    }
+
+    return true;
   }
   ```
 
-- ### canBeInserted
+- ### transformRecordBeforeInsert
 
   `function`, optional
 
-  A function for server-side validation before a record is inserted.
-
-  If the function returns `true`, the record is inserted.
-
-  If it returns `false` or throws an `Error`, the record is not inserted, and the user receives an error message.
+  A function to transform the record values before they are inserted into the table. This function is called with the record values and should return the transformed values.
 
   ```typescript [Example]
-  canBeInserted: (record) => {
-      if (!record.email.includes('@')) {
-          throw new Error('Invalid email');
-      }
-      
-      const isEmailTaken = !!(await knex('users').where('email', record.email).count());
-      if (isEmailTaken) {
-          throw new Error('A user with this email already exists');
-      }
-  
-      return true;
+  transformRecordBeforeInsert: (values) => {
+    const secret_token = generate_random_token();
+    const created_at = new Date();
+    const updated_at = new Date();
+
+    return {
+      ...values,
+      secret_token,
+      created_at,
+      updated_at
+    }
+  }
+  ```
+
+- ### afterInsert
+
+  `function`, optional
+
+  A function executed after the record is inserted into the table. This function is often used to perform additional actions, such as sending notifications or updating related records.
+
+  ```typescript [Example]
+  afterInsert: (primaryKey, values) => {
+    console.log(`Record with ID ${primaryKey} was inserted with values:`, values);
   }
   ```
 
@@ -221,38 +207,54 @@ If you only need to change the way columns and fields are rendered, you can use 
 
   Allows users to update records in the table. If not specified, the default value is `true`.
 
-- ### beforeUpdate
+- ### allowedRoleIdsToUpdate
+
+  `string[]`, optional
+
+  Specifies the role IDs that are allowed to update records in the table. If not specified, all users can update records unless `allowUpdate` is set to `false`.
+
+- ### validateRecordBeforeUpdate
 
   `function`, optional
 
-  A function executed on the record before it is updated in the table. This function is often used to format data, add missing but required properties, or generate sensitive data that the user should not input directly (e.g., password hashes, access tokens).
+  Defines a function to validate the record values before they are updated in the table. This function is called with the primary key and record values, and should return a boolean indicating whether the values are valid.
+
+  It can also throw an error with a message to indicate why the record is invalid.
 
   ```typescript [Example]
-  beforeUpdate: (record) => {
-      return {
-          ...record,
-          updated_at: new Date()
-      }
+  validateRecordBeforeUpdate: (primaryKey, values) => {
+    if (!values.email.includes('@')) {
+      throw new Error('Invalid email');
+    }
+
+    return true;
   }
   ```
 
-- ### canBeUpdated
+- ### transformRecordBeforeUpdate
 
   `function`, optional
 
-  A function for server-side validation before a record is updated.
-
-  If the function returns `true`, the record is updated.
-
-  If it returns `false` or throws an `Error`, the record is not updated, and the user receives an error message.
+  Defines a function to transform the record values before they are updated in the table. This function is called with the primary key and record values, and should return the transformed values.
 
   ```typescript [Example]
-  canBeUpdated: (record) => {
-      if (!record.email.includes('@')) {
-          throw new Error('Invalid email');
-      }
+  transformRecordBeforeUpdate: (primaryKey, values) => {
+    return {
+      ...values,
+      updated_at: new Date()
+    }
+  }
+  ```
 
-      return true;
+- ### afterUpdate
+
+  `function`, optional
+
+  A function executed after the record is updated in the table. This function is often used to perform additional actions, such as sending notifications or updating related records.
+
+  ```typescript [Example]
+  afterUpdate: (primaryKey, values) => {
+    console.log(`Record with ID ${primaryKey} was updated with values:`, values);
   }
   ```
 
@@ -262,25 +264,57 @@ If you only need to change the way columns and fields are rendered, you can use 
 
   Allows users to delete records from the table. If not specified, the default value is `true`.
 
-- ### canBeDeleted
+- ### allowedRoleIdsToDelete
+
+  `string[]`, optional
+
+  Specifies the role IDs that are allowed to delete records from the table. If not specified, all users can delete records unless `allowDelete` is set to `false`.
+
+- ### validateRecordBeforeDelete
 
   `function`, optional
 
-  A function for server-side validation before a record is deleted.
+  Defines a function to validate the record before it is deleted from the table. This function is called with the primary key and should return a boolean indicating whether the record can be deleted.
 
-  If the function returns `true`, the record is deleted.
-
-  If it returns `false` or throws an `Error`, the record is not deleted, and the user receives an error message.
+  It can also throw an error with a message to indicate why the record cannot be deleted.
 
   ```typescript [Example]
-  canBeDeleted: (record) => {
-      if (record.role === 'ADMIN') {
-          throw new Error('Admin users cannot be deleted.');
-      }
-  
-      return true;
+  validateRecordBeforeDelete: (primaryKey) => {
+    if (primaryKey === 'admin') {
+      throw new Error('Admin user cannot be deleted');
+    }
+
+    return true;
   }
   ```
+
+- ### afterDelete
+
+  `function`, optional
+
+  A function executed after the record is deleted from the table. This function is often used to perform additional actions, such as sending notifications or deleting related records.
+
+  ```typescript [Example]
+  afterDelete: (primaryKey) => {
+    console.log(`Record with ID ${primaryKey} was deleted`);
+  }
+  ```
+
+- ### customSqlQuery
+
+  `string`, optional
+
+  Specifies a custom SQL query to retrieve the records for the table. This property is required if you are using the `rawSqlQuery` fetch strategy.
+  
+  Learn more: [Custom SQL queries](./custom-queries.md)
+
+- ### customSqlCountQuery
+
+  `string`, optional
+
+  Specifies a custom SQL query to count the records for the table. This query should return a single numeric value.
+
+  Learn more: [Custom SQL queries](./custom-queries.md)
 
 - ### knexQueryModifier
 
@@ -309,6 +343,12 @@ If you only need to change the way columns and fields are rendered, you can use 
 
   Each calculated column should have the following properties:
 
+  - #### label
+
+    `string`, optional
+
+    Specifies the display name of the calculated column. If not specified, the label will be generated automatically based on the column alias.
+
   - #### alias
 
     `string`, required
@@ -330,8 +370,19 @@ If you only need to change the way columns and fields are rendered, you can use 
     FROM orders 
     WHERE orders.user_id = main.id AND orders.status = 'completed'
     ```
+  - #### position
+
+    `number`, optional
+
+    Specifies the position of the calculated column in the table. If not specified, the calculated columns will be displayed at the end of the table.
 
   Learn more: [Adding calculated columns](../customization/add-custom-columns.md#calculated-columns)
+
+- ### nested
+
+  An object that defines configurations for nested tables. Each key in this object corresponds to a nested table configuration.
+
+  Each nested table configuration has all the properties of a regular table configuration.
 
 - ### relationships
 
@@ -488,35 +539,25 @@ By default, form fields are automatically generated based on your database schem
 
 But you can also define the form input explicitly using the `formInput` property in the [column configuration](#columns).
 
-Example of a table configuration with form inputs:
-
-```json [app/pages/users/settings.json]
-{
-  "_version": "1",
-  
-  "rootTable": {
-    "table": "users",
-    
-    "columns": [
-      {
-        "column": "description",
-        "label": "Description",
-        "formInput": {
-          "type": "textarea"
-        }
-      },
-      {
-        "column": "balance",
-        "label": "Balance",
-        "prefix": "$",
-        "formInput": {
-          "type": "numberInput",
-          "allowDecimal": true
-        }
-      }
-    ]
+```typescript [Example]
+columns: [
+  {
+    'column': 'description',
+    'label: 'Description',
+    'formInput: {
+      'type': 'textarea'
+    }
+  },
+  {
+    'column': 'balance',
+    'label': 'Balance',
+    'prefix': '$',
+    'formInput': {
+      'type': 'numberInput',
+      'allowDecimal': true
+    }
   }
-}
+]
 ```
 
 ### Field input types
@@ -633,7 +674,9 @@ Below is a list of supported field input types and their interfaces:
 
 ### Custom field input
 
-If you need to use a custom field input, you can define it using the type `custom` and the `renderComponent` function.
+If you need to use a custom field input, you can define it using the type `custom` and the `renderComponent` function. This requires you to add `index.jsx` file in your page directory. 
+
+Learn more: [Table Page Component](../../ui/table-page-component.md)
 
 This function receives the following parameters:
 - `value`: The current value of the field.
@@ -669,12 +712,10 @@ You can extend your table controller with [custom server procedures](../../custo
 
 ```tsx [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
-import dataSource from '../../_server/data-sources/postgres';
+import page from './page.json';
 
-const controller = app.defineTableController(dataSource, {
-  rootTable: {
-    table: 'users'
-  }
+const controller = app.defineTableController({
+  ...page.config,
 }, {
   // Custom server procedures
   sendWelcomeEmail: async (data) => {

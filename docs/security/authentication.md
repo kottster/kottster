@@ -21,11 +21,11 @@ User management functions are processed through our platform:
 
 ### Token-based flow
 
-When users authenticate, they receive JWT tokens that your self-hosted app validates locally. Your app verifies these tokens without needing to communicate with our servers for each request, ensuring fast performance and reducing external dependencies during normal operation.
+When users authenticate, they receive JWT tokens stored in localStorage. For each request, your Kottster app validates the token and fetches the user's current permissions from our external service.
 
-**How token verification works**: Your Kottster app can verify tokens issued by out paltform because the secret key used for token signing is stored in both our platform database and your app configuration. This shared secret enables your app to validate tokens independently while maintaining security.
+Permission data is cached for several minutes to reduce external API calls and improve performance.
 
-## Trade-offs of this approach
+## Strengths and limitations
 
 ### Benefits
 
@@ -63,7 +63,6 @@ Example of custom middleware that validates user status with an external API:
 
 ```javascript [app/_server/app.js]
 import { createApp } from '@kottster/server';
-import { dataSourceRegistry } from './data-sources/registry';
 import schema from '../../kottster-app.json';
 import axios from 'axios';
 
@@ -81,8 +80,6 @@ export const app = createApp({
     return true;
   }
 });
-
-app.registerDataSources(dataSourceRegistry);
 ```
 
 ### Use cases for additional security middleware

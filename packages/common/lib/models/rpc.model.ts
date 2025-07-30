@@ -5,14 +5,13 @@ interface CustomRpcInput {
   procedureInput: any;
 };
 
-export type RpcActionType = 'custom' | 'page_settings' | 'table_select' | 'table_selectOne' | 'table_insert' | 'table_update' | 'table_delete';
+export type RpcActionType = 'custom' | 'table_select' | 'table_selectOne' | 'table_insert' | 'table_update' | 'table_delete';
 
 export interface RpcActionBody<T extends RpcActionType> {
   [key: string]: any;
   action: T;
   input:
-      T extends 'page_settings' ? any 
-    : T extends 'table_select' ? TablePageInputSelect
+      T extends 'table_select' ? TablePageInputSelect
     : T extends 'table_selectOne' ? TablePageInputSelectSingle
     : T extends 'table_insert' ? TablePageInputInsert
     : T extends 'table_update' ? TablePageInputUpdate

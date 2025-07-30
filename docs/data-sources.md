@@ -28,15 +28,13 @@ After creating an app, you’ll land on the "**Getting Started**" page, where yo
 
 On the same "**Getting Started**" page, you can choose "**Edit file manually**" option to get instructions on how to add a data source using the CLI.
 
-### 3. Manually
+After you execute the command, a folder with the data source will be created in the `_server/data-sources/` directory.
 
-You can also add a data source by creating a new directory in the `server/data-sources` folder and add a `index.js` file inside it. The file should export a function that returns a data source object.
-
-After this, go to `./app/_server/data-sources/registry.js` and add the data source to the registry.
-
-Restart the server to apply the changes.
+This method is extremely useful if you want to set additional parameters for connection, such as SSL or custom connection options.
 
 ## Table configuration
+
+<!-- TODO: check -->
 
 Each data source configuration contains a `tablesConfig` object that allows to define restrictions and permissions for each table globally.
 

@@ -1,4 +1,4 @@
-import { DSAction } from "../models/action.model";
+import { DevAction } from "../models/action.model";
 import { FileWriter } from "../services/fileWriter.service";
 
 interface Data {
@@ -12,8 +12,8 @@ interface Result {}
 /**
  * Get the data source info
  */
-export class InitApp extends DSAction {
-  public async execute({ id, name, secretKey }: Data): Promise<Result> {
+export class InitApp extends DevAction {
+  public async executeDevAction({ id, name, secretKey }: Data): Promise<Result> {
     const fileWrtier = new FileWriter({ usingTsc: this.app.usingTsc });
     fileWrtier.writeSchemaJsonFile({
       id: id.toString(),
@@ -21,7 +21,6 @@ export class InitApp extends DSAction {
         name,
         icon: 'https://web.kottster.app/icon.png',
       },
-      navItems: []
     });
 
     fileWrtier.writeAppServerFileWithSecretKey(secretKey);

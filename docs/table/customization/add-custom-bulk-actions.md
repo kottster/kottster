@@ -2,7 +2,7 @@
 description: "Add custom bulk actions to Kottster table pages to enhance workflows. Learn how to create client-side actions, auto-calling server procedures, and manually calling server procedures."
 ---
 
-# Add custom bulk actions
+# Add bulk actions
 
 ![Example of custom bulk actions in Kottster](./example-custom-bulk-actions.png)
 
@@ -68,14 +68,10 @@ export default () => (
 
 ```js [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
-import dataSource from '../../_server/data-sources/mysql';
-import pageSettings from './settings.json';
+import page from './page.json';
 
-const controller = app.defineTableController(dataSource, {
-  ...pageSettings,
-  rootTable: {
-    ...pageSettings.rootTable,
-  }
+const controller = app.defineTableController({
+  ...page.config
 }, {
   sendBulkWelcomeEmails: async (records) => {
     console.debug(`[server] Sending welcome emails to ${records.length} users`);

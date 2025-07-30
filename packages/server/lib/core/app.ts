@@ -1,13 +1,11 @@
+import * as jose from 'jose';
 import { ExtendAppContextFunction } from '../models/appContext.model';
 import { PROJECT_DIR } from '../constants/projectDir';
-import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, RpcActionBody, TablePageInputSelect, TablePageInputDelete, TablePageInputUpdate, TablePageInputInsert, isSchemaEmpty, schemaPlaceholder, ApiResponse, TablePageInputSelectSingle, PageSettings, pageSettingsTablePageKey } from '@kottster/common';
+import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, RpcActionBody, TablePageInputSelect, TablePageInputDelete, TablePageInputUpdate, TablePageInputInsert, isSchemaEmpty, schemaPlaceholder, ApiResponse, TablePageInputSelectSingle, Page, TablePageConfig, TablePageInputSelectUsingExecuteQuery, TablePageResultSelectDTO } from '@kottster/common';
 import { DataSourceRegistry } from './dataSourceRegistry';
 import { ActionService } from '../services/action.service';
-import * as jose from 'jose';
-import { commonHeaders } from '../constants/commonHeaders';
 import { DataSourceAdapter } from '../models/dataSourceAdapter.model';
 import { parse as parseCookie } from 'cookie';
-import { SafePageSettings } from '../models/safePageSettings.model';
 import { Request, Response, NextFunction } from 'express';
 import { createServer } from '../factories/createServer';
 
@@ -35,7 +33,7 @@ export interface KottsterAppOptions {
 
 interface EnsureValidTokenResponse {
   isTokenValid: boolean;
-  newRequest: Request;
+  user: User | null;
   invalidTokenErrorMessage?: string;
 }
 
@@ -52,6 +50,11 @@ export class KottsterApp {
   public schema: AppSchema;
   private customEnsureValidToken?: (request: Request) => Promise<EnsureValidTokenResponse>;
   private postAuthMiddleware?: PostAuthMiddleware;
+
+  /**
+   * Used to store the token cache
+   */
+  private tokenCache = new Map<string, { data: { user: User; appId: string }; expires: number }>();
   
   public extendContext: ExtendAppContextFunction;
 
@@ -59,7 +62,7 @@ export class KottsterApp {
     this.appId = options.schema.id ?? '';
     this.secretKey = options.secretKey ?? '';
     this.usingTsc = checkTsUsage(PROJECT_DIR);
-    this.schema = !isSchemaEmpty(options.schema) ? options.schema : schemaPlaceholder;
+    this.schema = (!isSchemaEmpty(options.schema) ? options.schema : schemaPlaceholder) as AppSchema;
     this.customEnsureValidToken = options.__ensureValidToken;
     this.postAuthMiddleware = options.postAuthMiddleware;
     this.readOnlyMode = options.__readOnlyMode ?? false;
@@ -77,6 +80,7 @@ export class KottsterApp {
 
       if (this) {
         adapter.setApp(this);
+        adapter.setData(dataSource);
         adapter.setTablesConfig(dataSource.tablesConfig);
         adapter.connect();
       };
@@ -93,10 +97,6 @@ export class KottsterApp {
 
   public async executeAction(action: string, data: any) {
     return await ActionService.getAction(this, action).execute(data);
-  }
-
-  public async executeDevSyncAction(action: string, data: any) {
-    return await ActionService.getDSAction(this, action).execute(data);
   }
 
   /**
@@ -130,49 +130,20 @@ export class KottsterApp {
     }
   }
 
-  /**
-   * Get the middleware for the app
-   * @param req The request object
-   * @returns The middleware function
-   */
-  public getDevSyncApiRoute() {
-    return async (req: Request, res: Response, next: NextFunction) => {
-      if (req.method === 'GET') {
-        next();
-        return;
-      }
-  
-      try {
-        const result = await this.handleDevSyncApiRequest(req);
-        
-        if (result) {
-          res.setHeader('Content-Type', 'application/json');
-          res.status(200).json(result);
-          return;
-        } else {
-          res.status(404).json({ error: 'Not Found' });
-          return;
-        }
-      } catch (error) {
-        console.error('Error handling devsync API request:', error);
-        res.status(500).json({ error: 'Internal Server Error' });
-        return;
-      }
-    }
-  }
-
   private async handleInternalApiRequest(request: Request): Promise<any> {
     let result: ApiResponse;
     
     try {
-      const { isTokenValid, newRequest, invalidTokenErrorMessage } = await this.ensureValidToken(request);
-      if (!isTokenValid) {
+      const { isTokenValid, invalidTokenErrorMessage } = await this.ensureValidToken(request);
+
+      const action = request.query.action as string | undefined;
+      const actionData = request.body;
+      
+      // If the action is 'getAppSchema', we don't need to throw an error for invalid token
+      if (!isTokenValid && action !== 'getAppSchema' && action !== 'initApp') {
         throw new Error(`Invalid JWT token: ${invalidTokenErrorMessage}`);
       }
-      
-      const action = newRequest.query.action as string | undefined;
-      const actionData = newRequest.body;
-  
+
       if (!action) {
         throw new Error('Action not found in request');
       }
@@ -180,33 +151,6 @@ export class KottsterApp {
       result = {
         status: 'success',
         result: await this.executeAction(action, actionData),
-      };
-    } catch (error) {
-      console.error('Error handling Kottster API request:', error);
-      
-      result = {
-        status: 'error',
-        error: error.message,
-      };
-    }
-
-    return result;
-  }
-
-  private async handleDevSyncApiRequest(request: Request): Promise<any> {
-    let result: ApiResponse;
-    
-    try {
-      const action = request.query.action as string | undefined;
-      const actionData = request.body;
-  
-      if (!action) {
-        return new Response('Action not found in request', { status: 400, headers: commonHeaders });
-      }
-  
-      result = {
-        status: 'success',
-        result: await this.executeDevSyncAction(action, actionData),
       };
     } catch (error) {
       console.error('Error handling Kottster API request:', error);
@@ -229,13 +173,13 @@ export class KottsterApp {
     procedures: T
   ): RequestHandler & { procedures: T } {
     const func: RequestHandler = async (req, res) => {
-      const { isTokenValid, newRequest, invalidTokenErrorMessage } = await this.ensureValidToken(req);
+      const { isTokenValid, invalidTokenErrorMessage } = await this.ensureValidToken(req);
       if (!isTokenValid) {
         res.status(401).json({ error: `Invalid JWT token: ${invalidTokenErrorMessage}` });
         return;
       }
 
-      const body = await newRequest.body as RpcActionBody<'custom'>;
+      const body = await req.body as RpcActionBody<'custom'>;
       const { procedure, procedureInput } = body.input;
 
       if (procedure in procedures) {
@@ -273,22 +217,91 @@ export class KottsterApp {
    * @returns The express request handler
    */
   public defineTableController<T extends Record<string, (input: any) => any>>(
-    dataSource: DataSource, 
-    pageSettings: SafePageSettings,
+    tablePageConfig: TablePageConfig,
     procedures?: T
   ): RequestHandler  & { procedures: T } {
-    const typesPageSettings = pageSettings as PageSettings;
+    const dataSource = this.dataSources.find(ds => ds.name === tablePageConfig.dataSource);
+    if (!dataSource && (tablePageConfig.fetchStrategy === 'databaseTable' || tablePageConfig.fetchStrategy === 'rawSqlQuery')) {
+      throw new Error(`Data source "${tablePageConfig.dataSource}" not found`);
+    }
 
     const func: RequestHandler = async (req, res, next) => {
       // If the request is a custom one, handle it by the custom controller
       const body = await req.body as RpcActionBody<'custom'>;
       const action = body.action;
+
+      const { isTokenValid, user, invalidTokenErrorMessage } = await this.ensureValidToken(req);
+      if (!isTokenValid || !user) {
+        res.status(401).json({ error: `Invalid JWT token: ${invalidTokenErrorMessage}` });
+        return;
+      }
+
+      const page = (req as Request & { page?: Page }).page;
+      if (!page) {
+        res.status(404).json({ error: 'Specified page not found' });
+        return;
+      }
+
       if (action === 'custom') {
         return this.defineCustomController(procedures as T)(req, res, next);
       }
 
       try {
-        const result = await this.processTableControllerRequest(dataSource, req, typesPageSettings);
+        const body = await req.body as RpcActionBody<'table_select' | 'table_selectOne' | 'table_insert' | 'table_update' | 'table_delete'>;
+        let result: any;
+
+        try {
+          const dataSourceAdapter = dataSource?.adapter as DataSourceAdapter | undefined;
+          const databaseSchema = dataSourceAdapter ? await dataSourceAdapter.getDatabaseSchema() : undefined;
+
+          if (page.allowedRoleIds?.length && !page.allowedRoleIds.includes(user.role.id) && this.stage === Stage.production) {
+            throw new Error('You do not have access to this page');
+          }
+          
+          // If the table select action is used and fetch strategy is 'customFetch', we need to execute the custom query right away
+          if (body.action === 'table_select' && tablePageConfig.fetchStrategy === 'customFetch') {
+            result = tablePageConfig.customDataFetcher ? await tablePageConfig.customDataFetcher(body.input as TablePageInputSelectUsingExecuteQuery) : {
+              records: [],
+            } as TablePageResultSelectDTO;
+          } else {
+            if (!dataSource) {
+              throw new Error(`Data source "${tablePageConfig.dataSource}" not found`);
+            }
+            if (!dataSourceAdapter) {
+              throw new Error(`Data source adapter for "${tablePageConfig.dataSource}" not found`);
+            }
+            if (!databaseSchema) {
+              throw new Error(`Database schema for "${tablePageConfig.dataSource}" not found`);
+            }
+            
+            if (body.action === 'table_select') {
+              result = await dataSourceAdapter?.getTableRecords(body.input as TablePageInputSelect, databaseSchema, tablePageConfig);
+            } else if (body.action === 'table_selectOne') {
+              result = await dataSourceAdapter.getOneTableRecord(body.input as TablePageInputSelectSingle, databaseSchema, tablePageConfig);
+            } else if (body.action === 'table_insert') {
+              if (tablePageConfig.allowedRoleIdsToInsert?.length && this.stage === Stage.production && !tablePageConfig.allowedRoleIdsToInsert.includes(user.role.id)) {
+                throw new Error('You do not have permission to create records in this table');
+              }
+
+              result = await dataSourceAdapter.insertTableRecord(body.input as TablePageInputInsert, databaseSchema, tablePageConfig);
+            } else if (body.action === 'table_update') {
+              if (tablePageConfig.allowedRoleIdsToUpdate?.length && this.stage === Stage.production && !tablePageConfig.allowedRoleIdsToUpdate.includes(user.role.id)) {
+                throw new Error('You do not have permission to update records in this table');
+              }
+
+              result = await dataSourceAdapter.updateTableRecords(body.input as TablePageInputUpdate, databaseSchema, tablePageConfig);
+            } else if (body.action === 'table_delete') {
+              if (tablePageConfig.allowedRoleIdsToDelete?.length && this.stage === Stage.production && !tablePageConfig.allowedRoleIdsToDelete.includes(user.role.id)) {
+                throw new Error('You do not have permission to delete records in this table');
+              }
+
+              result = await dataSourceAdapter.deleteTableRecords(body.input as TablePageInputDelete, databaseSchema, tablePageConfig);
+            }
+          };
+        } catch (error) {
+          throw new Error(error);
+        }
+        
         res.json({
           status: 'success',
           result,
@@ -313,60 +326,61 @@ export class KottsterApp {
     return func as RequestHandler & { procedures: T };
   };
 
-  private async processTableControllerRequest(dataSource: DataSource, request: Request, pageSettings: PageSettings): Promise<any> {
-    const tablePageConfig = pageSettings[pageSettingsTablePageKey];
-
-    const { isTokenValid, newRequest, invalidTokenErrorMessage } = await this.ensureValidToken(request);
-    if (!isTokenValid) {
-      throw new Error(`Invalid JWT token: ${invalidTokenErrorMessage}`);
-    }
-
-    const body = await newRequest.body as RpcActionBody<'page_settings' | 'table_select' | 'table_selectOne' | 'table_insert' | 'table_update' | 'table_delete'>;
-
-    try {
-      if (body.action === 'page_settings') {
-        return pageSettings;
-      } else {
-        const dataSourceAdapter = dataSource.adapter as DataSourceAdapter;
-        const databaseSchema = await dataSourceAdapter.getDatabaseSchema();
-
-        if (body.action === 'table_select') {
-          const result = await dataSourceAdapter.getTableRecords(body.input as TablePageInputSelect, databaseSchema, tablePageConfig);
-          return result;
-        } else if (body.action === 'table_selectOne') {
-          const result = await dataSourceAdapter.getOneTableRecord(body.input as TablePageInputSelectSingle, databaseSchema, tablePageConfig);
-          return result;
-        } else if (body.action === 'table_insert') {
-          const result = await dataSourceAdapter.insertTableRecord(body.input as TablePageInputInsert, databaseSchema, tablePageConfig);
-          return result;
-        } else if (body.action === 'table_update') {
-          const result = await dataSourceAdapter.updateTableRecords(body.input as TablePageInputUpdate, databaseSchema, tablePageConfig);
-          return result;
-        } else if (body.action === 'table_delete') {
-          const result = await dataSourceAdapter.deleteTableRecords(body.input as TablePageInputDelete, databaseSchema, tablePageConfig);
-          return result;
-        };
+  private cleanupExpiredTokenCache(): void {
+    const now = Date.now();
+    for (const [token, cached] of this.tokenCache.entries()) {
+      if (cached.expires <= now) {
+        this.tokenCache.delete(token);
       }
-    } catch (error) {
-      throw new Error(error);
+    }
+  };
+
+  private async getDataFromToken(token: string): Promise<{ user: User; appId: string }> {
+    // Check cache and return cached data if available
+    const cached = this.tokenCache.get(token);
+    if (cached && cached.expires > Date.now()) {
+      return cached.data;
     }
 
-    throw new Error('Invalid action');
-  }
-
-  private async getDataFromToken(token: string) {
     const { payload } = await jose.jwtVerify(token, new TextEncoder().encode(this.secretKey));
     const decodedToken = payload as unknown as JWTTokenPayload;
-  
-    const user: User = {
-      id: decodedToken.userId,
-      email: decodedToken.userEmail,
+    if (!decodedToken.appId || decodedToken.appId !== this.appId || !decodedToken.userId) {
+      throw new Error('Invalid JWT token');
+    }
+
+    const response = await fetch(`${process.env.KOTTSTER_API_BASE_URL || 'https://api.kottster.app'}/v3/apps/${this.appId}/users/current`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch user data by JWT token: ${response.statusText}`);
     };
-  
-    return { 
+    const user = await response.json() as User;
+    const result = { 
       appId: decodedToken.appId,
       user 
     };
+
+    // Cache result
+    this.tokenCache.set(token, {
+      data: result,
+      expires: Date.now() + 60 * 1000 // 60s
+    });
+    this.cleanupExpiredTokenCache();
+  
+    return result;
+  }
+
+  public createRequestWithPageDataMiddleware(pageConfig: Page): RequestHandler {
+    const handler: RequestHandler = (req, res, next) => {
+      (req as Request & { page?: Page }).page = pageConfig;
+
+      next();
+    };
+
+    return handler;
   }
 
   private async ensureValidToken(request: Request): Promise<EnsureValidTokenResponse> {
@@ -382,11 +396,19 @@ export class KottsterApp {
       token = cookieData.jwtToken;
     }
     if (!token) {
-      return { isTokenValid: false, newRequest: request, invalidTokenErrorMessage: 'Invalid JWT token: token not passed' };
+      return { 
+        isTokenValid: false, 
+        user: null,
+        invalidTokenErrorMessage: 'Invalid JWT token: token not passed' 
+      };
     }
 
     if (!this.secretKey) {
-      return { isTokenValid: false, newRequest: request, invalidTokenErrorMessage: 'Invalid JWT token: secret key not set' };
+      return { 
+        isTokenValid: false, 
+        user: null,
+        invalidTokenErrorMessage: 'Invalid JWT token: secret key not set' 
+      };
     }
 
     try {
@@ -394,18 +416,22 @@ export class KottsterApp {
       if (String(appId) !== String(this.appId)) {
         throw new Error('Invalid JWT token: invalid app ID');
       }
-      
-      const newRequest = request as Request & { user?: User };
-      newRequest.user = user;
 
       // If a post-auth middleware is provided, call it
       if (this.postAuthMiddleware) {
-        await this.postAuthMiddleware(user, newRequest);
+        await this.postAuthMiddleware(user, request);
       }
       
-      return { isTokenValid: true, newRequest };
+      return { 
+        isTokenValid: true, 
+        user,
+      };
     } catch (error) {
-      return { isTokenValid: false, newRequest: request, invalidTokenErrorMessage: error.message };
+      return { 
+        isTokenValid: false, 
+        user: null, 
+        invalidTokenErrorMessage: error.message 
+      };
     }
   }
 

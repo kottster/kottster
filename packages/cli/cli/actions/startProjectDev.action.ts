@@ -92,7 +92,7 @@ export async function startProjectDev(options: Options): Promise<void> {
         '--include', './app/_server/**/*.js',
         '--include', './app/pages/**/api.server.ts',
         '--include', './app/pages/**/api.server.js',
-        '--include', './app/pages/**/settings.json',
+        '--include', './app/**/*.json',
         usingTsc ? './app/_server/server.ts' : './app/_server/server.js'
       ],
       {

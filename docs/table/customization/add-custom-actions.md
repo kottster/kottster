@@ -2,7 +2,7 @@
 description: "Add custom actions to Kottster table pages to enhance workflows. Learn how to create client-side actions, auto-calling server procedures, and manually calling server procedures."
 ---
 
-# Add custom actions
+# Add actions
 
 ![Example of custom actions in Kottster](./example-custom-actions.png)
 
@@ -67,14 +67,10 @@ export default () => (
 
 ```js [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
-import dataSource from '../../_server/data-sources/mysql';
-import pageSettings from './settings.json';
+import page from './page.json';
 
-const controller = app.defineTableController(dataSource, {
-  ...pageSettings,
-  rootTable: {
-    ...pageSettings.rootTable,
-  }
+const controller = app.defineTableController({
+  ...page.config
 }, {
   sendWelcomeEmail: async (record) => {
     console.debug(`[server] Sending welcome email to ${record.email}`);

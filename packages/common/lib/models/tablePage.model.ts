@@ -25,7 +25,8 @@ export interface TablePageInputSelect extends TablePageInputBase {
 }
 
 export interface TablePageInputSelectUsingExecuteQuery extends TablePageInputBase {
-  page?: number;
+  page: number;
+  pageSize: number;
   search?: string;
 }
 
@@ -48,7 +49,7 @@ export interface TablePageInputInsert extends TablePageInputBase {
 
 export interface TablePageInputUpdate extends TablePageInputBase {
   tablePageConfig?: TablePageConfig;
-  primaryKeys: (string | number)[];
+  primaryKey: any;
   values: Record<string, any>;
 }
 
@@ -132,7 +133,7 @@ export interface TablePageConfigColumn {
     recordIndex: number, 
     data: {
       records: TablePageResultSelectRecord[];
-      totalRecords: number;
+      total: number;
     }
   ) => any;
 
@@ -141,6 +142,12 @@ export interface TablePageConfigColumn {
 }
 
 export interface TablePageConfigCalculatedColumn {
+  /** Display name for the column */
+  label?: string;
+
+  /** Client-side index of the column in the table */
+  position?: number;
+
   /**
    * Raw SQL expression for the calculated column
    * Use 'main' as the alias for the main table
@@ -155,27 +162,115 @@ export interface TablePageConfigCalculatedColumn {
   alias: string;
 }
 
+export enum TableFetchStrategy {
+  databaseTable = 'databaseTable',
+  rawSqlQuery = 'rawSqlQuery',
+  customFetch = 'customFetch',
+}
+
 export interface TablePageConfig {
+  /** 
+   * Set up using no-code 
+   */
+
   table?: string;
+  dataSource?: string;
+  fetchStrategy: keyof typeof TableFetchStrategy;
+
   primaryKeyColumn?: string;
   pageSize?: number;
+  
   columns?: TablePageConfigColumn[];
   calculatedColumns?: TablePageConfigCalculatedColumn[];
 
-  executeQuery?: (input: TablePageInputSelectUsingExecuteQuery) => Promise<TablePageResultSelectDTO>;
-
   allowInsert?: boolean;
-  beforeInsert?: (record: Record<string, any>) => Record<string, any>;
-  canBeInserted?: (record: Record<string, any>) => boolean;
-
   allowUpdate?: boolean;
-  beforeUpdate?: (record: Record<string, any>) => Record<string, any>;
-  canBeUpdated?: (record: Record<string, any>) => boolean;
-
   allowDelete?: boolean;
-  canBeDeleted?: (record: Record<string, any>) => boolean;
 
-  /** Column name to sort by default */
+  allowedRoleIdsToInsert?: string[];
+  allowedRoleIdsToUpdate?: string[];
+  allowedRoleIdsToDelete?: string[];
+
+  customSqlQuery?: string;
+  customSqlCountQuery?: string;
+
+  /** 
+   * Set up using manual configuration
+   */
+
+  /**
+   * Custom fetcher function to retrieve data.
+   * The function should return records and total count
+   * @param input - The input parameters for fetching data (page, search, etc.)
+   * @returns An object containing records and total
+   */
+  customDataFetcher?: (input: TablePageInputSelectUsingExecuteQuery) => Promise<TablePageResultSelectDTO>;
+
+  /**
+   * Function to check if a record can be inserted.
+   * This can be used to perform custom validations before insertion
+   * @param values - The values of the record to be inserted
+   * @returns A boolean indicating whether the record can be inserted
+   */
+  validateRecordBeforeInsert?: (values: Record<string, any>) => boolean | Promise<boolean>;
+
+  /**
+   * Function to modify the record before inserting it.
+   * @param values - The values of the record to be inserted
+   * @returns The modified record to be inserted
+   */
+  transformRecordBeforeInsert?: (values: Record<string, any>) => Record<string, any> | Promise<Record<string, any>>;
+
+  /**
+   * Function to execute after a record is inserted.
+   * This can be used to perform custom actions after insertion
+   * @param primaryKey - The primary key of the record that was inserted
+   * @param values - The values of the record that was inserted
+   */
+  afterInsert?: (primaryKey: any, values: Record<string, any>) => void | Promise<void>;
+
+  /**
+   * Function to modify the record before updating it.
+   * @param primaryKey - The primary key of the record to be updated
+   * @param values - The values of the record to be updated
+   * @returns A boolean indicating whether the record can be updated
+   */
+  validateRecordBeforeUpdate?: (primaryKey: any, values: Record<string, any>) => boolean | Promise<boolean>;
+
+  /**
+   * Function to modify the record before updating it.
+   * @param primaryKey - The primary key of the record to be updated
+   * @param values - The values of the record to be updated
+   * @returns The modified record to be updated
+   */
+  transformRecordBeforeUpdate?: (primaryKey: any, values: Record<string, any>) => Record<string, any> | Promise<Record<string, any>>;
+
+  /**
+   * Function to execute after a record is updated.
+   * This can be used to perform custom actions after update
+   * @param primaryKeyColumn - The primary key column of the record
+   * @param values - The values of the record that was updated
+   */
+  afterUpdate?: (primaryKey: any, values: Record<string, any>) => void | Promise<void>;
+
+  /**
+   * Function to execute before deleting a record.
+   * This can be used to perform custom actions before deletion
+   * @param primaryKey - The primary key of the record to be deleted
+   * @returns A boolean indicating whether the record can be deleted
+   */
+  validateRecordBeforeDelete?: (primaryKey: any) => boolean | Promise<boolean>;
+
+  /**
+   * Function to execute after a record is deleted.
+   * This can be used to perform custom actions after deletion
+   * @param primaryKey - The primary key of the record that was deleted
+   */
+  afterDelete?: (primaryKey: any) => void | Promise<void>;
+
+  /** 
+   * Column name to sort by default
+   */
   defaultSortColumn?: string;
 
   /**
@@ -184,23 +279,34 @@ export interface TablePageConfig {
    */
   defaultSortDirection?: 'asc' | 'desc';
 
-  /** Optional object to specify relationships */
+  /*
+   * Optional object to specify relationships
+   */
   relationships?: Relationship[];
 
-  // Will be typed as Knex.Where in @kottster/server
+  /*
+   * Knex query modifier (type Knex.Where)
+   */
   knexQueryModifier?: any;
+
+  /** 
+   * Nested configurations
+   */
+  nested?: {
+    [key: string]: TablePageConfig;
+  };
 }
 
 export type TablePageResultSelectRecord = Record<string, any>;
 
 export type TablePageResultSelectRecordLinkedDTO = Record<string, {
   records?: TablePageResultSelectRecord[];
-  totalRecords?: number;
+  total?: number;
 }>;
 
 export interface TablePageResultSelectDTO {
   records?: TablePageResultSelectRecord[];
-  totalRecords?: number;
+  total?: number;
 }
 
 export interface TablePageResultSelectSingleDTO {

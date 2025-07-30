@@ -4,7 +4,7 @@ Kottster lets you create pages with custom content and business logic. You can u
 
 ## Page structure
 
-Each custom page should have its own directory under `./app/pages/<page-id>` containing at least one file. The `<page-id>` becomes the URL path where your page will be accessible (e.g., `/dashboard` for a page in `./app/pages/dashboard/`).
+Each custom page should have its own directory under `./app/pages/<key>` containing at least one file. The `<page-id>` becomes the URL path where your page will be accessible (e.g., `/dashboard` for a page in `./app/pages/dashboard/`).
 
 ### Frontend component (`index.jsx`)
 This file defines your page's user interface and exports a React component.

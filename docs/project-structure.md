@@ -22,18 +22,23 @@ This page explains the purpose of each file and folder in your project.
 
       Contains all your app's pages. Each folder corresponds to a page in the app. The folder name is used as the URL path.
 
-      Each page consists of two files:
+      Each page should have its own folder with the following files:
+      - `page.json` - Contains the page configuration
       - `index.jsx` - Contains the frontend React component
       - `api.server.js` - Contains the backend controller logic
+
+      The `page.json` is required for each page, while the other two files are optional. You will usually need them only for custom pages that require specific logic or customization.
 
       Example structure:
       ```
       pages/
-      ├── users/
+      ├── order-management/
+      │   ├── page.json
+      ├── user-management/
+      │   ├── page.json
       │   ├── index.jsx
-      │   ├── api.server.js
-      │   └── settings.json
       └── dashboard/
+          ├── page.json
           ├── index.jsx
           └── api.server.js
       ```
@@ -52,7 +57,11 @@ This page explains the purpose of each file and folder in your project.
 
       - #### `data-sources/`
 
-          Contains data source files. [Learn more](./data-sources.md)
+          Contains files with [data sources](./data-sources.md).
+
+          Each data source should have its own folder with the following files:
+          - `dataSource.json` - Contains the data source configuration
+          - `index.js` - Connects to the database and exports the data source instance
 
   - ### `public/`
 

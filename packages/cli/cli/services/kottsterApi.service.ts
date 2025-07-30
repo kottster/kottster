@@ -55,7 +55,7 @@ export class KottsterApi {
     }
 
     try {
-      await fetch(`${this.API_BASE_URL}/v1/apps/cli-usage-data`, {
+      await fetch(`${this.API_BASE_URL}/v3/apps/cli-usage-data`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

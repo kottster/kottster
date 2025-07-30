@@ -1,5 +1,5 @@
 import { Knex } from "knex";
-import { DataSourceAdapterType, FieldInput, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TablePageInputDelete, TablePageInputInsert, TablePageInputSelect, TablePageInputUpdate, TablePageResultInsertDTO, TablePageResultSelectDTO, TablePageResultSelectRecord, TablePageResultUpdateDTO, TablePageResultSelectRecordLinkedDTO, defaultTablePageSize, TablePageInputSelectUsingExecuteQuery, TablePageInputSelectSingle, TablePageResultSelectSingleDTO, findRelationship, DataSourceTablesConfig, getTableData, TablePageConfig, FilterItem, OneToOneRelationship, OneToManyRelationship, ManyToManyRelationship, Stage } from "@kottster/common";
+import { DataSourceAdapterType, FieldInput, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TablePageInputDelete, TablePageInputInsert, TablePageInputSelect, TablePageInputUpdate, TablePageResultInsertDTO, TablePageResultSelectDTO, TablePageResultSelectRecord, TablePageResultUpdateDTO, TablePageResultSelectRecordLinkedDTO, defaultTablePageSize, TablePageInputSelectSingle, TablePageResultSelectSingleDTO, findRelationship, DataSourceTablesConfig, getTableData, TablePageConfig, FilterItem, OneToOneRelationship, OneToManyRelationship, ManyToManyRelationship, Stage, DataSource } from "@kottster/common";
 import { KottsterApp } from "../core/app";
 import { CachingService } from "../services/caching.service";
 
@@ -14,6 +14,7 @@ export abstract class DataSourceAdapter {
   private tablesConfig: DataSourceTablesConfig;
   private cachedFullDatabaseSchemaSchema: RelationalDatabaseSchema | null = null;
   private cachingService = new CachingService();
+  protected name: string;
 
   constructor(protected client: Knex) {}
 
@@ -22,6 +23,13 @@ export abstract class DataSourceAdapter {
    */
   public setApp(app: KottsterApp): void {
     this.app = app;
+  }
+
+  /**
+   * Set the data source data
+   */
+  public setData(data: Omit<DataSource, 'databaseSchema'>): void {
+    this.name = data.name;
   }
 
   /**
@@ -85,7 +93,7 @@ export abstract class DataSourceAdapter {
    */
   async getDatabaseSchema(): Promise<RelationalDatabaseSchema> {
     let databaseSchema: RelationalDatabaseSchema;
-    const slug = `datasource_dbschema_${this.type}`;
+    const slug = `datasource_${this.name}_schema`;
     
     if (this.app.stage === Stage.development) {
       this.cachedFullDatabaseSchemaSchema = this.cachingService.readValueFromCache(slug) as RelationalDatabaseSchema | null;
@@ -101,9 +109,9 @@ export abstract class DataSourceAdapter {
       if (this.app.stage === Stage.development) {
         this.cachingService.saveValueToCache(slug, this.cachedFullDatabaseSchemaSchema);
       }
-      
-      console.log('Database schema cached');
-      
+
+      console.log(`Database schema for "${this.name}" cached`);
+
       return this.cachedFullDatabaseSchemaSchema;
     }
     
@@ -157,18 +165,35 @@ export abstract class DataSourceAdapter {
       tableSchema, 
       tablePageProcessedConfig,
     } = getTableData({ tablePageConfig, databaseSchema });
-    const executeQuery = tablePageConfig.executeQuery;
+    
+    const customSqlQuery = tablePageConfig.customSqlQuery;
+    const customSqlCountQuery = tablePageConfig.customSqlCountQuery;
+
     const table = tablePageConfig.table;
     const limit = ((input.pageSize > 1000 ? 1000 : input.pageSize) || tablePageProcessedConfig.pageSize || defaultTablePageSize);
     const knexQueryModifier = tablePageConfig.knexQueryModifier as ((knex: Knex.QueryBuilder) => Knex.QueryBuilder) | undefined;
 
-    // If a custom query is provided, execute it and return the result directly
-    if (executeQuery) {
-      return executeQuery(input as TablePageInputSelectUsingExecuteQuery);
-    }
+    // If a custom SQL query is provided, execute it and return the result directly
+    if (customSqlQuery) {
+      const records = await this.executeRawQuery(customSqlQuery, {
+        offset: (input.page - 1) * limit,
+        limit: input.pageSize,
+      });
+      const total = customSqlCountQuery ? await this.executeRawQuery(customSqlCountQuery, {}) : undefined;
 
-    if (!tableSchema) {
-      throw new Error('Table schema not provided');
+      // Look for any number in the total
+      let count: number | undefined = undefined;
+      if (total?.[0]?.count) {
+        count = Number(total[0].count);
+      }
+      if (total?.[0][Object.keys(total[0])[0]]) {
+        count = Number(total[0][Object.keys(total[0])[0]]);
+      }
+
+      return {
+        records: records as TablePageResultSelectRecord[],
+        total: count,
+      };
     }
     
     if (!table || !tablePageProcessedConfig.primaryKeyColumn) {
@@ -206,7 +231,7 @@ export abstract class DataSourceAdapter {
     // Add calculated columns to the select statement
     if (tablePageConfig.calculatedColumns) {
       tablePageConfig.calculatedColumns.forEach(calculatedColumn => {
-        query.select(this.client.raw(`(${calculatedColumn.sqlExpression}) as ${calculatedColumn.alias}`));
+        query.select(this.client.raw(`(${calculatedColumn.sqlExpression}) as "${calculatedColumn.alias}"`));
       });
     }
 
@@ -390,21 +415,21 @@ export abstract class DataSourceAdapter {
           }
           if (!record['_related'][relationship.key]) {
             (record['_related'] as TablePageResultSelectRecordLinkedDTO)[relationship.key] = {
-              totalRecords: 0,
+              total: 0,
             };
           }
 
           // Loop through the foreign records and add them to the linked field
-          record['_related'][relationship.key].totalRecords = foreignTotalRecords[record[tablePageProcessedConfig.primaryKeyColumn!]] ?? 0;
+          record['_related'][relationship.key].total = foreignTotalRecords[record[tablePageProcessedConfig.primaryKeyColumn!]] ?? 0;
         });
       }));
     }
 
-    const preparedRecords = await this.prepareRecords(records, tableSchema);
+    const preparedRecords = tableSchema ? await this.prepareRecords(records, tableSchema) : records;
 
     return {
       records: preparedRecords,
-      totalRecords: Number(count),
+      total: Number(count),
     };
   };
 
@@ -433,6 +458,34 @@ export abstract class DataSourceAdapter {
     }));
 
     return preparedRecords;
+  }
+
+  async executeRawQuery(query: string, vars: Record<string, any> = {}): Promise<any[]> {
+    switch (this.type) {
+      case DataSourceAdapterType.knex_pg: {
+        const { rows: records } = await this.client.raw(query, vars);
+
+        return records;
+      };
+      case DataSourceAdapterType.knex_mysql2: {
+        const [records] = await this.client.raw(query, vars);
+
+        return records;
+      };
+      case DataSourceAdapterType.knex_better_sqlite3: {
+        const records = await this.client.raw(query, vars);
+
+        return records;
+      };
+      case DataSourceAdapterType.knex_tedious: {
+        const records = await this.client.raw(query, vars);
+
+        return records;
+      };
+      default: {
+        throw new Error(`Unsupported data source adapter type: ${this.type}`);
+      }
+    }
   }
 
   /**
@@ -540,25 +593,33 @@ export abstract class DataSourceAdapter {
       throw new Error('Insert operation not permitted on this table');
     }
 
-    // Check if the record can be inserted
-    if (tablePageConfig.canBeInserted && !tablePageConfig.canBeInserted(input.values)) {
-      throw new Error('Record cannot be inserted');
-    }
-
     // Pre-process the input values
     let values: Record<string, any> = {};
-    if (tablePageConfig.beforeInsert) {
-      values = await tablePageConfig.beforeInsert(input.values);
-    } else {
-      for (const key in input.values) {
-        const columnSchema = tableSchema?.columns.find(column => column.name === key);
-        if (columnSchema) {
-          values[key] = await this.prepareRecordValueBeforeUpsert(input.values[key], columnSchema);
-        }
+    for (const key in input.values) {
+      const columnSchema = tableSchema?.columns.find(column => column.name === key);
+      if (columnSchema) {
+        values[key] = await this.prepareRecordValueBeforeUpsert(input.values[key], columnSchema);
       }
     }
 
-    await this.client(table).insert(values);
+    // Check if the record can be inserted
+    if (tablePageConfig.validateRecordBeforeInsert && !await tablePageConfig.validateRecordBeforeInsert(values)) {
+      throw new Error('Record cannot be inserted');
+    }
+
+    if (tablePageConfig.transformRecordBeforeInsert) {
+      // Transform the values before inserting
+      values = await tablePageConfig.transformRecordBeforeInsert(values);
+    }
+
+    const primaryKey = await this.executeUpsertAndGetId(
+      this.client(table).insert(values),
+      tablePageProcessedConfig.primaryKeyColumn
+    );
+
+    if (primaryKey && tablePageConfig.afterInsert) {
+      await tablePageConfig.afterInsert(primaryKey, values);
+    }
 
     return {};
   }
@@ -588,30 +649,45 @@ export abstract class DataSourceAdapter {
       throw new Error('Update operation not permitted on this table');
     }
 
-    // Check if the record can be updated
-    if (tablePageConfig.canBeUpdated && !tablePageConfig.canBeUpdated(input.values)) {
-      throw new Error('Record cannot be updated');
-    }
-
     // Pre-process the input values
     let values: Record<string, any> = {};
-    if (tablePageConfig.beforeUpdate) {
-      values = await tablePageConfig.beforeUpdate(input.values);
-    } else {
-      for (const key in input.values) {
-        const columnSchema = tableSchema?.columns.find(column => column.name === key);
-        if (columnSchema) {
-          values[key] = await this.prepareRecordValueBeforeUpsert(input.values[key], columnSchema);
-        }
+    for (const key in input.values) {
+      const columnSchema = tableSchema?.columns.find(column => column.name === key);
+      if (columnSchema) {
+        values[key] = await this.prepareRecordValueBeforeUpsert(input.values[key], columnSchema);
       }
     }
 
+    // Check if the record can be updated
+    if (tablePageConfig.validateRecordBeforeUpdate && !await tablePageConfig.validateRecordBeforeUpdate(input.primaryKey, values)) {
+      throw new Error('Record cannot be updated');
+    }
+
+    if (tablePageConfig.transformRecordBeforeUpdate) {
+      // Transform the values before updating
+      values = await tablePageConfig.transformRecordBeforeUpdate(input.primaryKey, values);
+    }
+
     await this.client(table)
-      .whereIn(tablePageProcessedConfig.primaryKeyColumn, input.primaryKeys)
+      .where(tablePageProcessedConfig.primaryKeyColumn, input.primaryKey)
       .update(values);
+
+    if (tablePageConfig.afterUpdate) {
+      await tablePageConfig.afterUpdate(input.primaryKey, values);
+    }
 
     return {};
   }
+
+  private async executeUpsertAndGetId(query: Knex.QueryBuilder, primaryKeyColumn: string): Promise<any> {
+  // For MySQL, we use a different approach to get the inserted ID
+  if (this.type === DataSourceAdapterType.knex_mysql2) {
+    const result = await query;
+    return result[0];
+  } else {
+    return await query.returning(primaryKeyColumn);
+  }
+}
 
   /**
    * Delete the table records (Table RPC)
@@ -635,14 +711,26 @@ export abstract class DataSourceAdapter {
       throw new Error('Delete operation not permitted on this table');
     }
 
-    // Check if the record can be deleted
-    if (tablePageConfig.canBeDeleted && !tablePageConfig.canBeDeleted(input.primaryKeys)) {
-      throw new Error('Record cannot be deleted');
+    // Check if the records can be deleted
+    if (tablePageConfig.validateRecordBeforeDelete) {
+      // Check every primary key value
+      for (const primaryKey of input.primaryKeys) {
+        if (!await tablePageConfig.validateRecordBeforeDelete(primaryKey)) {
+          throw new Error(`Record #${primaryKey} cannot be deleted`);
+        }
+      }
     }
 
     await this.client.table(table)
       .whereIn(tablePageProcessedConfig.primaryKeyColumn, input.primaryKeys)
       .del();
+
+    if (tablePageConfig.afterDelete) {
+      // Call afterDelete for each primary key
+      for (const primaryKey of input.primaryKeys) {
+        await tablePageConfig.afterDelete(primaryKey);
+      }
+    }
 
     return true;
   };

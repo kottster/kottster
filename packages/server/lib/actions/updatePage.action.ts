@@ -1,43 +1,38 @@
-import { DSAction } from "../models/action.model";
+import { Page } from "@kottster/common";
+import { DevAction } from "../models/action.model";
 import { FileReader } from "../services/fileReader.service";
 import { FileWriter } from "../services/fileWriter.service";
 
 interface Data {
-  id: string;
-  page: {
-    name?: string;
-    id: string;
-  };
+  key: string;
+  page: Partial<Page>;
 }
 
 /**
  * Update a page
  */
-export class UpdatePage extends DSAction {
-  public async execute(data: Data) {
+export class UpdatePage extends DevAction {
+  public async executeDevAction(data: Data) {
     const fileWriter = new FileWriter({ usingTsc: this.app.usingTsc });
     const fileReader = new FileReader();
-    const { id, page } = data;
+    const { key, page } = data;
     const appSchema = fileReader.readSchemaJsonFile();
 
-    // Update page file if ID has changed
-    if (id !== page.id) {
-      fileWriter.renamePage(id, page.id);
-    }
-    
-    // Update nav item in the app schema
-    appSchema.navItems = appSchema.navItems.map(p => {
-      if (p.id === id) {
-        return {
-          ...p,
-          id: page.id,
-          name: page.name || page.id
-        }
-      }
+    // Update page config
+    fileWriter.updatePageConfig(key, {
+      ...page,
+    } as Page);
 
-      return p;
-    });
-    fileWriter.writeSchemaJsonFile(appSchema);
+    // Update page file if key has changed
+    if (page.key && key !== page.key) {
+      fileWriter.renamePage(key, page.key);
+
+      // Update page key in menuPageOrder if it exists
+      if (appSchema.menuPageOrder?.includes(key)) {
+        appSchema.menuPageOrder = appSchema.menuPageOrder.map((pageKey) => (pageKey === key ? page.key! : pageKey));
+        fileWriter.writeSchemaJsonFile(appSchema);
+      }
+    }
 
     return {};
   }

@@ -45,7 +45,7 @@ Learn more about **columns and their parameters** in the [API reference](../conf
 
 ## Calculated columns
 
-**Using the `calculatedColumns` in the `defineTableController` function**
+**Using the visual editor or the `calculatedColumns` in the `defineTableController` function**
 
 For more complex scenarios where you need to perform SQL calculations on the server side, you can use the [`calculatedColumns`](../configuration/api.md#calculatedcolumns) configuration. This is particularly useful for aggregate functions like counting related records or performing mathematical operations.
 
@@ -53,34 +53,30 @@ For more complex scenarios where you need to perform SQL calculations on the ser
 
 ```js [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
-import dataSource from '../../_server/data-sources/mysql';
-import pageSettings from './settings.json';
+import page from './page.json';
 
-const controller = app.defineTableController(dataSource, {
-  ...pageSettings,
-  rootTable: {
-    ...pageSettings.rootTable,
-    
-    // Define columns calculated at the database level with SQL
-    calculatedColumns: [
-      {
-        alias: 'order_count',
-        sqlExpression:
-          'SELECT COUNT(*) FROM orders WHERE orders.user_id = main.id'
-      },
-      {
-        alias: 'total_revenue',
+const controller = app.defineTableController({
+  ...page.config,
   
-        // Example of a more complex calculation
-        sqlExpression: (`
-          SELECT SUM(order_items.price) 
-          FROM orders 
-          JOIN order_items ON orders.id = order_items.order_id 
-          WHERE orders.user_id = main.id
-        `)
-      }
-    ],
-  }
+  // Define columns calculated at the database level with SQL
+  calculatedColumns: [
+    {
+      alias: 'order_count',
+      sqlExpression:
+        'SELECT COUNT(*) FROM orders WHERE orders.user_id = main.id'
+    },
+    {
+      alias: 'total_revenue',
+
+      // Example of a more complex calculation
+      sqlExpression: (`
+        SELECT SUM(order_items.price) 
+        FROM orders 
+        JOIN order_items ON orders.id = order_items.order_id 
+        WHERE orders.user_id = main.id
+      `)
+    }
+  ],
 });
 
 export default controller;

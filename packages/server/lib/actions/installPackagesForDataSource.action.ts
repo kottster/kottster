@@ -1,4 +1,4 @@
-import { DSAction } from "../models/action.model";
+import { DevAction } from "../models/action.model";
 import { DataSourceType } from "@kottster/common";
 import { exec } from "child_process";
 import { PROJECT_DIR } from "../constants/projectDir";
@@ -10,8 +10,8 @@ interface Data {
 /**
  * Install the required packages for the data source
  */
-export class InstallPackagesForDataSource extends DSAction {
-  public async execute(data: Data) {
+export class InstallPackagesForDataSource extends DevAction {
+  public async executeDevAction(data: Data) {
     return new Promise((resolve, reject) => {
       const { type } = data;
 

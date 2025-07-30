@@ -48,9 +48,6 @@ type TemplateVars = {
     };
     searchPath?: string;
   };
-  'app/_server/data-sources/registry.js': {
-    dataSourceName: string;
-  };
   'app/index.html': undefined;
   'app/main.jsx': undefined;
 };
@@ -132,7 +129,6 @@ export class FileTemplateManager {
 
     'app/_server/app.js': stripIndent(`
       import { createApp } from '@kottster/server';
-      import { dataSourceRegistry } from './data-sources/registry';
       import schema from '../../kottster-app.json';
 
       export const app = createApp({
@@ -144,8 +140,6 @@ export class FileTemplateManager {
         */
         secretKey: process.env.SECRET_KEY,
       });
-
-      app.registerDataSources(dataSourceRegistry);
     `),
 
     'app/_server/server.js': stripIndent(`
@@ -163,161 +157,106 @@ export class FileTemplateManager {
     `),
 
     'app/_server/data-sources/postgres/index.js': (usingTsc, vars) => stripIndent(`
-      import { createDataSource, KnexPgAdapter } from '@kottster/server';
+      import { KnexPgAdapter } from '@kottster/server';
       import knex from 'knex';
-      ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
-      const dataSource = createDataSource({
-        type: ${usingTsc ? `DataSourceType.postgres` : `'postgres'`},
-        name: 'postgres',
-        init: () => {
-          /**${!vars.connection ? ` \n           * Replace the following with your connection options. ` : ''}
-           * Learn more at https://knexjs.org/guide/#configuration-options
-           */
-          const client = knex({
-            client: 'pg',
-            connection: ${typeof vars.connection !== 'object' ? `'${vars.connection || 'postgresql://myuser:mypassword@localhost:5432/mydatabase'}',` : `{
-              host: '${vars.connection.host || 'localhost'}',
-              port: ${vars.connection.port ? Number(vars.connection.port) : '5432'},
-              user: '${vars.connection.user || 'myuser'}',
-              password: '${vars.connection.password || 'mypassword'}',
-              database: '${vars.connection.database || 'mydatabase'}',
-            },`}
-            searchPath: ['${vars.searchPath || 'public'}'],
-          });
-
-          return new KnexPgAdapter(client);
-        },
-        tablesConfig: {}
+      
+      /**${!vars.connection ? ` \n         * Replace the following with your connection options. ` : ''}
+       * Learn more at https://knexjs.org/guide/#configuration-options
+       */
+      const client = knex({
+        client: 'pg',
+        connection: ${typeof vars.connection !== 'object' ? `'${vars.connection || 'postgresql://myuser:mypassword@localhost:5432/mydatabase'}',` : `{
+          host: '${vars.connection.host || 'localhost'}',
+          port: ${vars.connection.port ? Number(vars.connection.port) : '5432'},
+          user: '${vars.connection.user || 'myuser'}',
+          password: '${vars.connection.password || 'mypassword'}',
+          database: '${vars.connection.database || 'mydatabase'}',
+        },`}
+        searchPath: ['${vars.searchPath || 'public'}'],
       });
 
-      export default dataSource;
+      export default new KnexPgAdapter(client);
     `),
 
     'app/_server/data-sources/mysql/index.js': (usingTsc, vars) => stripIndent(`
-      import { createDataSource, KnexMysql2Adapter } from '@kottster/server';
+      import { KnexMysql2Adapter } from '@kottster/server';
       import knex from 'knex';
-      ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
-      const dataSource = createDataSource({
-        type: ${usingTsc ? `DataSourceType.mysql` : `'mysql'`},
-        name: 'mysql',
-        init: () => {
-          /**${!vars.connection ? ` \n           * Replace the following with your connection options. ` : ''}
-           * Learn more at https://knexjs.org/guide/#configuration-options
-           */
-          const client = knex({
-            client: 'mysql2',
-            connection: ${typeof vars.connection === 'string' ? `'${vars.connection}',` : `{
-              host: '${vars.connection?.host || 'localhost'}',
-              port: ${vars.connection?.port ? Number(vars.connection.port) : '3306'},
-              user: '${vars.connection?.user || 'myuser'}',
-              password: '${vars.connection?.password || 'mypassword'}',
-              database: '${vars.connection?.database || 'mydatabase'}',
-            },`}
-          });
-
-          return new KnexMysql2Adapter(client);
-        },
-        tablesConfig: {}
+      
+      /**${!vars.connection ? ` \n         * Replace the following with your connection options. ` : ''}
+       * Learn more at https://knexjs.org/guide/#configuration-options
+       */
+      const client = knex({
+        client: 'mysql2',
+        connection: ${typeof vars.connection === 'string' ? `'${vars.connection}',` : `{
+          host: '${vars.connection?.host || 'localhost'}',
+          port: ${vars.connection?.port ? Number(vars.connection.port) : '3306'},
+          user: '${vars.connection?.user || 'myuser'}',
+          password: '${vars.connection?.password || 'mypassword'}',
+          database: '${vars.connection?.database || 'mydatabase'}',
+        },`}
       });
 
-      export default dataSource;
+      export default new KnexMysql2Adapter(client);
     `),
 
     'app/_server/data-sources/mariadb/index.js': (usingTsc, vars) => stripIndent(`
-      import { createDataSource, KnexMysql2Adapter } from '@kottster/server';
+      import { KnexMysql2Adapter } from '@kottster/server';
       import knex from 'knex';
-      ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
-      const dataSource = createDataSource({
-        type: ${usingTsc ? `DataSourceType.mariadb` : `'mariadb'`},
-        name: 'mariadb',
-        init: () => {
-          /**${!vars.connection ? ` \n           * Replace the following with your connection options. ` : ''}
-           * Learn more at https://knexjs.org/guide/#configuration-options
-           */
-          const client = knex({
-            client: 'mysql2',
-            connection: ${typeof vars.connection === 'string' ? `'${vars.connection}',` : `{
-              host: '${vars.connection?.host || 'localhost'}',
-              port: ${vars.connection?.port ? Number(vars.connection.port) : '3307'},
-              user: '${vars.connection?.user || 'myuser'}',
-              password: '${vars.connection?.password || 'mypassword'}',
-              database: '${vars.connection?.database || 'mydatabase'}',
-            },`}
-          });
-
-          return new KnexMysql2Adapter(client);
-        },
-        tablesConfig: {}
+      
+      /**${!vars.connection ? ` \n         * Replace the following with your connection options. ` : ''}
+       * Learn more at https://knexjs.org/guide/#configuration-options
+       */
+      const client = knex({
+        client: 'mysql2',
+        connection: ${typeof vars.connection === 'string' ? `'${vars.connection}',` : `{
+          host: '${vars.connection?.host || 'localhost'}',
+          port: ${vars.connection?.port ? Number(vars.connection.port) : '3307'},
+          user: '${vars.connection?.user || 'myuser'}',
+          password: '${vars.connection?.password || 'mypassword'}',
+          database: '${vars.connection?.database || 'mydatabase'}',
+        },`}
       });
 
-      export default dataSource;
+      export default new KnexMysql2Adapter(client);
     `),
 
     'app/_server/data-sources/mssql/index.js': (usingTsc, vars) => stripIndent(`
-      import { createDataSource, KnexTediousAdapter } from '@kottster/server';
+      import { KnexTediousAdapter } from '@kottster/server';
       import knex from 'knex';
-      ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
-      const dataSource = createDataSource({
-        type: ${usingTsc ? `DataSourceType.mssql` : `'mssql'`},
-        name: 'mssql',
-        databaseSchemas: ['dbo'],
-        init: () => {
-          const client = knex({
-            /**
-             * Learn more at https://knexjs.org/guide/#configuration-options
-             */
-            client: 'mssql',
-            connection: ${typeof vars.connection !== 'object' ? `'${vars.connection || 'mysql://myuser:mypassword@localhost:3306/mydatabase'}',` : `{
-              host: '${vars.connection.host || 'localhost'}',
-              port: ${vars.connection.port ? Number(vars.connection.port) : '5432'},
-              user: '${vars.connection.user || 'myuser'}',
-              password: '${vars.connection.password || 'mypassword'}',
-              database: '${vars.connection.database || 'mydatabase'}',
-            },`}
-            searchPath: ['${vars.searchPath || 'dbo'}'],
-          });
-
-          return new KnexTediousAdapter(client);
-        },
-        tablesConfig: {}
+      
+      /**
+       * Learn more at https://knexjs.org/guide/#configuration-options
+       */
+      const client = knex({
+        client: 'mssql',
+        connection: ${typeof vars.connection !== 'object' ? `'${vars.connection || 'mysql://myuser:mypassword@localhost:3306/mydatabase'}',` : `{
+          host: '${vars.connection.host || 'localhost'}',
+          port: ${vars.connection.port ? Number(vars.connection.port) : '5432'},
+          user: '${vars.connection.user || 'myuser'}',
+          password: '${vars.connection.password || 'mypassword'}',
+          database: '${vars.connection.database || 'mydatabase'}',
+        },`}
+        searchPath: ['${vars.searchPath || 'dbo'}'],
       });
 
-      export default dataSource;
+      export default new KnexTediousAdapter(client);
     `),
 
     'app/_server/data-sources/sqlite/index.js': (usingTsc, vars) => stripIndent(`
-      import { createDataSource, KnexBetterSqlite3Adapter } from '@kottster/server';
+      import { KnexBetterSqlite3Adapter } from '@kottster/server';
       import knex from 'knex';
-      ${usingTsc ? "import { DataSourceType } from '@kottster/common';\n" : ""}
-      const dataSource = createDataSource({
-        type: ${usingTsc ? `DataSourceType.sqlite` : `'sqlite'`},
-        name: 'sqlite',
-        init: () => {
-          /**${!vars.connection ? ` \n           * Replace the following with your connection options. ` : ''}
-           * Learn more at https://knexjs.org/guide/#configuration-options
-           */
-          const client = knex({
-            client: 'better-sqlite3',
-            connection: {
-              filename: '${vars.connection?.filename || '/path/to/database.sqlite'}',
-            }
-          });
-
-          return new KnexBetterSqlite3Adapter(client);
-        },
-        tablesConfig: {}
+      
+      /**${!vars.connection ? ` \n         * Replace the following with your connection options. ` : ''}
+       * Learn more at https://knexjs.org/guide/#configuration-options
+       */
+      const client = knex({
+        client: 'better-sqlite3',
+        connection: {
+          filename: '${vars.connection?.filename || '/path/to/database.sqlite'}',
+        }
       });
 
-      export default dataSource;
-    `),
-
-    'app/_server/data-sources/registry.js': (_, vars) => stripIndent(`
-      import { DataSourceRegistry } from '@kottster/server';
-      ${vars.dataSourceName ? `import ${vars.dataSourceName}DataSource from './${vars.dataSourceName}';` : ''}
-
-      export const dataSourceRegistry = new DataSourceRegistry([
-        ${vars.dataSourceName ? `${vars.dataSourceName}DataSource` : ''}
-      ]);
+      export default new KnexBetterSqlite3Adapter(client);
     `),
 
     'app/index.html': usingTsc => stripIndent(`
@@ -340,25 +279,14 @@ export class FileTemplateManager {
       import React from 'react';
       import ReactDOM from 'react-dom/client';
       import { MantineProvider } from '@mantine/core';
-      import { appTheme, KottsterApp } from '@kottster/react';
+      import { KottsterApp } from '@kottster/react';
       import '@kottster/react/dist/style.css';
-      
-      import schema from '../kottster-app.json';
 
       const pageEntries = import.meta.glob('./pages/**/index.${usingTsc ? `{jsx,tsx}` : 'jsx'}', { eager: true });
 
       ReactDOM.createRoot(document.getElementById('root')${usingTsc ? '!' : ''}).render(
         <React.StrictMode>
-          <MantineProvider 
-            theme={appTheme} 
-            defaultColorScheme='light' 
-            forceColorScheme='light'
-          >
-            <KottsterApp 
-              schema={schema} 
-              pageEntries={pageEntries}
-            />
-          </MantineProvider>
+          <KottsterApp pageEntries={pageEntries} />
         </React.StrictMode>
       );
     `),

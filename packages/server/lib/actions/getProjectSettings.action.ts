@@ -1,4 +1,4 @@
-import { DSAction } from "../models/action.model";
+import { DevAction } from "../models/action.model";
 
 interface Result {
   usingTsc: boolean;
@@ -7,8 +7,8 @@ interface Result {
 /**
  * Get the project settings
  */
-export class GetProjectSettings extends DSAction {
-  public async execute(): Promise<Result> {
+export class GetProjectSettings extends DevAction {
+  public async executeDevAction(): Promise<Result> {
     return {
       usingTsc: this.app.usingTsc,
     };

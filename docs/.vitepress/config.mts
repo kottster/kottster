@@ -171,6 +171,7 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
       text: 'Security & Data Access',
       collapsed: true,
       items: [
+        { text: 'Roles and permissions', link: '/security/roles-and-permissions' },
         { text: 'Access to database', link: '/security/database-access' },
         { text: 'Authentication', link: '/security/authentication' },
         { text: 'Database usage', link: '/security/database-usage' },
@@ -186,8 +187,9 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
           link: '/table/configuration/api',
           items: [
             { text: 'API Reference', link: '/table/configuration/api' },    
-            { text: 'Custom SQL and fetching', link: '/table/configuration/custom-queries' },
-            { text: 'Custom relationships', link: '/table/configuration/custom-relationships' },    
+            { text: 'Raw SQL queries', link: '/table/configuration/raw-sql-queries' },
+            { text: 'Custom data fetcher', link: '/table/configuration/custom-data-fetcher' },
+            { text: 'Relationships', link: '/table/configuration/relationships' },    
           ],
         },
         { text: 'TablePage component', link: '/ui/table-page-component' },
@@ -199,8 +201,8 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
             { text: 'Customize columns', link: '/table/customization/customize-columns' },    
             { text: 'Add custom fields', link: '/table/customization/add-custom-fields' },    
             { text: 'Customize fields', link: '/table/customization/customize-fields' },      
-            { text: 'Add custom actions', link: '/table/customization/add-custom-actions' },    
-            { text: 'Add custom bulk actions', link: '/table/customization/add-custom-bulk-actions' },    
+            { text: 'Add actions', link: '/table/customization/add-custom-actions' },    
+            { text: 'Add bulk actions', link: '/table/customization/add-custom-bulk-actions' },    
           ],
         },
       ]

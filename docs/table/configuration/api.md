@@ -136,7 +136,7 @@ If you only need to change the way columns and fields are rendered, you can use 
   <!-- Allow to define define custom logic for executing the query. This function is called with the query object and should return a promise that resolves to the query result. -->
   Defines a custom function to retrieve data for the table. This function is required if you are using the `customFetch` fetch strategy.
 
-  Learn more: [Custom queries](./custom-queries.md)
+  Learn more: [Custom data fetcher](./custom-data-fetcher.md)
 
 - ### allowInsert
 
@@ -306,7 +306,7 @@ If you only need to change the way columns and fields are rendered, you can use 
 
   Specifies a custom SQL query to retrieve the records for the table. This property is required if you are using the `rawSqlQuery` fetch strategy.
   
-  Learn more: [Custom SQL queries](./custom-queries.md)
+  Learn more: [Raw SQL queries](./raw-sql-queries.md)
 
 - ### customSqlCountQuery
 
@@ -314,7 +314,7 @@ If you only need to change the way columns and fields are rendered, you can use 
 
   Specifies a custom SQL query to count the records for the table. This query should return a single numeric value.
 
-  Learn more: [Custom SQL queries](./custom-queries.md)
+  Learn more: [Raw SQL queries](./raw-sql-queries.md)
 
 - ### knexQueryModifier
 
@@ -388,7 +388,9 @@ If you only need to change the way columns and fields are rendered, you can use 
 
   Specifies the configuration for the relationships the table has with other tables.
 
-  By default, Kottster detects relationships between tables based on foreign keys. But you can also define custom relationships: [Custom relationships](./custom-relationships.md)
+  By default, Kottster detects relationships between tables based on foreign keys. 
+  
+  Learn more: [Relationships](./relationships.md)
 
   Each relation should have `key` property, which specifies the name of the relation. The key is used to access the relation in the table configuration.
 

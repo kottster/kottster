@@ -278,7 +278,6 @@ export class FileTemplateManager {
     'app/main.jsx': usingTsc => stripIndent(`
       import React from 'react';
       import ReactDOM from 'react-dom/client';
-      import { MantineProvider } from '@mantine/core';
       import { KottsterApp } from '@kottster/react';
       import '@kottster/react/dist/style.css';
 

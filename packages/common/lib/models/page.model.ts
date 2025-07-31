@@ -12,6 +12,7 @@ interface BasePage {
   title?: string;
   icon?: string;
   allowedRoleIds?: string[];
+  hideInSidebar?: boolean;
 }
 
 interface TablePage extends BasePage {
@@ -27,11 +28,11 @@ interface CustomPage extends BasePage {
 
 export type Page = TablePage | CustomPage;
 
-interface PublicTablePage extends Pick<TablePage, 'key' | 'title' | 'icon' | 'type' | 'allowedRoleIds' | 'version'> {
+interface PublicTablePage extends Pick<TablePage, 'key' | 'title' | 'icon' | 'type' | 'allowedRoleIds' | 'version' | 'hideInSidebar'> {
   config: TablePage['config'];
 }
 
-interface PublicCustomPage extends Pick<CustomPage, 'key' | 'title' | 'icon' | 'type' | 'allowedRoleIds' | 'version'> {}
+interface PublicCustomPage extends Pick<CustomPage, 'key' | 'title' | 'icon' | 'type' | 'allowedRoleIds' | 'version' | 'hideInSidebar'> {}
 
 export type PublicPage = PublicTablePage | PublicCustomPage;
 

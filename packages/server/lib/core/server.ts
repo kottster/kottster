@@ -139,7 +139,6 @@ export class KottsterServer {
   private async setupDynamicRoutes() {
     const isDevelopment = this.app.stage === Stage.development;
     const fileReader = new FileReader();
-    // const pageFileStructures = fileReader.getPageFileStructuresWithConfig();
     const pageConfigs = fileReader.getPageConfigs();
 
     // Set routes for pages specified in the schema

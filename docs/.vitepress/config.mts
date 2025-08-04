@@ -189,6 +189,7 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
             { text: 'API Reference', link: '/table/configuration/api' },    
             { text: 'Raw SQL queries', link: '/table/configuration/raw-sql-queries' },
             { text: 'Custom data fetcher', link: '/table/configuration/custom-data-fetcher' },
+            { text: 'Calculated columns', link: '/table/configuration/calculated-columns' },
             { text: 'Relationships', link: '/table/configuration/relationships' },    
           ],
         },

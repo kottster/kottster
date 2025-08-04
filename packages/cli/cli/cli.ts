@@ -32,7 +32,7 @@ program
   .option('--skipInstall', 'Skip installing dependencies')
   .option('--skipFileGeneration', 'Do not create a file for the data source')
   .option('--data <json>', 'The stringified JSON data with the connection details', String)
-  .option('--name <name>', 'The name of the data source, if not provided, it will be generated based on the type')
+  .option('--name <name>', 'The name of the data source to replace')
   .allowUnknownOption()
   .action(addDataSource)
 

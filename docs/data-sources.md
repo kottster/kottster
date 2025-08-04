@@ -34,51 +34,34 @@ This method is extremely useful if you want to set additional parameters for con
 
 ## Table configuration
 
-<!-- TODO: check -->
-
-Each data source configuration contains a `tablesConfig` object that allows to define restrictions and permissions for each table globally.
+Each data source configuration contains a `tablesConfig` object that allows you to define restrictions and permissions for each table globally. This configuration should be specified in the `dataSource.json` file. By default, if table configuration is not provided, the table is included in all requests.
 
 The following table configuration options are available:
 - **`excluded`**: Excludes the table from any requests. By default, all tables are included.
 - **`excludedColumns`**: Excludes the specified columns from any requests. By default, all columns are included.
-- **`preventInsert`**: Prevents the insert operation. By default, insert operations are allowed.
-- **`preventUpdate`**: Prevents the update operation. By default, update operations are allowed.
-- **`preventDelete`**: Prevents the delete operation. By default, delete operations are allowed.
+- **`preventInsert`**: Prevents insert operations. By default, insert operations are allowed.
+- **`preventUpdate`**: Prevents update operations. By default, update operations are allowed.
+- **`preventDelete`**: Prevents delete operations. By default, delete operations are allowed.
 
 Example of a data source configuration:
 
-```typescript [app/_server/data-sources/postgres.js]
-import { createDataSource } from '@kottster/server';
-
-const dataSource = createDataSource({
-  type: DataSourceType.postgres,
-  name: 'postgres',
-  init: () => {/* ... */},
-  tablesConfig: {
-    // Configuration for the 'payment_methods' table
-    payment_methods: {
-      // Excludes the `payment_methods` table from any requests.
-      excluded: true,
+```json [app/_server/data-sources/mysql-db/dataSource.json]
+{
+  "type": "mysql",
+  "tablesConfig": {
+    "payment_methods": {
+      "excluded": true
     },
-
-    // Configuration for the 'users' table
-    users: {
-      // Excludes the 'password' column from any requests.
-      excludedColumns: ['password'],
-
-      // Prevents insertions into the 'users' table.
-      preventInsert: true, 
-
-      // Prevents updates to the 'users' table.
-      preventUpdate: true,
-
-      // Prevents deletions from the 'users' table.
-      preventDelete: true,
-    },
+    "users": {
+      "excludedColumns": ["password"],
+      "preventInsert": true,
+      "preventUpdate": true,
+      "preventDelete": true
+    }
   }
-});
-
-export default dataSource;
+}
 ```
 
-By default, if table configuration is not provided, the table is included in all requests.
+In the example above, access to the `payment_methods` table is completely excluded, including all its columns. Even in development mode, this table will not be visible in the visual editor.
+
+The `users` table is still accessible, but with certain restrictions. The `password` column is excluded from all requests, it won't be returned in any queries and won't be available in the visual editor. Additionally, insert, update, and delete operations are prevented for this table.

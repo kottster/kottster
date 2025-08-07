@@ -1,5 +1,5 @@
 import { Knex } from "knex";
-import { DataSourceAdapterType, FieldInput, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TablePageInputDelete, TablePageInputInsert, TablePageInputSelect, TablePageInputUpdate, TablePageResultInsertDTO, TablePageResultSelectDTO, TablePageResultSelectRecord, TablePageResultUpdateDTO, TablePageResultSelectRecordLinkedDTO, defaultTablePageSize, TablePageInputSelectSingle, TablePageResultSelectSingleDTO, findRelationship, DataSourceTablesConfig, getTableData, TablePageConfig, FilterItem, OneToOneRelationship, OneToManyRelationship, ManyToManyRelationship, Stage, DataSource } from "@kottster/common";
+import { DataSourceAdapterType, FieldInput, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TablePageInputDelete, TablePageInputInsert, TablePageInputSelect, TablePageInputUpdate, TablePageInsertResult, TablePageSelectResult, TablePageResultSelectRecord, TablePageUpdateResult, TablePageSelectRecordLinkedResult, defaultTablePageSize, TablePageInputSelectSingle, TablePageSelectSingleResult, findRelationship, DataSourceTablesConfig, getTableData, TablePageConfig, FilterItem, OneToOneRelationship, OneToManyRelationship, ManyToManyRelationship, Stage, DataSource, DashboardPageInputGetStatData, DashboardPageGetStatDataResult, DashboardPageConfigStat, DashboardPageConfigCard, DashboardPageGetCardDataResult, DashboardPageInputGetCardData } from "@kottster/common";
 import { KottsterApp } from "../core/app";
 import { CachingService } from "../services/caching.service";
 
@@ -156,10 +156,45 @@ export abstract class DataSourceAdapter {
   abstract getFilterBuilder(filterItems: FilterItem[]): (builder: Knex.QueryBuilder) => void;
 
   /**
+   * Get the stat data (Dashboard RPC)
+   * @returns The stat data
+   */
+  async getStatData(input: DashboardPageInputGetStatData, stat: DashboardPageConfigStat): Promise<DashboardPageGetStatDataResult> {
+    const value = await this.executeRawQueryForSingleValue(stat.sqlQuery, {
+      period_start_date: input.periodStartDate,
+      period_end_date: input.periodEndDate,
+    });
+    const total = stat.type === 'withTotal' && stat.totalSqlQuery ? await this.executeRawQueryForSingleValue(stat.totalSqlQuery, {
+      period_start_date: input.periodStartDate,
+      period_end_date: input.periodEndDate,
+    }) : undefined;
+    
+    return {
+      value: value !== undefined ? value : undefined,
+      total: total !== undefined ? total : undefined,
+    }
+  }
+
+  /**
+   * Get the card data (Dashboard RPC)
+   * @returns The card data
+   */
+  async getCardData(input: DashboardPageInputGetCardData, card: DashboardPageConfigCard): Promise<DashboardPageGetCardDataResult> {
+    const items = await this.executeRawQuery(card.sqlQuery, {
+      period_start_date: input.periodStartDate,
+      period_end_date: input.periodEndDate,
+    });
+
+    return {
+      items: items !== undefined ? items : [],
+    }
+  }
+
+  /**
    * Get the table records (Table RPC)
    * @returns The table records
    */
-  async getTableRecords(input: TablePageInputSelect, databaseSchema: RelationalDatabaseSchema, tablePageConfigDefault: TablePageConfig): Promise<TablePageResultSelectDTO> {
+  async getTableRecords(input: TablePageInputSelect, databaseSchema: RelationalDatabaseSchema, tablePageConfigDefault: TablePageConfig): Promise<TablePageSelectResult> {
     const tablePageConfig = input.tablePageConfig ?? tablePageConfigDefault;
     const { 
       tableSchema, 
@@ -179,20 +214,11 @@ export abstract class DataSourceAdapter {
         offset: (input.page - 1) * limit,
         limit: input.pageSize,
       });
-      const total = customSqlCountQuery ? await this.executeRawQuery(customSqlCountQuery, {}) : undefined;
-
-      // Look for any number in the total
-      let count: number | undefined = undefined;
-      if (total?.[0]?.count) {
-        count = Number(total[0].count);
-      }
-      if (total?.[0][Object.keys(total[0])[0]]) {
-        count = Number(total[0][Object.keys(total[0])[0]]);
-      }
+      const total = customSqlCountQuery ? await this.executeRawQueryForSingleValue(customSqlCountQuery, {}) : undefined;
 
       return {
         records: records as TablePageResultSelectRecord[],
-        total: count,
+        total: total !== undefined ? Number(total) : undefined,
       };
     }
     
@@ -358,7 +384,7 @@ export abstract class DataSourceAdapter {
             record['_related'] = {};
           }
           if (!record['_related'][relationshipKey]) {
-            (record['_related'] as TablePageResultSelectRecordLinkedDTO)[relationshipKey] = {
+            (record['_related'] as TablePageSelectRecordLinkedResult)[relationshipKey] = {
               records: [],
             };
           }
@@ -414,7 +440,7 @@ export abstract class DataSourceAdapter {
             record['_related'] = {};
           }
           if (!record['_related'][relationship.key]) {
-            (record['_related'] as TablePageResultSelectRecordLinkedDTO)[relationship.key] = {
+            (record['_related'] as TablePageSelectRecordLinkedResult)[relationship.key] = {
               total: 0,
             };
           }
@@ -460,6 +486,20 @@ export abstract class DataSourceAdapter {
     return preparedRecords;
   }
 
+  async executeRawQueryForSingleValue(query: string, vars: Record<string, any> = {}): Promise<string | undefined> {
+    const result = await this.executeRawQuery(query, vars);
+
+    let final: number | undefined = undefined;
+    if (result?.[0]?.count) {
+      final = result[0].count;
+    }
+    if (result?.[0][Object.keys(result[0])[0]]) {
+      final = result[0][Object.keys(result[0])[0]];
+    }
+
+    return `${final}`;
+  }
+
   async executeRawQuery(query: string, vars: Record<string, any> = {}): Promise<any[]> {
     switch (this.type) {
       case DataSourceAdapterType.knex_pg: {
@@ -493,7 +533,7 @@ export abstract class DataSourceAdapter {
    * @description Used for one-to-one RecordSelect fields
    * @returns The table record
    */
-  async getOneTableRecord(input: TablePageInputSelectSingle, databaseSchema: RelationalDatabaseSchema, tablePageConfigDefault: TablePageConfig): Promise<TablePageResultSelectSingleDTO> {
+  async getOneTableRecord(input: TablePageInputSelectSingle, databaseSchema: RelationalDatabaseSchema, tablePageConfigDefault: TablePageConfig): Promise<TablePageSelectSingleResult> {
     const { relationshipKey, primaryKeyValues, forPreview } = input;
     const tablePageConfig = input.tablePageConfig ?? tablePageConfigDefault;
     const { 
@@ -572,7 +612,7 @@ export abstract class DataSourceAdapter {
    * Insert the table records (Table RPC)
    * @returns The table records
    */
-  async insertTableRecord(input: TablePageInputInsert, databaseSchema: RelationalDatabaseSchema, tablePageConfigDefault: TablePageConfig): Promise<TablePageResultInsertDTO> {
+  async insertTableRecord(input: TablePageInputInsert, databaseSchema: RelationalDatabaseSchema, tablePageConfigDefault: TablePageConfig): Promise<TablePageInsertResult> {
     const tablePageConfig = input.tablePageConfig ?? tablePageConfigDefault;
     const { 
       tableSchema, 
@@ -628,7 +668,7 @@ export abstract class DataSourceAdapter {
    * Update the table records (Table RPC)
    * @returns The table records
    */
-  async updateTableRecords(input: TablePageInputUpdate, databaseSchema: RelationalDatabaseSchema, tablePageConfigDefault: TablePageConfig): Promise<TablePageResultUpdateDTO> {
+  async updateTableRecords(input: TablePageInputUpdate, databaseSchema: RelationalDatabaseSchema, tablePageConfigDefault: TablePageConfig): Promise<TablePageUpdateResult> {
     const tablePageConfig = input.tablePageConfig ?? tablePageConfigDefault;
     const { 
       tableSchema, 

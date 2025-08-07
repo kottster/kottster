@@ -1,7 +1,7 @@
 import * as jose from 'jose';
 import { ExtendAppContextFunction } from '../models/appContext.model';
 import { PROJECT_DIR } from '../constants/projectDir';
-import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, RpcActionBody, TablePageInputSelect, TablePageInputDelete, TablePageInputUpdate, TablePageInputInsert, isSchemaEmpty, schemaPlaceholder, ApiResponse, TablePageInputSelectSingle, Page, TablePageConfig, TablePageInputSelectUsingExecuteQuery, TablePageResultSelectDTO } from '@kottster/common';
+import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, RpcActionBody, TablePageInputSelect, TablePageInputDelete, TablePageInputUpdate, TablePageInputInsert, isSchemaEmpty, schemaPlaceholder, ApiResponse, TablePageInputSelectSingle, Page, TablePageConfig, TablePageInputSelectUsingExecuteQuery, TablePageSelectResult, DashboardPageConfig, DashboardPageInputGetStatData, DashboardPageInputGetCardData } from '@kottster/common';
 import { DataSourceRegistry } from './dataSourceRegistry';
 import { ActionService } from '../services/action.service';
 import { DataSourceAdapter } from '../models/dataSourceAdapter.model';
@@ -211,6 +211,121 @@ export class KottsterApp {
   }
 
   /**
+   * Define a dashboard controller
+   * @param dashboardPageConfig The dashboard page config
+   * @returns The express request handler
+   */
+  public defineDashboardController(dashboardPageConfig: DashboardPageConfig) {
+    const func: RequestHandler = async (req, res) => {
+      const { isTokenValid, user, invalidTokenErrorMessage } = await this.ensureValidToken(req);
+      if (!isTokenValid || !user) {
+        res.status(401).json({ error: `Invalid JWT token: ${invalidTokenErrorMessage}` });
+        return;
+      }
+
+      const page = (req as Request & { page?: Page }).page;
+      if (!page) {
+        res.status(404).json({ error: 'Specified page not found' });
+        return;
+      }
+
+      try {
+        const body = await req.body as RpcActionBody<'dashboard_getCardData' | 'dashboard_getStatData'>;
+        let result: any;
+
+        try {
+          if (page.allowedRoleIds?.length && !page.allowedRoleIds.includes(user.role.id) && this.stage === Stage.production) {
+            throw new Error('You do not have access to this page');
+          }
+
+          if (body.action === 'dashboard_getStatData') {
+            const input = body.input as DashboardPageInputGetStatData;
+            const stat = dashboardPageConfig.stats?.find(s => s.key === input.statKey);
+            if (!stat) {
+              throw new Error(`Stat ${input.statKey} not found`);
+            }
+
+            if (stat.fetchStrategy === 'rawSqlQuery') {
+              if (!stat.dataSource) {
+                throw new Error(`Data source for stat not specified`);
+              }
+  
+              const dataSource = this.dataSources.find(ds => ds.name === stat.dataSource);
+              if (!dataSource) {
+                throw new Error(`Data source "${stat.dataSource}" not found`);
+              }
+
+              const dataSourceAdapter = dataSource.adapter as DataSourceAdapter | undefined;
+              if (!dataSourceAdapter) {
+                throw new Error(`Data source adapter for "${stat.dataSource}" not found`);
+              }
+
+              result = await dataSourceAdapter.getStatData(input, stat);
+            } else if (stat.fetchStrategy === 'customFetch') {
+              if (!stat.customDataFetcher) {
+                throw new Error(`Custom data fetcher for stat "${stat.key}" not specified`);
+              }
+
+              result = await stat.customDataFetcher(input);
+            }
+          }
+          else if (body.action === 'dashboard_getCardData') {
+            const input = body.input as DashboardPageInputGetCardData;
+            const card = dashboardPageConfig.cards?.find(c => c.key === input.cardKey);
+            if (!card) {
+              throw new Error(`Card ${input.cardKey} not found`);
+            }
+
+            if (card.fetchStrategy === 'rawSqlQuery') {
+              if (!card.dataSource) {
+                throw new Error(`Data source for card not specified`);
+              }
+  
+              const dataSource = this.dataSources.find(ds => ds.name === card.dataSource);
+              if (!dataSource) {
+                throw new Error(`Data source "${card.dataSource}" not found`);
+              }
+
+              const dataSourceAdapter = dataSource.adapter as DataSourceAdapter | undefined;
+              if (!dataSourceAdapter) {
+                throw new Error(`Data source adapter for "${card.dataSource}" not found`);
+              }
+
+              result = await dataSourceAdapter.getCardData(input, card);
+            } else if (card.fetchStrategy === 'customFetch') {
+              if (!card.customDataFetcher) {
+                throw new Error(`Custom data fetcher for card "${card.key}" not specified`);
+              }
+
+              result = await card.customDataFetcher(input);
+            }
+          }
+        } catch (error) {
+          throw new Error(error);
+        }
+        
+        res.json({
+          status: 'success',
+          result,
+        });
+      } catch (error) {
+        if (error instanceof Error && error.message === 'Unauthorized') {
+          return new Response('Unauthorized', { status: 401 });
+        }
+
+        console.error('Error executing dashboard RPC:', error);
+        res.status(500).json({
+          status: 'error',
+          error: error.message,
+        });
+        return;
+      }
+    }
+
+    return func;
+  }
+
+  /**
    * Define a table controller
    * @param dataSource The data source
    * @param pageSettings The page settings
@@ -220,13 +335,13 @@ export class KottsterApp {
     tablePageConfig: TablePageConfig,
     procedures?: T
   ): RequestHandler  & { procedures: T } {
+    // Check if specified data source exists
     const dataSource = this.dataSources.find(ds => ds.name === tablePageConfig.dataSource);
     if (!dataSource && (tablePageConfig.fetchStrategy === 'databaseTable' || tablePageConfig.fetchStrategy === 'rawSqlQuery')) {
       throw new Error(`Data source "${tablePageConfig.dataSource}" not found`);
     }
 
     const func: RequestHandler = async (req, res, next) => {
-      // If the request is a custom one, handle it by the custom controller
       const body = await req.body as RpcActionBody<'custom'>;
       const action = body.action;
 
@@ -242,6 +357,7 @@ export class KottsterApp {
         return;
       }
 
+      // If the request is a custom one, handle it by the custom controller
       if (action === 'custom') {
         return this.defineCustomController(procedures as T)(req, res, next);
       }
@@ -262,7 +378,7 @@ export class KottsterApp {
           if (body.action === 'table_select' && tablePageConfig.fetchStrategy === 'customFetch') {
             result = tablePageConfig.customDataFetcher ? await tablePageConfig.customDataFetcher(body.input as TablePageInputSelectUsingExecuteQuery) : {
               records: [],
-            } as TablePageResultSelectDTO;
+            } as TablePageSelectResult;
           } else {
             if (!dataSource) {
               throw new Error(`Data source "${tablePageConfig.dataSource}" not found`);

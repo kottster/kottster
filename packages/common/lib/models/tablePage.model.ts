@@ -204,7 +204,7 @@ export interface TablePageConfig {
    * @param input - The input parameters for fetching data (page, search, etc.)
    * @returns An object containing records and total
    */
-  customDataFetcher?: (input: TablePageInputSelectUsingExecuteQuery) => Promise<TablePageResultSelectDTO>;
+  customDataFetcher?: (input: TablePageInputSelectUsingExecuteQuery) => Promise<TablePageSelectResult>;
 
   /**
    * Function to check if a record can be inserted.
@@ -299,20 +299,20 @@ export interface TablePageConfig {
 
 export type TablePageResultSelectRecord = Record<string, any>;
 
-export type TablePageResultSelectRecordLinkedDTO = Record<string, {
+export type TablePageSelectRecordLinkedResult = Record<string, {
   records?: TablePageResultSelectRecord[];
   total?: number;
 }>;
 
-export interface TablePageResultSelectDTO {
+export interface TablePageSelectResult {
   records?: TablePageResultSelectRecord[];
   total?: number;
 }
 
-export interface TablePageResultSelectSingleDTO {
+export interface TablePageSelectSingleResult {
   record: TablePageResultSelectRecord;
 }
 
-export interface TablePageResultInsertDTO {}
+export interface TablePageInsertResult {}
 
-export interface TablePageResultUpdateDTO {}
+export interface TablePageUpdateResult {}

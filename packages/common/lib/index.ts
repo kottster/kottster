@@ -11,6 +11,7 @@ export * from './models/databaseSchema.model';
 export * from './models/rpc.model';
 export * from './models/spec.model';
 export * from './models/tablePage.model';
+export * from './models/dashboardPage.model';
 export * from './models/fieldInput.model';
 export * from './models/js.model';
 export * from './models/relationship.model';

@@ -121,4 +121,4 @@ WHERE status = 'active'
 
 ## Column configuration
 
-When using custom data fetchers, Kottster automatically detects the columns based on the properties of the records returned.
+When using raw SQL queries, Kottster automatically detects the columns based on the properties of the records returned.

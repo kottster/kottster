@@ -161,12 +161,17 @@ export class KottsterServer {
             console.error(`Failed to load route "${pageConfig.key}":`, error);
           }
         } else {
-          if (!pageConfig.config.dataSource) {
-            console.warn(`Page "${pageConfig.key}" does not have a data source specified. Skipping route setup.`);
-            continue;
-          }
+          if (pageConfig.type === 'table') {
+            if (!pageConfig.config.dataSource) {
+              console.warn(`Page "${pageConfig.key}" does not have a data source specified. Skipping route setup.`);
+              continue;
+            }
 
-          this.expressApp.post(`/api/${pageConfig.key}`, this.app.createRequestWithPageDataMiddleware(pageConfig), this.app.defineTableController(pageConfig.config));
+            this.expressApp.post(`/api/${pageConfig.key}`, this.app.createRequestWithPageDataMiddleware(pageConfig), this.app.defineTableController(pageConfig.config));
+          }
+          if (pageConfig.type === 'dashboard') {
+            this.expressApp.post(`/api/${pageConfig.key}`, this.app.createRequestWithPageDataMiddleware(pageConfig), this.app.defineDashboardController(pageConfig.config));
+          }
         }
       };
     }

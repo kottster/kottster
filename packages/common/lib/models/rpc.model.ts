@@ -1,3 +1,4 @@
+import { DashboardPageInputGetCardData, DashboardPageInputGetStatData } from "./dashboardPage.model";
 import { TablePageInputDelete, TablePageInputInsert, TablePageInputSelect, TablePageInputSelectSingle, TablePageInputUpdate } from "./tablePage.model";
 
 interface CustomRpcInput {
@@ -5,7 +6,7 @@ interface CustomRpcInput {
   procedureInput: any;
 };
 
-export type RpcActionType = 'custom' | 'table_select' | 'table_selectOne' | 'table_insert' | 'table_update' | 'table_delete';
+export type RpcActionType = 'custom' | 'table_select' | 'table_selectOne' | 'table_insert' | 'table_update' | 'table_delete' | 'dashboard_getCardData' | 'dashboard_getStatData';
 
 export interface RpcActionBody<T extends RpcActionType> {
   [key: string]: any;
@@ -16,6 +17,8 @@ export interface RpcActionBody<T extends RpcActionType> {
     : T extends 'table_insert' ? TablePageInputInsert
     : T extends 'table_update' ? TablePageInputUpdate
     : T extends 'table_delete' ? TablePageInputDelete
+    : T extends 'dashboard_getStatData' ? DashboardPageInputGetStatData
+    : T extends 'dashboard_getCardData' ? DashboardPageInputGetCardData
     : T extends 'custom' ? CustomRpcInput
     : never;
 }

@@ -291,7 +291,7 @@ export class KnexPg extends DataSourceAdapter {
           AND tc.table_schema = COALESCE(?, current_schema())
       ),
       fk_info AS (
-        SELECT
+        SELECT DISTINCT
           kcu.table_name,
           kcu.column_name,
           ccu.table_name AS foreign_table_name,

@@ -289,9 +289,9 @@ export abstract class DataSourceAdapter {
       });
     }
 
-    const oneToOneRelationships = (tablePageProcessedConfig.relationships?.filter(relationship => relationship.relation === 'oneToOne') ?? []) as OneToOneRelationship[]; 
-    const oneToManyRelationships = (tablePageProcessedConfig.relationships?.filter(relationship => relationship.relation === 'oneToMany') ?? []) as OneToManyRelationship[];
-    const manyToManyRelationships = (tablePageProcessedConfig.relationships?.filter(relationship => relationship.relation === 'manyToMany') ?? []) as ManyToManyRelationship[];
+    const oneToOneRelationships = (tablePageProcessedConfig.relationships?.filter(relationship => relationship.relation === 'oneToOne' && relationship.hiddenInTable === false) ?? []) as OneToOneRelationship[];
+    const oneToManyRelationships = (tablePageProcessedConfig.relationships?.filter(relationship => relationship.relation === 'oneToMany' && relationship.hiddenInTable === false) ?? []) as OneToManyRelationship[];
+    const manyToManyRelationships = (tablePageProcessedConfig.relationships?.filter(relationship => relationship.relation === 'manyToMany' && relationship.hiddenInTable === false) ?? []) as ManyToManyRelationship[];
     
     // Preload linked one-to-one records
     if (oneToOneRelationships.length > 0) {

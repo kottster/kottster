@@ -1,3 +1,4 @@
+import { DashboardPageConfig } from './dashboardPage.model';
 import { File } from './file.model'
 import { TablePageConfig } from './tablePage.model';
 
@@ -20,21 +21,30 @@ interface TablePage extends BasePage {
   config: TablePageConfig;
 }
 
+interface DashboardPage extends BasePage {
+  type: 'dashboard';
+  config: DashboardPageConfig;
+}
+
 interface CustomPage extends BasePage {
   type: 'custom';
   key: string;
   title: string;
 }
 
-export type Page = TablePage | CustomPage;
+export type Page = TablePage | DashboardPage | CustomPage;
 
 interface PublicTablePage extends Pick<TablePage, 'key' | 'title' | 'icon' | 'type' | 'allowedRoleIds' | 'version' | 'hideInSidebar'> {
   config: TablePage['config'];
 }
 
+interface PublicDashboardPage extends Pick<DashboardPage, 'key' | 'title' | 'icon' | 'type' | 'allowedRoleIds' | 'version' | 'hideInSidebar'> {
+  config: DashboardPage['config'];
+}
+
 interface PublicCustomPage extends Pick<CustomPage, 'key' | 'title' | 'icon' | 'type' | 'allowedRoleIds' | 'version' | 'hideInSidebar'> {}
 
-export type PublicPage = PublicTablePage | PublicCustomPage;
+export type PublicPage = PublicTablePage | PublicDashboardPage | PublicCustomPage;
 
 export interface PageFileStructure {
   pageKey: string;

@@ -2,10 +2,13 @@ import { TablePageConfig } from "./tablePage.model";
 
 interface RelationshipBase {
   key: string;
-  
+
   position?: number;
 
   hiddenInTable?: boolean;
+
+  /** Display name for the relation */
+  label?: string;
 }
 
 export type Relationship = OneToOneRelationship | OneToManyRelationship | ManyToManyRelationship;

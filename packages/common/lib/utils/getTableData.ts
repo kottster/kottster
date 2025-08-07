@@ -158,6 +158,7 @@ export function getTableData(params: {
       key: i.key,
       hiddenInTable: relationship?.hiddenInTable ?? false,
       position: relationship?.position ?? i.position,
+      label: relationship?.label,
     } as Relationship;
   });
   const sortedRelationships = sortRelationshipsByOrder(relationships);

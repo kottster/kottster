@@ -292,21 +292,19 @@ export class KnexPg extends DataSourceAdapter {
       ),
       fk_info AS (
         SELECT
-          kcu.table_name,
-          kcu.column_name,
-          ccu.table_name AS foreign_table_name,
-          ccu.column_name AS foreign_column_name
+          conrelid::regclass::text AS table_name,
+          a.attname AS column_name,
+          confrelid::regclass::text AS foreign_table_name,
+          af.attname AS foreign_column_name
         FROM
-          information_schema.table_constraints AS tc
-          JOIN information_schema.key_column_usage AS kcu
-            ON tc.constraint_name = kcu.constraint_name
-            AND tc.table_schema = kcu.table_schema
-          JOIN information_schema.constraint_column_usage AS ccu
-            ON ccu.constraint_name = tc.constraint_name
-            AND ccu.table_schema = tc.table_schema
+          pg_constraint c
+          JOIN pg_namespace n ON n.oid = c.connamespace
+          JOIN LATERAL unnest(c.conkey, c.confkey) WITH ORDINALITY AS u(attnum, fattnum, ord) ON true
+          JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = u.attnum
+          JOIN pg_attribute af ON af.attrelid = c.confrelid AND af.attnum = u.fattnum
         WHERE
-          tc.constraint_type = 'FOREIGN KEY'
-          AND tc.table_schema = COALESCE(?, current_schema())
+          c.contype = 'f'
+          AND n.nspname = COALESCE(?, current_schema())
       )
       SELECT
         t.table_name,

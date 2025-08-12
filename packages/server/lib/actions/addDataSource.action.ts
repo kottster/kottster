@@ -112,7 +112,7 @@ export class AddDataSource extends DevAction {
           length: 6,
           charset: '1234567890abcdefghijklmnopqrstuvwxyz'
         });
-        const dataSourceName = name || `${type}-db-${postfix}`;
+        const dataSourceName = name || `${type}_db_${postfix}`;
 
         const command = this.getCommand(type, dataSourceName, connectionDetails);
         exec(command, { cwd: PROJECT_DIR }, error => {

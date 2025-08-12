@@ -242,7 +242,8 @@ export class KottsterApp {
             const input = body.input as DashboardPageInputGetStatData;
             const stat = dashboardPageConfig.stats?.find(s => s.key === input.statKey);
             if (!stat) {
-              throw new Error(`Stat ${input.statKey} not found`);
+              res.status(404).json({ error: `Specified stat "${input.statKey}" not found` });
+              return;
             }
 
             if (stat.fetchStrategy === 'rawSqlQuery') {
@@ -273,7 +274,8 @@ export class KottsterApp {
             const input = body.input as DashboardPageInputGetCardData;
             const card = dashboardPageConfig.cards?.find(c => c.key === input.cardKey);
             if (!card) {
-              throw new Error(`Card ${input.cardKey} not found`);
+              res.status(404).json({ error: `Specified card "${input.cardKey}" not found` });
+              return;
             }
 
             if (card.fetchStrategy === 'rawSqlQuery') {

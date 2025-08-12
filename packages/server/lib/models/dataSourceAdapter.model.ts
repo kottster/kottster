@@ -164,7 +164,7 @@ export abstract class DataSourceAdapter {
       period_start_date: input.periodStartDate,
       period_end_date: input.periodEndDate,
     });
-    const total = stat.type === 'withTotal' && stat.totalSqlQuery ? await this.executeRawQueryForSingleValue(stat.totalSqlQuery, {
+    const total = stat.type === 'ratio' && stat.totalSqlQuery ? await this.executeRawQueryForSingleValue(stat.totalSqlQuery, {
       period_start_date: input.periodStartDate,
       period_end_date: input.periodEndDate,
     }) : undefined;
@@ -499,7 +499,7 @@ export abstract class DataSourceAdapter {
       final = result[0][Object.keys(result[0])[0]];
     }
 
-    return `${final}`;
+    return final ? `${final}` : '0';
   }
 
   async executeRawQuery(query: string, vars: Record<string, any> = {}): Promise<any[]> {

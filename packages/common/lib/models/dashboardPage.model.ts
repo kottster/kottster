@@ -13,9 +13,8 @@ export interface DashboardPageInputGetCardData extends DashboardPageInputBase {
 }
 
 export enum DashboardPageConfigStatType {
-  // TODO: rename to value, valueOfTotal, etc.
-  basic = 'basic',
-  withTotal = 'withTotal',
+  single = 'single',
+  ratio = 'ratio',
 }
 
 export enum DashboardPageConfigCardType {
@@ -52,22 +51,28 @@ export interface DashboardPageConfigStatBase {
    * @returns An object containing values
    */
   customDataFetcher?: (input: DashboardPageInputGetStatData) => Promise<DashboardPageGetStatDataResult>;
+
+  /**
+   * Info tooltip text for the state
+   * @example 'This stat shows the total sales for the last month.'
+   */
+  infoTooltipText?: string;
 }
 
-export interface DashboardPageConfigBasicStat extends DashboardPageConfigStatBase {
-  type: 'basic';
+export interface DashboardPageConfigSingleStat extends DashboardPageConfigStatBase {
+  type: 'single';
   sqlQuery: string;
 }
 
-export interface DashboardPageConfigTotalStat extends DashboardPageConfigStatBase {
-  type: 'withTotal';
+export interface DashboardPageConfigRatioStat extends DashboardPageConfigStatBase {
+  type: 'ratio';
   sqlQuery: string;
   totalSqlQuery: string;
 }
 
-export type DashboardPageConfigStat = DashboardPageConfigBasicStat | DashboardPageConfigTotalStat;
+export type DashboardPageConfigStat = DashboardPageConfigSingleStat | DashboardPageConfigRatioStat;
 
-export interface DashboardPageConfigChartLegend {
+export interface DashboardPageConfigChartValue {
   alias: string;
   title?: string;
   color?: string;
@@ -91,24 +96,33 @@ export interface DashboardPageConfigCardBase {
    * @returns An object containing items
    */
   customDataFetcher?: (input: DashboardPageInputGetCardData) => Promise<DashboardPageGetCardDataResult>;
+
+  /**
+   * Info tooltip text for the card
+   * @example 'This chart shows the sales data for the last month.'
+   */
+  infoTooltipText?: string;
 }
 
 export interface DashboardPageConfigLineChartCard extends DashboardPageConfigCardBase {
   type: 'lineChart';
   sqlQuery: string;
   dataKeyAlias: string;
-  legends: DashboardPageConfigChartLegend[];
+  values: DashboardPageConfigChartValue[];
   valueSuffix?: string;
   valuePrefix?: string;
+  withDots?: boolean;
 }
 
 export interface DashboardPageConfigAreaChartCard extends Omit<DashboardPageConfigLineChartCard, 'type'> {
   type: 'areaChart';
   stacked?: boolean;
+  withDots?: boolean;
 }
 
-export interface DashboardPageConfigBarChartCard extends Omit<DashboardPageConfigLineChartCard, 'type'> {
+export interface DashboardPageConfigBarChartCard extends Omit<DashboardPageConfigLineChartCard, 'type' | 'withDots'> {
   type: 'barChart';
+  stacked?: boolean;
 }
 
 export type DashboardPageConfigCard = DashboardPageConfigLineChartCard | DashboardPageConfigAreaChartCard | DashboardPageConfigBarChartCard;

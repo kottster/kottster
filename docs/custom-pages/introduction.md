@@ -73,8 +73,8 @@ export default () => {
   // Hook to call backend procedures for the current page
   const callProcedure = useCallProcedure();
   
-  // Get the current page ID
-  const { pageId } = usePage();
+  // Get the current page key
+  const { pageKey } = usePage();
   
   const [filePath, setFilePath] = useState();
   const [loading, setLoading] = useState(true);
@@ -82,7 +82,7 @@ export default () => {
   const fetchFilePath = async () => {
     try {
       // Call the backend procedure defined in api.server.js
-      const data = await callProcedure('getFilePath', { id: pageId });
+      const data = await callProcedure('getFilePath', { id: pageKey });
       setFilePath(data);
     } finally {
       setLoading(false);
@@ -91,7 +91,7 @@ export default () => {
 
   useEffect(() => {
     fetchFilePath(); // Fetch the file path when the component mounts
-  }, [pageId]);
+  }, [pageKey]);
 
   return (
     <Page>
@@ -152,14 +152,14 @@ import { type Procedures } from './api.server';
 export default () => {
   // Get fully typed procedure calls
   const callProcedure = useCallProcedure<Procedures>();
-  const { pageId } = usePage();
+  const { pageKey } = usePage();
   const [filePath, setFilePath] = useState<string>();
   const [loading, setLoading] = useState(true);
   
   const fetchFilePath = async () => {
     try {
       // TypeScript will now validate the function name and parameters
-      const data = await callProcedure('getFilePath', { id: pageId });
+      const data = await callProcedure('getFilePath', { id: pageKey });
       setFilePath(data);
     } finally {
       setLoading(false);
@@ -168,7 +168,7 @@ export default () => {
 
   useEffect(() => {
     fetchFilePath();
-  }, [pageId]);
+  }, [pageKey]);
 
   return (
     <Page>

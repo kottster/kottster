@@ -315,10 +315,12 @@ export abstract class DataSourceAdapter {
       });
     }
 
-    const oneToOneRelationships = (tablePageProcessedConfig.relationships?.filter(relationship => relationship.relation === 'oneToOne') ?? []) as OneToOneRelationship[]; 
-    const oneToManyRelationships = (tablePageProcessedConfig.relationships?.filter(relationship => relationship.relation === 'oneToMany') ?? []) as OneToManyRelationship[];
-    const manyToManyRelationships = (tablePageProcessedConfig.relationships?.filter(relationship => relationship.relation === 'manyToMany') ?? []) as ManyToManyRelationship[];
-    
+    // Collect all relationships that are visible in the table
+    const visibleRelationships = tablePageProcessedConfig.relationships?.filter(r => !r.hiddenInTable) ?? [];
+    const oneToOneRelationships = (visibleRelationships.filter(r => r.relation === 'oneToOne') ?? []) as OneToOneRelationship[];
+    const oneToManyRelationships = (visibleRelationships.filter(r => r.relation === 'oneToMany') ?? []) as OneToManyRelationship[];
+    const manyToManyRelationships = (visibleRelationships.filter(r => r.relation === 'manyToMany') ?? []) as ManyToManyRelationship[];
+
     // Preload linked one-to-one records
     if (oneToOneRelationships.length > 0) {
       const linkedRecordKeys: Record<string, any[]> = {};

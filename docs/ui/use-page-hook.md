@@ -12,11 +12,11 @@ Example usage:
 import { Page, usePage } from '@kottster/react';
 
 export default () => {
-  const { pageId, navItem } = usePage(); // [!code highlight]
+  const { pageKey, navItem } = usePage(); // [!code highlight]
 
   return (
     <Page>
-      Current Page ID: {pageId} <br />
+      Current Page ID: {pageKey} <br />
       Current Nav Item: {navItem ? navItem.label : 'No nav item found'}
     </Page>
   );
@@ -25,7 +25,7 @@ export default () => {
 
 ## Returned Values
 
-- **pageId**: `string` - The ID of the current page.
+- **pageKey**: `string` - The ID of the current page.
 - **navItem**: `object` - The navigation item associated with the current page, containing:
   - **id**: `string` - The page ID associated with the navigation item.
   - **label**: `string` - The label of the navigation item.

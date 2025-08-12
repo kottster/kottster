@@ -266,12 +266,12 @@ import { type Procedures } from './api.server';
 
 export default () => {
   const callProcedure = useCallProcedure<Procedures>(); // [!code highlight]
-  const { pageId } = usePage();
+  const { pageKey } = usePage();
 
   const { data: product, isLoading } = useQuery({
-    queryKey: ['product', pageId],
-    queryFn: () => callProcedure('getProduct', { id: parseInt(pageId) }), // [!code highlight]
-    enabled: !!pageId, // Only run query if pageId exists
+    queryKey: ['product', pageKey],
+    queryFn: () => callProcedure('getProduct', { id: parseInt(pageKey) }), // [!code highlight]
+    enabled: !!pageKey, // Only run query if pageKey exists
   });
 
   if (isLoading) return <div>Loading...</div>;

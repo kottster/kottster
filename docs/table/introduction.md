@@ -19,7 +19,7 @@ Kottster table pages let you **view and manage data** in your database tables.
 
 ## Page structure
 
-Each table page requires a `page.json` configuration file in its own directory under `app/pages/<pageId>`. The `<pageId>` becomes the URL path where your page will be accessible (e.g., `/users` for a page in `./app/pages/users/`).
+Each table page requires a `page.json` configuration file in its own directory under `app/pages/<pageKey>`. The `<pageKey>` becomes the URL path where your page will be accessible (e.g., `/users` for a page in `./app/pages/users/`).
 
 ### Configuration file (`page.json`)
 This file defines the table page configuration and is the only required file. You can edit it using the visual editor or modify the file manually.
@@ -98,7 +98,7 @@ The visual editor manages the `page.json` file automatically. Even though you ca
 
 ### Option 2: Manual creation
 
-For more control or custom requirements, you can manually create the `page.json` file in your `./app/pages/<pageId>` directory. Add optional `api.server.js` and `index.jsx` files only if you need additional customization beyond the base table functionality.
+For more control or custom requirements, you can manually create the `page.json` file in your `./app/pages/<pageKey>` directory. Add optional `api.server.js` and `index.jsx` files only if you need additional customization beyond the base table functionality.
 
 ## Examples
 

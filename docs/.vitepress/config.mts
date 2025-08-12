@@ -208,6 +208,24 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
         },
       ]
     },
+    
+    {
+      text: 'Dashboard Pages',
+      collapsed: false,
+      items: [
+        { text: 'Introduction', link: '/dashboard/introduction' },
+        { 
+          text: 'Configuration', 
+          link: '/dashboard/configuration/api',
+          items: [
+            { text: 'API Reference', link: '/dashboard/configuration/api' },    
+            { text: 'Raw SQL queries', link: '/dashboard/configuration/raw-sql-queries' },
+            { text: 'Custom data fetcher', link: '/dashboard/configuration/custom-data-fetcher' },
+          ],
+        },
+        { text: 'DashboardPage component', link: '/ui/dashboard-page-component' },
+      ]
+    },
     {
       text: 'Custom Pages',
       collapsed: false,

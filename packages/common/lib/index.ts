@@ -17,6 +17,7 @@ export * from './models/js.model';
 export * from './models/relationship.model';
 export * from './models/filter.model';
 export * from './models/template.model';
+export * from './models/dto.model';
 
 // Utils
 export * from './utils/getEnvOrThrow';

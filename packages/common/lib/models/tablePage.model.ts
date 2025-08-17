@@ -178,6 +178,10 @@ export interface TablePageConfig {
   fetchStrategy: keyof typeof TableFetchStrategy;
 
   primaryKeyColumn?: string;
+  
+  /** 
+   * @deprecated Deprecated since now users can now set page size in the UI 
+   */
   pageSize?: number;
   
   columns?: TablePageConfigColumn[];

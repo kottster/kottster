@@ -67,7 +67,7 @@ export interface DashboardPageConfigSingleStat extends DashboardPageConfigStatBa
 export interface DashboardPageConfigRatioStat extends DashboardPageConfigStatBase {
   type: 'ratio';
   sqlQuery: string;
-  totalSqlQuery: string;
+  sqlTotalQuery: string;
 }
 
 export type DashboardPageConfigStat = DashboardPageConfigSingleStat | DashboardPageConfigRatioStat;

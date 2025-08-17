@@ -102,13 +102,6 @@ If you only need to change the way columns and fields are rendered, you can use 
 
   Specifies the primary key column in the table. Typically, this is set to `"id"`.
 
-<!-- TODO: remove -->
-- ### pageSize
-
-  `number`, optional
-
-  Specifies the number of records to display per page. If not specified, the default value is `20`.
-
 - ### defaultSortColumn
 
   `string`, optional

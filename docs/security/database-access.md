@@ -57,27 +57,18 @@ For production deployments, we strongly recommend moving connection details (cre
 Here's an example data source configuration:
 
 ```javascript [app/_server/data-sources/postgres.js]
-import { createDataSource, KnexPgAdapter } from '@kottster/server';
+import { KnexPgAdapter } from '@kottster/server';
 import knex from 'knex';
 
-const dataSource = createDataSource({
-  type: 'postgres',
-  name: 'postgres',
-  init: () => {
-    const client = knex({
-      client: 'pg',
-      connection: process.env.NODE_ENV === 'development' // [!code highlight]
-        ? 'postgresql://myuser:mypassword@localhost:5432/mydatabase' // [!code highlight]
-        : process.env.DB_CONNECTION, // [!code highlight]
-      searchPath: ['public'],
-    });
-
-    return new KnexPgAdapter(client);
-  },
-  tablesConfig: {}
+const client = knex({
+  client: 'pg',
+  connection: process.env.NODE_ENV === 'development' // [!code highlight]
+    ? 'postgresql://myuser:mypassword@localhost:5432/mydatabase' // [!code highlight]
+    : process.env.DB_CONNECTION, // [!code highlight]
+  searchPath: ['public'],
 });
 
-export default dataSource;
+export default new KnexPgAdapter(client);
 ```
 
 Learn more about how to prepare your app for production in the [Deploying Kottster](../deploying.md#before-you-deploy) documentation.

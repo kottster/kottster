@@ -125,6 +125,11 @@ export default defineConfig({
   },
 
   vite: {
+    css: {
+      postcss: {
+        plugins: []
+      }
+    },
     plugins: [
       groupIconVitePlugin({
         // customIcon: {

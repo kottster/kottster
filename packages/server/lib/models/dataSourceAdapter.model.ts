@@ -164,7 +164,7 @@ export abstract class DataSourceAdapter {
       period_start_date: input.periodStartDate,
       period_end_date: input.periodEndDate,
     });
-    const total = stat.type === 'ratio' && stat.totalSqlQuery ? await this.executeRawQueryForSingleValue(stat.totalSqlQuery, {
+    const total = stat.type === 'ratio' && stat.sqlTotalQuery ? await this.executeRawQueryForSingleValue(stat.sqlTotalQuery, {
       period_start_date: input.periodStartDate,
       period_end_date: input.periodEndDate,
     }) : undefined;

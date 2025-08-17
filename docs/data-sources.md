@@ -26,7 +26,7 @@ After creating an app, you’ll land on the "**Getting Started**" page, where yo
 
 ### 2. Using the CLI
 
-On the same "**Getting Started**" page, you can choose "**Edit file manually**" option to get instructions on how to add a data source using the CLI.
+On the same "**Getting Started**" page, you can choose "**Add file manually**" option to get instructions on how to add a data source using the CLI.
 
 After you execute the command, a folder with the data source will be created in the `_server/data-sources/` directory.
 

@@ -1,7 +1,7 @@
 import * as jose from 'jose';
 import { ExtendAppContextFunction } from '../models/appContext.model';
 import { PROJECT_DIR } from '../constants/projectDir';
-import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, RpcActionBody, TablePageInputSelect, TablePageInputDelete, TablePageInputUpdate, TablePageInputInsert, isSchemaEmpty, schemaPlaceholder, ApiResponse, TablePageInputSelectSingle, Page, TablePageConfig, TablePageInputSelectUsingExecuteQuery, TablePageSelectResult, DashboardPageConfig, DashboardPageInputGetStatData, DashboardPageInputGetCardData } from '@kottster/common';
+import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, RpcActionBody, TablePageInputSelect, TablePageInputDelete, TablePageInputUpdate, TablePageInputInsert, isSchemaEmpty, schemaPlaceholder, ApiResponse, TablePageInputSelectSingle, Page, TablePageConfig, TablePageInputSelectUsingExecuteQuery, TablePageSelectResult, DashboardPageConfig, DashboardPageInputGetStatData, DashboardPageInputGetCardData, DashboardPageGetStatDataResult, DashboardPageGetCardDataResult } from '@kottster/common';
 import { DataSourceRegistry } from './dataSourceRegistry';
 import { ActionService } from '../services/action.service';
 import { DataSourceAdapter } from '../models/dataSourceAdapter.model';
@@ -264,10 +264,15 @@ export class KottsterApp {
               result = await dataSourceAdapter.getStatData(input, stat);
             } else if (stat.fetchStrategy === 'customFetch') {
               if (!stat.customDataFetcher) {
-                throw new Error(`Custom data fetcher for stat "${stat.key}" not specified`);
+                // Fallback to default result if no custom fetcher is provided
+                console.warn(`Custom data fetcher for stat "${stat.key}" not specified`);
+                result = {
+                  value: 0,
+                  total: 0,
+                } as DashboardPageGetStatDataResult;
+              } else {
+                result = await stat.customDataFetcher(input);
               }
-
-              result = await stat.customDataFetcher(input);
             }
           }
           else if (body.action === 'dashboard_getCardData') {
@@ -296,10 +301,14 @@ export class KottsterApp {
               result = await dataSourceAdapter.getCardData(input, card);
             } else if (card.fetchStrategy === 'customFetch') {
               if (!card.customDataFetcher) {
-                throw new Error(`Custom data fetcher for card "${card.key}" not specified`);
+                // Fallback to default result if no custom fetcher is provided
+                console.warn(`Custom data fetcher for card "${card.key}" not specified`);
+                result = {
+                  items: [],
+                } as DashboardPageGetCardDataResult;
+              } else {
+                result = await card.customDataFetcher(input);
               }
-
-              result = await card.customDataFetcher(input);
             }
           }
         } catch (error) {

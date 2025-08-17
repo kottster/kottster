@@ -4,7 +4,7 @@ description: "Dashboard pages in Kottster let you visualize and monitor data thr
 
 # Dashboard pages
 
-Kottster dashboard pages let you **visualize and monitor data** through statistics blocks and charts.
+Kottster dashboard pages let you **visualize and monitor data** through statistics and charts. 
 
 <!-- ![Dashboard features in Kottster](dashboard-explanation.png) -->
 

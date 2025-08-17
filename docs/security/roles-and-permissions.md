@@ -17,7 +17,7 @@ Based on these roles, you can define which parts of your app users have access t
 
 ## Default roles
 
-By default, each Kottster app comes with three built-in roles: Admin, Developer, and Regular. You can easily add your own custom roles to match your specific needs.
+By default, each Kottster app comes with three built-in roles: **Admin**, **Developer**, and **Regular**. You can easily add your own custom roles to match your specific needs.
 
 ## Setting up page access
 

@@ -16,15 +16,15 @@ To change your app's name, edit the `kottster-app.json` file and modify the `met
   "id": "123",
   "meta": {
     "name": "Your Custom App Name",
-    "logo": "https://web.kottster.app/icon.png"
+    "icon": "https://web.kottster.app/icon.png"
   },
-  "navItems": [ ... ]
+  ...
 }
 ```
 
 ## Logo
 
-You can customize your app's logo by updating the `meta.logo` property in `kottster-app.json`. 
+You can customize your app's logo by updating the `meta.icon` property in `kottster-app.json`. 
 
 ### Using an external URL
 
@@ -35,9 +35,9 @@ By default, the logo points to `https://web.kottster.app/icon.png` (the default 
   "id": "123",
   "meta": {
     "name": "Admin Panel",
-    "logo": "https://example.com/your-logo.png"
+    "icon": "https://example.com/your-logo.png"
   },
-  "navItems": [ ... ]
+  ...
 }
 ```
 
@@ -54,9 +54,9 @@ For better performance and reliability, you can store your logo locally:
   "id": "123",
   "meta": {
     "name": "Admin Panel",
-    "logo": "/logo.png"
+    "icon": "/logo.png"
   },
-  "navItems": [ ... ]
+  ...
 }
 ```
 

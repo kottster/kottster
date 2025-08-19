@@ -59,8 +59,7 @@ export default defineConfig({
     [
       'script',
       {
-        src: 'https://aaib-script.vercel.app/loader-v1.js',
-        // src: 'http://localhost:6740/loader-v1.js',
+        src: 'https://unpkg.com/@aaib/javascript/dist/loader-v1.js',
       }
     ],
     [
@@ -251,6 +250,7 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
           collapsed: false,
           items: [
             { text: 'TablePage', link: '/ui/table-page-component' },
+            { text: 'DashboardPage', link: '/ui/dashboard-page-component' },
             { text: 'Page', link: '/ui/page-component' },
           ]
         },

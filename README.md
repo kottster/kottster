@@ -1,15 +1,38 @@
-# Kottster
+<div align="center" style="border-bottom: none">
+    <a href="https://kottster.app"><picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://kottster.app/_next/image?url=%2Flogoline-white.png&w=256&q=75">
+        <source media="(prefers-color-scheme: light)" srcset="https://kottster.app/_next/image?url=%2Flogoline.png&w=256&q=75">
+        <img alt="Kottster logo" src="https://kottster.app/_next/image?url=%2Flogoline.png&w=256&q=75" width="140" />
+    </picture></a>
+</div>
 
+<div align="center">
+
+# Instant admin panel for your app
+
+Get a custom Node.js admin panel. Create pages to **view and manage data in your database**, <br />
+or **build fully custom pages** from scratch. Secure, self-hosted, and easy to set up.
+  
+</div>
+
+<div align="center">
+  
 ![NPM Downloads](https://img.shields.io/npm/dm/%40kottster%2Fcli)
 [![@kottster/server.svg](https://img.shields.io/npm/v/@kottster/server.svg)](https://www.npmjs.com/package/@kottster/server)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![GitHub last commit](https://img.shields.io/github/last-commit/kottster/kottster)
 
-Instant Node.js admin panel for your app. Create pages to **view and manage data in your database**, or **build fully custom pages** from scratch. Secure, self-hosted, and easy to set up.
+</div>
+
+<div align="center">
 
 [Get Started](https://kottster.app/docs/) • [Live Demo](https://demo.kottster.app) • [Our Website](https://kottster.app) • [Docs](https://kottster.app/docs/)
 
 [![Kottster](/assets/intro-5.png)](https://youtu.be/JBpLVgkoj-k?si=GJ3IIBmzlgrCLKWs)
+
+</div>
+
+---
 
 ## Getting started
 

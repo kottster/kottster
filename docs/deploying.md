@@ -33,7 +33,7 @@ We recommend **using environment variables** to set different secret keys for de
 
 Open `app/_server/app.js` file and update it to use separate keys based on the environment, like this:
 
-```javascript [app/_server/app.js]
+```javascript
 import { createApp } from '@kottster/server';
 import schema from '../../kottster-app.json';
 

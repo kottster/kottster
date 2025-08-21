@@ -5,6 +5,7 @@
     "preview": "vitepress preview"
   },
   "dependencies": {
+    "mixpanel-browser": "^2.68.0",
     "vitepress": "^1.6.3",
     "vitepress-plugin-group-icons": "^1.6.0"
   }

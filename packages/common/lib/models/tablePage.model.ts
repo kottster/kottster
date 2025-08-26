@@ -40,7 +40,6 @@ export interface TablePageGetRecordInput extends TablePageInputBase {
 }
 
 export interface TablePageCreateRecordInput extends TablePageInputBase {
-  // tablePageConfig?: TablePageConfig;
   nestedTableKey?: TablePageNestedTableKey;
   values: Record<string, any>;
 }
@@ -52,7 +51,6 @@ export interface TablePageUpdateRecordInput extends TablePageInputBase {
 }
 
 export interface TablePageDeleteRecordInput extends TablePageInputBase {
-  // tablePageConfig?: TablePageConfig;
   nestedTableKey?: TablePageNestedTableKey;
   primaryKeyValues: any[];
 }

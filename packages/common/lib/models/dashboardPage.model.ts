@@ -1,12 +1,12 @@
 export interface DashboardPageInputBase {}
 
-export interface DashboardPageInputGetStatData extends DashboardPageInputBase {
+export interface DashboardPageGetStatDataInput extends DashboardPageInputBase {
   statKey: string;
   periodStartDate?: string;
   periodEndDate?: string;
 }
 
-export interface DashboardPageInputGetCardData extends DashboardPageInputBase {
+export interface DashboardPageGetCardDataInput extends DashboardPageInputBase {
   cardKey: string;
   periodStartDate?: string;
   periodEndDate?: string;
@@ -50,7 +50,7 @@ export interface DashboardPageConfigStatBase {
    * @param input - The input parameters for fetching data (period start and end dates)
    * @returns An object containing values
    */
-  customDataFetcher?: (input: DashboardPageInputGetStatData) => Promise<DashboardPageGetStatDataResult>;
+  customDataFetcher?: (input: DashboardPageGetStatDataInput) => Promise<DashboardPageGetStatDataResult>;
 
   /**
    * Info tooltip text for the state
@@ -95,7 +95,7 @@ export interface DashboardPageConfigCardBase {
    * @param input - The input parameters for fetching data (period start and end dates)
    * @returns An object containing items
    */
-  customDataFetcher?: (input: DashboardPageInputGetCardData) => Promise<DashboardPageGetCardDataResult>;
+  customDataFetcher?: (input: DashboardPageGetCardDataInput) => Promise<DashboardPageGetCardDataResult>;
 
   /**
    * Info tooltip text for the card

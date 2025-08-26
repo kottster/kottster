@@ -40,6 +40,7 @@ export * from './utils/getRelationshipKeyByColumn';
 export * from './utils/getRelationshipByColumn';
 export * from './utils/transformToKebabCase';
 export * from './utils/getPageTitle';
+export * from './utils/nestedKeyTransformation';;
 
 // Constants
 export * from './constants/dataSourceTypes';

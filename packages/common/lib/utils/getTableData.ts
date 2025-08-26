@@ -1,6 +1,6 @@
 import { defaultTablePageSize } from "../constants/table";
 import { RelationalDatabaseSchema, RelationalDatabaseSchemaTable } from "../models/databaseSchema.model";
-import { Relationship } from "../models/relationship.model";
+import { OneToOneRelationship, Relationship } from "../models/relationship.model";
 import { TablePageConfig, TablePageConfigColumn } from "../models/tablePage.model";
 import { findNameLikeColumns } from "./findNameLikeColumns";
 import { getAllPossibleRelationships } from "./getAllPossibleLinked";
@@ -25,6 +25,10 @@ interface ReturnType {
   tablePageProcessedConfig: ReturnTypeFinalData;
 }
 
+/**
+ * Get the default column data for a given table and column name.
+ * This function uses the database schema to determine the default settings for the column.
+ */
 export function getDefaultColumnData(
   tableName: string, 
   columnName: string, 
@@ -44,7 +48,7 @@ export function getDefaultColumnData(
   const relationshipPreviewColumns = foreignTableSchema ? findNameLikeColumns(foreignTableSchema.columns) : [];
   
   return {
-    column: columnSchema.name,
+    column: columnName,
     label: columnSchema.foreignKey ? getLabelFromForeignKeyColumnName(columnSchema.name) : transformToReadable(columnSchema.name),
     hiddenInTable: false,
     hiddenInForm: columnSchema.primaryKey?.autoIncrement ? true : false,
@@ -58,25 +62,20 @@ export function getDefaultColumnData(
   };
 }
 
-export function removeDefaultColumnData(data: TablePageConfigColumn, defaultColumnData: TablePageConfigColumn): TablePageConfigColumn | undefined {
-  // If some data equal to defaultColumnData, remove it from finalData
-  const finalData: Partial<Omit<TablePageConfigColumn, 'column'>> = {};
-  
-  Object.entries(data).forEach(([key, value]) => {
-    if (key === 'column') return;
-    
-    const typedKey = key as keyof Omit<TablePageConfigColumn, 'column'>;
-    
-    if (value !== undefined && value !== defaultColumnData[typedKey]) {
-      finalData[typedKey] = value;
-    }
-  });
-
-  // If finalData is empty, return undefined
-  // Otherwise, return finalData with column name
-  return Object.keys(finalData).length === 0 ? undefined : {
-    ...finalData,
-    column: data.column,
+/**
+ * Get the default relationship data for a given relationship key and relation type.
+ * This function generates a default label based on the relation type and target table.
+ */
+export function getDefaultRelationshipData(
+  relationshipKey: string,
+  relation: Relationship['relation'], 
+  targetTable: Relationship['targetTable'], 
+  foreignKeyColumn: OneToOneRelationship['foreignKeyColumn']
+): Relationship {
+  return {
+    key: relationshipKey,
+    label: relation === 'oneToOne' ? getLabelFromForeignKeyColumnName(foreignKeyColumn || '') : transformToReadable(targetTable || ''),
+    hiddenInTable: false,
   };
 }
 
@@ -150,15 +149,21 @@ export function getTableData(params: {
 
   // Relationships
   const autoDetectedRelationships = (databaseSchema && getAllPossibleRelationships(tablePageConfig, databaseSchema)) ?? [];
-  const relationships = autoDetectedRelationships.map(i => {
-    const relationship = tablePageConfig?.relationships?.find(i2 => i2.key === i.key);
+  const relationships = autoDetectedRelationships.map(r => {
+    const relationship = tablePageConfig?.relationships?.find(i2 => i2.key === r.key);
+    const defaultRelationshipData = getDefaultRelationshipData(
+      r.key,
+      r.relation,
+      r.targetTable,
+      (r as OneToOneRelationship).foreignKeyColumn,
+    );
 
     return {
-      ...i,
-      key: i.key,
-      hiddenInTable: relationship?.hiddenInTable ?? false,
-      position: relationship?.position ?? i.position,
-      label: relationship?.label,
+      ...r,
+      key: r.key,
+      hiddenInTable: relationship?.hiddenInTable ?? defaultRelationshipData.hiddenInTable,
+      label: relationship?.label ?? defaultRelationshipData.label,
+      position: relationship?.position ?? defaultRelationshipData.position,
     } as Relationship;
   });
   const sortedRelationships = sortRelationshipsByOrder(relationships);

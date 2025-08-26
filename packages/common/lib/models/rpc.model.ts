@@ -1,24 +1,24 @@
-import { DashboardPageInputGetCardData, DashboardPageInputGetStatData } from "./dashboardPage.model";
-import { TablePageInputDelete, TablePageInputInsert, TablePageInputSelect, TablePageInputSelectSingle, TablePageInputUpdate } from "./tablePage.model";
+import { DashboardPageGetCardDataInput, DashboardPageGetStatDataInput } from "./dashboardPage.model";
+import { TablePageDeleteRecordInput, TablePageCreateRecordInput, TablePageGetRecordsInput, TablePageGetRecordInput, TablePageUpdateRecordInput } from "./tablePage.model";
 
 interface CustomRpcInput {
   procedure: string;
   procedureInput: any;
 };
 
-export type RpcActionType = 'custom' | 'table_select' | 'table_selectOne' | 'table_insert' | 'table_update' | 'table_delete' | 'dashboard_getCardData' | 'dashboard_getStatData';
+export type RpcActionType = 'custom' | 'table_getRecords' | 'table_getRecord' | 'table_createRecord' | 'table_updateRecord' | 'table_deleteRecord' | 'dashboard_getCardData' | 'dashboard_getStatData';
 
 export interface RpcActionBody<T extends RpcActionType> {
   [key: string]: any;
   action: T;
   input:
-      T extends 'table_select' ? TablePageInputSelect
-    : T extends 'table_selectOne' ? TablePageInputSelectSingle
-    : T extends 'table_insert' ? TablePageInputInsert
-    : T extends 'table_update' ? TablePageInputUpdate
-    : T extends 'table_delete' ? TablePageInputDelete
-    : T extends 'dashboard_getStatData' ? DashboardPageInputGetStatData
-    : T extends 'dashboard_getCardData' ? DashboardPageInputGetCardData
+      T extends 'table_getRecords' ? TablePageGetRecordsInput
+    : T extends 'table_getRecord' ? TablePageGetRecordInput
+    : T extends 'table_createRecord' ? TablePageCreateRecordInput
+    : T extends 'table_updateRecord' ? TablePageUpdateRecordInput
+    : T extends 'table_deleteRecord' ? TablePageDeleteRecordInput
+    : T extends 'dashboard_getStatData' ? DashboardPageGetStatDataInput
+    : T extends 'dashboard_getCardData' ? DashboardPageGetCardDataInput
     : T extends 'custom' ? CustomRpcInput
     : never;
 }

@@ -4,9 +4,9 @@ import { OneToManyRelationship, Relationship } from "./relationship.model";
 
 export interface TablePageInputBase {}
 
-export interface TablePageInputSelect extends TablePageInputBase {
+export interface TablePageGetRecordsInput extends TablePageInputBase {
   // Specify table page config only if this is not a root table
-  tablePageConfig?: TablePageConfig;
+  nestedTableKey?: TablePageNestedTableKey;
 
   page: number;
   pageSize: number;
@@ -24,38 +24,35 @@ export interface TablePageInputSelect extends TablePageInputBase {
   };
 }
 
-export interface TablePageInputSelectUsingExecuteQuery extends TablePageInputBase {
+export interface TablePageCustomDataFetcherInput extends TablePageInputBase {
   page: number;
   pageSize: number;
   search?: string;
 }
 
-export interface TablePageInputSelectSingle extends TablePageInputBase {
-  tablePageConfig?: TablePageConfig;
-
-  /** If selecting records from linked table */
-  relationshipKey?: string;
+export interface TablePageGetRecordInput extends TablePageInputBase {
+  nestedTableKey?: TablePageNestedTableKey;
 
   /** For selecting particular records */
-  primaryKeyValues?: (string | number)[];
+  primaryKeyValues?: any[];
 
   forPreview?: boolean;
 }
 
-export interface TablePageInputInsert extends TablePageInputBase {
-  tablePageConfig?: TablePageConfig;
+export interface TablePageCreateRecordInput extends TablePageInputBase {
+  nestedTableKey?: TablePageNestedTableKey;
   values: Record<string, any>;
 }
 
-export interface TablePageInputUpdate extends TablePageInputBase {
-  tablePageConfig?: TablePageConfig;
-  primaryKey: any;
+export interface TablePageUpdateRecordInput extends TablePageInputBase {
+  nestedTableKey?: TablePageNestedTableKey;
+  primaryKeyValue: any;
   values: Record<string, any>;
 }
 
-export interface TablePageInputDelete extends TablePageInputBase {
-  tablePageConfig?: TablePageConfig;
-  primaryKeys: any[];
+export interface TablePageDeleteRecordInput extends TablePageInputBase {
+  nestedTableKey?: TablePageNestedTableKey;
+  primaryKeyValues: any[];
 }
 
 export enum TablePageFieldRequirement {
@@ -129,10 +126,10 @@ export interface TablePageConfigColumn {
    * @returns The rendered React element or content for the column
    */
   render?: (
-    record: TablePageResultSelectRecord,
+    record: TablePageRecord,
     recordIndex: number, 
     data: {
-      records: TablePageResultSelectRecord[];
+      records: TablePageRecord[];
       total: number;
     }
   ) => any;
@@ -208,7 +205,7 @@ export interface TablePageConfig {
    * @param input - The input parameters for fetching data (page, search, etc.)
    * @returns An object containing records and total
    */
-  customDataFetcher?: (input: TablePageInputSelectUsingExecuteQuery) => Promise<TablePageSelectResult>;
+  customDataFetcher?: (input: TablePageCustomDataFetcherInput) => Promise<TablePageGetRecordsResult>;
 
   /**
    * Function to check if a record can be inserted.
@@ -301,22 +298,30 @@ export interface TablePageConfig {
   };
 }
 
-export type TablePageResultSelectRecord = Record<string, any>;
+export type TablePageRecord = Record<string, any>;
 
-export type TablePageSelectRecordLinkedResult = Record<string, {
-  records?: TablePageResultSelectRecord[];
+export type TablePageRecordRelated = Record<string, {
+  records?: TablePageRecord[];
   total?: number;
 }>;
 
-export interface TablePageSelectResult {
-  records?: TablePageResultSelectRecord[];
+export interface TablePageGetRecordsResult {
+  records?: TablePageRecord[];
   total?: number;
 }
 
-export interface TablePageSelectSingleResult {
-  record: TablePageResultSelectRecord;
+export interface TablePageGetRecordResult {
+  record: TablePageRecord;
 }
 
-export interface TablePageInsertResult {}
+export interface TablePageCreateRecordResult {}
 
-export interface TablePageUpdateResult {}
+export interface TablePageUpdateRecordResult {}
+
+export interface TablePageNestedTableKeyItem {
+  table: string;
+  parentForeignKey?: string;
+  childForeignKey?: string;
+}
+
+export type TablePageNestedTableKey = TablePageNestedTableKeyItem[];

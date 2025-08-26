@@ -1,4 +1,4 @@
-import { DataSourceAdapterType, FilterItem, FilterItemOperator, FieldInput, JsType, PostgresBaseType, postgresBaseTypesByContentHint, postgresBaseTypeToArrayReturn, postgresBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn } from "@kottster/common";
+import { DataSourceAdapterType, FilterItem, FilterItemOperator, FieldInput, JsType, PostgresBaseType, postgresBaseTypesByContentHint, postgresBaseTypeToArrayReturn, postgresBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable } from "@kottster/common";
 import { DataSourceAdapter } from "../../models/dataSourceAdapter.model";
 import { Knex } from "knex";
 import { parse as parsePostgresArray } from 'postgres-array';
@@ -145,13 +145,33 @@ export class KnexPg extends DataSourceAdapter {
     return value;
   }
 
-  getSearchBuilder(searchableColumns: string[], searchValue: string) {
+  getSearchBuilder(searchableColumns: string[], searchValue: string, tableSchema: RelationalDatabaseSchemaTable) {
     return (builder: Knex.QueryBuilder) => {
-      searchableColumns.forEach((column, index) => {
-        if (index === 0) {
-          builder.where(column, 'ilike', `%${searchValue}%`);
-        } else {
-          builder.orWhere(column, 'ilike', `%${searchValue}%`);
+      builder.whereRaw('0 > 1');
+      searchableColumns.forEach((columnName) => {
+        const columnSchema = tableSchema.columns.find(c => c.name === columnName);
+        if (!columnSchema) return;
+
+        switch (columnSchema.contentHint) {
+          case ContentHint.string:
+            builder.orWhereILike(columnName, `%${searchValue}%`);
+            break;
+          case ContentHint.number:
+            {
+              const numberValue = parseFloat(searchValue);
+              if (!isNaN(numberValue)) {
+                builder.orWhere(columnName, '=', numberValue);
+              }
+            }
+            break;
+          case ContentHint.date:
+            {
+              const date = new Date(searchValue);
+              if (!isNaN(date.valueOf())) {
+                builder.orWhereRaw(`${columnName}::timestamp = ?::timestamp`, [date.toDateString()]);
+              }
+            }
+            break;
         }
       });
     };

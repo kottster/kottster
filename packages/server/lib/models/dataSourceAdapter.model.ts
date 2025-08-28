@@ -793,7 +793,7 @@ export abstract class DataSourceAdapter {
     if (this.config?.afterDelete) {
       // Call afterDelete for each primary key
       for (const primaryKey of input.primaryKeys) {
-        await this.config?.afterDelete(table, primaryKey, deletedRecords.find(record => record[tablePageProcessedConfig.primaryKeyColumn] === primaryKey));
+        await this.config?.afterDelete(table, primaryKey, deletedRecords.find(record => record[tablePageProcessedConfig.primaryKeyColumn as string] === primaryKey));
       }
     }
 

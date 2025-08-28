@@ -17,6 +17,34 @@ export enum DataSourceAdapterType {
   knex_better_sqlite3 = 'knex_better_sqlite3', // SQLite
 }
 
+export type DataSourceAdapterConfig = {
+  /**
+   * Function to execute after a record is inserted.
+   * This can be used to perform custom actions after insertion
+   * @param table - The table where the record was inserted
+   * @param primaryKey - The primary key of the record that was inserted
+   * @param values - The values of the record that was inserted
+   */
+  afterInsert?: (table: string, primaryKey: any, values: Record<string, any>) => void | Promise<void>;
+
+  /**
+   * Function to execute after a record is updated.
+   * This can be used to perform custom actions after update
+   * @param table - The table where the record was updated
+   * @param primaryKeyColumn - The primary key column of the record
+   * @param values - The values of the record that was updated
+   */
+  afterUpdate?: (table: string, primaryKey: any, values: Record<string, any>) => void | Promise<void>;
+
+  /**
+   * Function to execute after a record is deleted.
+   * This can be used to perform custom actions after deletion
+   * @param table - The table where the record was deleted
+   * @param primaryKey - The primary key of the record that was deleted
+   */
+  afterDelete?: (table: string, primaryKey: any, values: Record<string, any>) => void | Promise<void>;
+}
+
 export interface DataSourceTypeInfo {
   type: DataSourceType;
   name: string;
@@ -37,6 +65,7 @@ export interface DataSource<T = any> {
   name: string;
   adapter: T;
   tablesConfig: DataSourceTablesConfig;
+  config: DataSourceAdapterConfig;
   status: keyof typeof DataSourceStatus;
 
   // Only for database data sources

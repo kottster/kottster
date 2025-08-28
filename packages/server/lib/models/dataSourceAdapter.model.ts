@@ -1,5 +1,5 @@
 import { Knex } from "knex";
-import { DataSourceAdapterType, FieldInput, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TablePageInputDelete, TablePageInputInsert, TablePageInputSelect, TablePageInputUpdate, TablePageInsertResult, TablePageSelectResult, TablePageResultSelectRecord, TablePageUpdateResult, TablePageSelectRecordLinkedResult, defaultTablePageSize, TablePageInputSelectSingle, TablePageSelectSingleResult, findRelationship, DataSourceTablesConfig, getTableData, TablePageConfig, FilterItem, OneToOneRelationship, OneToManyRelationship, ManyToManyRelationship, Stage, DataSource, DashboardPageInputGetStatData, DashboardPageGetStatDataResult, DashboardPageConfigStat, DashboardPageConfigCard, DashboardPageGetCardDataResult, DashboardPageInputGetCardData } from "@kottster/common";
+import { DataSourceAdapterType, DataSourceAdapterConfig, FieldInput, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TablePageInputDelete, TablePageInputInsert, TablePageInputSelect, TablePageInputUpdate, TablePageInsertResult, TablePageSelectResult, TablePageResultSelectRecord, TablePageUpdateResult, TablePageSelectRecordLinkedResult, defaultTablePageSize, TablePageInputSelectSingle, TablePageSelectSingleResult, findRelationship, DataSourceTablesConfig, getTableData, TablePageConfig, FilterItem, OneToOneRelationship, OneToManyRelationship, ManyToManyRelationship, Stage, DataSource, DashboardPageInputGetStatData, DashboardPageGetStatDataResult, DashboardPageConfigStat, DashboardPageConfigCard, DashboardPageGetCardDataResult, DashboardPageInputGetCardData } from "@kottster/common";
 import { KottsterApp } from "../core/app";
 import { CachingService } from "../services/caching.service";
 
@@ -16,7 +16,7 @@ export abstract class DataSourceAdapter {
   private cachingService = new CachingService();
   protected name: string;
 
-  constructor(protected client: Knex) {}
+  constructor(protected client: Knex, protected config?: DataSourceAdapterConfig) {}
 
   /**
    * Set the app instance
@@ -663,6 +663,10 @@ export abstract class DataSourceAdapter {
       await tablePageConfig.afterInsert(primaryKey, values);
     }
 
+    if (primaryKey && this.config?.afterInsert) {
+      await this.config?.afterInsert(table, primaryKey, values);
+    }
+
     return {};
   }
 
@@ -718,6 +722,10 @@ export abstract class DataSourceAdapter {
       await tablePageConfig.afterUpdate(input.primaryKey, values);
     }
 
+    if (this.config?.afterUpdate) {
+      await this.config?.afterUpdate(table, input.primaryKey, values);
+    }
+
     return {};
   }
 
@@ -727,7 +735,8 @@ export abstract class DataSourceAdapter {
     const result = await query;
     return result[0];
   } else {
-    return await query.returning(primaryKeyColumn);
+    const result = await query.returning(primaryKeyColumn);
+    return result[0][primaryKeyColumn];
   }
 }
 
@@ -763,14 +772,28 @@ export abstract class DataSourceAdapter {
       }
     }
 
+    // Get records to delete
+    const deletedRecords = await this.client.table(table)
+      .whereIn(tablePageProcessedConfig.primaryKeyColumn, input.primaryKeys)
+      .select();
+
+    // Delete records
     await this.client.table(table)
       .whereIn(tablePageProcessedConfig.primaryKeyColumn, input.primaryKeys)
       .del();
 
+    // Handle event hooks
     if (tablePageConfig.afterDelete) {
       // Call afterDelete for each primary key
       for (const primaryKey of input.primaryKeys) {
         await tablePageConfig.afterDelete(primaryKey);
+      }
+    }
+
+    if (this.config?.afterDelete) {
+      // Call afterDelete for each primary key
+      for (const primaryKey of input.primaryKeys) {
+        await this.config?.afterDelete(table, primaryKey, deletedRecords.find(record => record[tablePageProcessedConfig.primaryKeyColumn as string] === primaryKey));
       }
     }
 

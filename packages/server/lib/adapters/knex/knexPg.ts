@@ -1,4 +1,4 @@
-import { DataSourceAdapterType, FilterItem, FilterItemOperator, FieldInput, JsType, PostgresBaseType, postgresBaseTypesByContentHint, postgresBaseTypeToArrayReturn, postgresBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn } from "@kottster/common";
+import { DataSourceAdapterType, FilterItem, FilterItemOperator, FieldInput, JsType, PostgresBaseType, postgresBaseTypesByContentHint, postgresBaseTypeToArrayReturn, postgresBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, DataSourceAdapterConfig } from "@kottster/common";
 import { DataSourceAdapter } from "../../models/dataSourceAdapter.model";
 import { Knex } from "knex";
 import { parse as parsePostgresArray } from 'postgres-array';
@@ -9,8 +9,8 @@ export class KnexPg extends DataSourceAdapter {
   type = DataSourceAdapterType.knex_pg;
   defaultDatabaseSchema = 'public';
 
-  constructor(protected client: Knex) {
-    super(client);
+  constructor(protected client: Knex, protected config?: DataSourceAdapterConfig) {
+    super(client, config);
   }
 
   processColumn(column: RelationalDatabaseSchemaColumn) {

@@ -1,4 +1,4 @@
-import { DataSourceAdapterType, FilterItem, FilterItemOperator, FieldInput, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, SqliteBaseType, sqliteBaseTypesByContentHint, sqliteBaseTypeToJsType } from "@kottster/common";
+import { DataSourceAdapterType, DataSourceAdapterConfig, FilterItem, FilterItemOperator, FieldInput, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, SqliteBaseType, sqliteBaseTypesByContentHint, sqliteBaseTypeToJsType } from "@kottster/common";
 import { DataSourceAdapter } from "../../models/dataSourceAdapter.model";
 import { Knex } from "knex";
 import { ContentHint } from "@kottster/common/dist/models/contentHint.model";
@@ -6,8 +6,8 @@ import { ContentHint } from "@kottster/common/dist/models/contentHint.model";
 export class KnexBetterSqlite3 extends DataSourceAdapter {
   type = DataSourceAdapterType.knex_better_sqlite3;
 
-  constructor(protected client: Knex) {
-    super(client);
+  constructor(protected client: Knex, protected config?: DataSourceAdapterConfig) {
+    super(client, config);
   }
 
   processColumn(column: RelationalDatabaseSchemaColumn) {

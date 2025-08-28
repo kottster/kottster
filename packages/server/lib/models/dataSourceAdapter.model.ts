@@ -735,7 +735,8 @@ export abstract class DataSourceAdapter {
     const result = await query;
     return result[0];
   } else {
-    return await query.returning(primaryKeyColumn);
+    const result = await query.returning(primaryKeyColumn);
+    return result[0][primaryKeyColumn];
   }
 }
 

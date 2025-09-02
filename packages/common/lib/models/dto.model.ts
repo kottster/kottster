@@ -5,6 +5,7 @@ import { PublicDataSource } from "./dataSource.model";
 import { Page, PageFileStructure } from "./page.model";
 import { TablePageConfig } from "./tablePage.model";
 import { Template } from "./template.model";
+import { User } from "./user.model";
 
 enum KottsterApiGenerateSqlPurpose {
   tableCustomSqlQuery = 'tableCustomSqlQuery',
@@ -15,34 +16,17 @@ enum KottsterApiGenerateSqlPurpose {
   dashboardCardSqlQuery = 'dashboardCardSqlQuery',
 }
 
-type KottsterApiGenerateSqlPurposeKeys = keyof typeof KottsterApiGenerateSqlPurpose;
+export type KottsterApiGenerateSqlPurposeKeys = keyof typeof KottsterApiGenerateSqlPurpose;
 
 export interface KottsterApiSchema {
-  getSuggestions: {
-    body: {
-      userId: string | number;
-      numberOfNavItems?: number;
-      numberOfDataSources?: number;
-      numberOfDatabaseTables?: number;
-      path: string;
-      isHostedOnLocalhost: boolean;
-      isDevelopment: boolean;
-      dockerMode: boolean;
-      kottsterReactVersion: string;
-    };
-    result: {
-      type: 'modal' | 'notification';
-      shouldSeeOnlyOnce?: boolean;
-      id: string;
-      title: string; 
-      message: string; 
-      color: string; 
-    }[];
-  };
-  
   getAppData: {
     body: null;
     result: AppData;
+  };
+
+  getCurrentUser: {
+    body: null;
+    result: User;
   };
 
   generatePage: {
@@ -96,7 +80,6 @@ export interface KottsterApiSchema {
   sendCliUsageData: {
     body: {
       command: string;
-      username: string;
       stage: string;
       dateTime: string;
       platform: string;
@@ -104,11 +87,37 @@ export interface KottsterApiSchema {
       duration: number;
       packageManager: string;
       usingTypescript: boolean;
+
+      /**
+       * @deprecated Not used anymore due to privacy concerns.
+       */
+      username: string;
     };
     result: null;
   },
 
-  
+  // TODO: legacy
+  getSuggestions: {
+    body: {
+      userId: string | number;
+      numberOfNavItems?: number;
+      numberOfDataSources?: number;
+      numberOfDatabaseTables?: number;
+      path: string;
+      isHostedOnLocalhost: boolean;
+      isDevelopment: boolean;
+      dockerMode: boolean;
+      kottsterReactVersion: string;
+    };
+    result: {
+      type: 'modal' | 'notification';
+      shouldSeeOnlyOnce?: boolean;
+      id: string;
+      title: string; 
+      message: string; 
+      color: string; 
+    }[];
+  };
 }
 
 export type KottsterApiBody<T extends keyof KottsterApiSchema> = KottsterApiSchema[T]['body'];

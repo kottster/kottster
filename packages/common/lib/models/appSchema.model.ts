@@ -19,10 +19,18 @@ export interface AppSchema {
    * The order of pages in the menu.
    */
   menuPageOrder?: string[];
+
+  /** 
+   * Kottster Enterprise Hub configuration
+   * @description Configuration for connecting to the Kottster Enterprise Hub.
+   */
+  enterpriseHub?: {
+    url: string;
+  };
 }
 
 // App schema that is passed to the client.
-export interface ClientAppSchema extends Pick<AppSchema, 'id' | 'meta' | 'menuPageOrder'> {
+export interface ClientAppSchema extends Pick<AppSchema, 'id' | 'meta' | 'menuPageOrder' | 'enterpriseHub'> {
   dataSources: PublicAppSchemaDataSourceConfig[];
 
   /**

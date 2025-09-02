@@ -1,10 +1,20 @@
 export interface User {
   id: string;
   email: string;
-  role: {
+  firstName?: string;
+  avatarUrl?: string;
+  roles: {
     id: string;
     name: string;
-  }
+  }[];
+
+  /**
+   * @deprecated Use `roles` instead
+   */
+  role?: {
+    id: string;
+    name: string;
+  };
 }
 
 export interface JWTTokenPayload {

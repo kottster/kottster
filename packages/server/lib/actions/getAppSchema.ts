@@ -20,6 +20,7 @@ export class GetAppSchema extends Action {
           type: dataSource.type,
         };
       }),
+      enterpriseHub: appSchema.enterpriseHub,
     };
   }
 }

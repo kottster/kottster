@@ -1,7 +1,6 @@
 import { Action, DevAction } from "../models/action.model";
 import { GetDataSources } from "../actions/getDataSources.action";
 import { GetDataSourceSchema } from "../actions/getDataSourceSchema.action";
-import { GetFiles } from "../actions/getFiles.action";
 import { CreatePage } from "../actions/createPage.action";
 import { UpdatePage } from "../actions/updatePage.action";
 import { DeletePage } from "../actions/deletePage.action";
@@ -30,8 +29,6 @@ export class ActionService {
         return new InitApp(app);
       case 'updateAppSchema':
         return new UpdateAppSchema(app);
-      case 'getFiles':
-        return new GetFiles(app);
       case 'createPage':
         return new CreatePage(app);
       case 'updatePage':

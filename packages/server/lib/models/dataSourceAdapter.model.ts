@@ -1,5 +1,5 @@
 import { Knex } from "knex";
-import { DataSourceAdapterType, FieldInput, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TablePageInputDelete, TablePageInputInsert, TablePageInputSelect, TablePageInputUpdate, TablePageInsertResult, TablePageSelectResult, TablePageResultSelectRecord, TablePageUpdateResult, TablePageSelectRecordLinkedResult, defaultTablePageSize, TablePageInputSelectSingle, TablePageSelectSingleResult, findRelationship, DataSourceTablesConfig, getTableData, TablePageConfig, FilterItem, OneToOneRelationship, OneToManyRelationship, ManyToManyRelationship, Stage, DataSource, DashboardPageInputGetStatData, DashboardPageGetStatDataResult, DashboardPageConfigStat, DashboardPageConfigCard, DashboardPageGetCardDataResult, DashboardPageInputGetCardData } from "@kottster/common";
+import { DataSourceAdapterType, FieldInput, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TablePageDeleteRecordInput, TablePageCreateRecordInput, TablePageGetRecordsInput, TablePageUpdateRecordInput, TablePageCreateRecordResult, TablePageGetRecordsResult, TablePageRecord, TablePageUpdateRecordResult, TablePageRecordRelated, defaultTablePageSize, TablePageGetRecordInput, TablePageGetRecordResult, DataSourceTablesConfig, getTableData, TablePageConfig, FilterItem, OneToOneRelationship, OneToManyRelationship, ManyToManyRelationship, Stage, DataSource, DashboardPageGetStatDataInput, DashboardPageGetStatDataResult, DashboardPageConfigStat, DashboardPageConfigCard, DashboardPageGetCardDataResult, DashboardPageGetCardDataInput, getNestedTablePageConfigByTablePageNestedTableKey } from "@kottster/common";
 import { KottsterApp } from "../core/app";
 import { CachingService } from "../services/caching.service";
 
@@ -159,7 +159,7 @@ export abstract class DataSourceAdapter {
    * Get the stat data (Dashboard RPC)
    * @returns The stat data
    */
-  async getStatData(input: DashboardPageInputGetStatData, stat: DashboardPageConfigStat): Promise<DashboardPageGetStatDataResult> {
+  async getStatData(input: DashboardPageGetStatDataInput, stat: DashboardPageConfigStat): Promise<DashboardPageGetStatDataResult> {
     const value = await this.executeRawQueryForSingleValue(stat.sqlQuery, {
       period_start_date: input.periodStartDate,
       period_end_date: input.periodEndDate,
@@ -179,7 +179,7 @@ export abstract class DataSourceAdapter {
    * Get the card data (Dashboard RPC)
    * @returns The card data
    */
-  async getCardData(input: DashboardPageInputGetCardData, card: DashboardPageConfigCard): Promise<DashboardPageGetCardDataResult> {
+  async getCardData(input: DashboardPageGetCardDataInput, card: DashboardPageConfigCard): Promise<DashboardPageGetCardDataResult> {
     const items = await this.executeRawQuery(card.sqlQuery, {
       period_start_date: input.periodStartDate,
       period_end_date: input.periodEndDate,
@@ -194,8 +194,9 @@ export abstract class DataSourceAdapter {
    * Get the table records (Table RPC)
    * @returns The table records
    */
-  async getTableRecords(input: TablePageInputSelect, databaseSchema: RelationalDatabaseSchema, tablePageConfigDefault: TablePageConfig): Promise<TablePageSelectResult> {
-    const tablePageConfig = input.tablePageConfig ?? tablePageConfigDefault;
+  async getTableRecords(rootTablePageConfig: TablePageConfig, input: TablePageGetRecordsInput, databaseSchema: RelationalDatabaseSchema): Promise<TablePageGetRecordsResult> {
+    const tablePageConfig = !input.nestedTableKey ? rootTablePageConfig : getNestedTablePageConfigByTablePageNestedTableKey(rootTablePageConfig, input.nestedTableKey);
+
     const { 
       tableSchema, 
       tablePageProcessedConfig,
@@ -217,7 +218,7 @@ export abstract class DataSourceAdapter {
       const total = customSqlCountQuery ? await this.executeRawQueryForSingleValue(customSqlCountQuery, {}) : undefined;
 
       return {
-        records: records as TablePageResultSelectRecord[],
+        records: records as TablePageRecord[],
         total: total !== undefined ? Number(total) : undefined,
       };
     }
@@ -315,12 +316,27 @@ export abstract class DataSourceAdapter {
       });
     }
 
+    await this.enrichRecordsWithRelatedData(records, tablePageProcessedConfig);
+
+    const preparedRecords = tableSchema ? await this.prepareRecords(records, tableSchema) : records;
+
+    return {
+      records: preparedRecords,
+      total: Number(count),
+    };
+  };
+
+  /**
+   * Enrich the records with related data for visible relationships in the table
+   * @returns The enriched records
+   */
+  private async enrichRecordsWithRelatedData(records: TablePageRecord[], tablePageProcessedConfig: TablePageConfig, forForm?: boolean): Promise<TablePageRecord[]> {
     // Collect all relationships that are visible in the table
-    const visibleRelationships = tablePageProcessedConfig.relationships?.filter(r => !r.hiddenInTable) ?? [];
+    const visibleRelationships = tablePageProcessedConfig.relationships?.filter(r => forForm ? true : !r.hiddenInTable) ?? [];
     const oneToOneRelationships = (visibleRelationships.filter(r => r.relation === 'oneToOne') ?? []) as OneToOneRelationship[];
     const oneToManyRelationships = (visibleRelationships.filter(r => r.relation === 'oneToMany') ?? []) as OneToManyRelationship[];
     const manyToManyRelationships = (visibleRelationships.filter(r => r.relation === 'manyToMany') ?? []) as ManyToManyRelationship[];
-
+    
     // Preload linked one-to-one records
     if (oneToOneRelationships.length > 0) {
       const linkedRecordKeys: Record<string, any[]> = {};
@@ -386,7 +402,7 @@ export abstract class DataSourceAdapter {
             record['_related'] = {};
           }
           if (!record['_related'][relationshipKey]) {
-            (record['_related'] as TablePageSelectRecordLinkedResult)[relationshipKey] = {
+            (record['_related'] as TablePageRecordRelated)[relationshipKey] = {
               records: [],
             };
           }
@@ -427,8 +443,8 @@ export abstract class DataSourceAdapter {
               // Select the count of the records in the target table using the junction table
               const recordForeignRecords = await this.client(relationship.targetTable)
                 .join(relationship.junctionTable!, `${relationship.targetTable}.${relationship.targetTableKeyColumn}`, `${relationship.junctionTable}.${relationship.junctionTableTargetKeyColumn}`)
-                .join(table!, `${relationship.junctionTable}.${relationship.junctionTableSourceKeyColumn}`, `${table}.${tablePageProcessedConfig.primaryKeyColumn}`)
-                .where(`${table}.${tablePageProcessedConfig.primaryKeyColumn}`, keyValue)
+                .join(tablePageProcessedConfig.table!, `${relationship.junctionTable}.${relationship.junctionTableSourceKeyColumn}`, `${tablePageProcessedConfig.table}.${tablePageProcessedConfig.primaryKeyColumn}`)
+                .where(`${tablePageProcessedConfig.table}.${tablePageProcessedConfig.primaryKeyColumn}`, keyValue)
                 .count({ count: `${relationship.targetTable}.${relationship.targetTableKeyColumn}` });
 
               foreignTotalRecords[keyValue] = recordForeignRecords[0]?.count ? Number(recordForeignRecords[0]?.count) : 0;
@@ -442,7 +458,7 @@ export abstract class DataSourceAdapter {
             record['_related'] = {};
           }
           if (!record['_related'][relationship.key]) {
-            (record['_related'] as TablePageSelectRecordLinkedResult)[relationship.key] = {
+            (record['_related'] as TablePageRecordRelated)[relationship.key] = {
               total: 0,
             };
           }
@@ -452,16 +468,11 @@ export abstract class DataSourceAdapter {
         });
       }));
     }
+    
+    return records;
+  }
 
-    const preparedRecords = tableSchema ? await this.prepareRecords(records, tableSchema) : records;
-
-    return {
-      records: preparedRecords,
-      total: Number(count),
-    };
-  };
-
-  private async prepareRecords(records: any[], tableSchema: RelationalDatabaseSchemaTable): Promise<TablePageResultSelectRecord[]> {
+  private async prepareRecords(records: any[], tableSchema: RelationalDatabaseSchemaTable): Promise<TablePageRecord[]> {
     const preparedRecords = await Promise.all(records.map(async record => {
       const preparedRecord: Record<string, any> = {
         _related: record._related,
@@ -470,6 +481,10 @@ export abstract class DataSourceAdapter {
       // Process each property of the record except _related
       await Promise.all(Object.entries(record).filter(([key]) => key !== '_related').map(async ([key, value]) => {
         const columnSchema = tableSchema.columns.find(column => column.name === key);
+        if (record.id === 1140 && key === 'created_at') {
+          console.debug('Returned created_at', record.created_at, record.created_at instanceof Date ? record.created_at.toISOString() : undefined);
+        };
+        
         if (!columnSchema) {
           preparedRecord[key] = value;
         } else {
@@ -535,31 +550,26 @@ export abstract class DataSourceAdapter {
    * @description Used for one-to-one RecordSelect fields
    * @returns The table record
    */
-  async getOneTableRecord(input: TablePageInputSelectSingle, databaseSchema: RelationalDatabaseSchema, tablePageConfigDefault: TablePageConfig): Promise<TablePageSelectSingleResult> {
-    const { relationshipKey, primaryKeyValues, forPreview } = input;
-    const tablePageConfig = input.tablePageConfig ?? tablePageConfigDefault;
+  async getOneTableRecord(rootTablePageConfig: TablePageConfig, input: TablePageGetRecordInput, databaseSchema: RelationalDatabaseSchema): Promise<TablePageGetRecordResult> {
+    const { primaryKeyValues, forPreview } = input;
+    const tablePageConfig = !input.nestedTableKey ? rootTablePageConfig : getNestedTablePageConfigByTablePageNestedTableKey(rootTablePageConfig, input.nestedTableKey);
+
     const { 
       tableSchema,
-      tablePageProcessedConfig: {
-        relationships, 
-        primaryKeyColumn: tablePagePrimaryKeyColumn, 
-        columns 
-      }
+      tablePageProcessedConfig
     } = getTableData({ tablePageConfig, databaseSchema });
     if (!tableSchema) {
       throw new Error('Table schema not provided');
     }
+    const { columns, primaryKeyColumn: tablePagePrimaryKeyColumn } = tablePageProcessedConfig;
 
-    const relationship = relationshipKey ? findRelationship(relationshipKey, relationships) : null;
-    if ((relationshipKey && !relationship) || (relationship && relationship.relation !== 'oneToOne') || !primaryKeyValues?.length) {
-      throw new Error('Invalid primary key values or relationship key');
+    if (!primaryKeyValues || primaryKeyValues.length === 0) {
+      throw new Error('No primary key values provided');
     }
     
     const selectableColumns = columns?.map(c => c.column) ?? [];
-    const table = relationship ? relationship.targetTable : tablePageConfig.table;
-    const primaryKeyColumn = relationship ? relationship.targetTableKeyColumn : tablePagePrimaryKeyColumn;
-
-    const tablePageConfigColumn = columns?.find(c => c.column === relationship?.foreignKeyColumn);
+    const table = tablePageConfig.table;
+    const primaryKeyColumn = tablePagePrimaryKeyColumn;
     
     if (!table || !primaryKeyColumn) {
       throw new Error('Table name or primary key column not provided');
@@ -576,8 +586,12 @@ export abstract class DataSourceAdapter {
       const combinedColumns = selectableColumns.concat([primaryKeyColumn]) ?? [primaryKeyColumn];
       query.select(combinedColumns.map(column => `${table}.${column}`));
     } else {
-      if (relationship && forPreview) {
-        query.select([primaryKeyColumn, ...(tablePageConfigColumn?.relationshipPreviewColumns ?? [])].map(column => `${table}.${column}`));
+      if (forPreview) {
+        const rootConfigAsParentConfig = !input.nestedTableKey || input.nestedTableKey.length < 2;
+        const parentTablePageConfig = rootConfigAsParentConfig ? rootTablePageConfig : getNestedTablePageConfigByTablePageNestedTableKey(rootTablePageConfig, input.nestedTableKey!.slice(0, -1)!);
+        const parentTablePageProcessedConfig = getTableData({ tablePageConfig: parentTablePageConfig, databaseSchema }).tablePageProcessedConfig;
+        const columnConfig = parentTablePageProcessedConfig.columns?.find(c => c.column === input.nestedTableKey?.[input.nestedTableKey.length - 1]?.parentForeignKey);
+        query.select([primaryKeyColumn, ...(columnConfig?.relationshipPreviewColumns ?? [])].map(column => `${table}.${column}`));
       } else if (!columns) {
         // If no columns are specified, select all columns
         query.select('*');
@@ -603,6 +617,10 @@ export abstract class DataSourceAdapter {
       });
     }
 
+    if (!forPreview) {
+      await this.enrichRecordsWithRelatedData([record], tablePageProcessedConfig);
+    }
+
     const [preparedRecord] = await this.prepareRecords([record], tableSchema);
     
     return {
@@ -614,8 +632,9 @@ export abstract class DataSourceAdapter {
    * Insert the table records (Table RPC)
    * @returns The table records
    */
-  async insertTableRecord(input: TablePageInputInsert, databaseSchema: RelationalDatabaseSchema, tablePageConfigDefault: TablePageConfig): Promise<TablePageInsertResult> {
-    const tablePageConfig = input.tablePageConfig ?? tablePageConfigDefault;
+  async insertTableRecord(rootTablePageConfig: TablePageConfig, input: TablePageCreateRecordInput, databaseSchema: RelationalDatabaseSchema): Promise<TablePageCreateRecordResult> {
+    const tablePageConfig = !input.nestedTableKey ? rootTablePageConfig : getNestedTablePageConfigByTablePageNestedTableKey(rootTablePageConfig, input.nestedTableKey);
+
     const { 
       tableSchema, 
       tablePageProcessedConfig,
@@ -670,8 +689,9 @@ export abstract class DataSourceAdapter {
    * Update the table records (Table RPC)
    * @returns The table records
    */
-  async updateTableRecords(input: TablePageInputUpdate, databaseSchema: RelationalDatabaseSchema, tablePageConfigDefault: TablePageConfig): Promise<TablePageUpdateResult> {
-    const tablePageConfig = input.tablePageConfig ?? tablePageConfigDefault;
+  async updateTableRecords(rootTablePageConfig: TablePageConfig, input: TablePageUpdateRecordInput, databaseSchema: RelationalDatabaseSchema): Promise<TablePageUpdateRecordResult> {
+    const tablePageConfig = !input.nestedTableKey ? rootTablePageConfig : getNestedTablePageConfigByTablePageNestedTableKey(rootTablePageConfig, input.nestedTableKey);
+
     const { 
       tableSchema, 
       tablePageProcessedConfig 
@@ -701,21 +721,21 @@ export abstract class DataSourceAdapter {
     }
 
     // Check if the record can be updated
-    if (tablePageConfig.validateRecordBeforeUpdate && !await tablePageConfig.validateRecordBeforeUpdate(input.primaryKey, values)) {
+    if (tablePageConfig.validateRecordBeforeUpdate && !await tablePageConfig.validateRecordBeforeUpdate(input.primaryKeyValue, values)) {
       throw new Error('Record cannot be updated');
     }
 
     if (tablePageConfig.transformRecordBeforeUpdate) {
       // Transform the values before updating
-      values = await tablePageConfig.transformRecordBeforeUpdate(input.primaryKey, values);
+      values = await tablePageConfig.transformRecordBeforeUpdate(input.primaryKeyValue, values);
     }
 
     await this.client(table)
-      .where(tablePageProcessedConfig.primaryKeyColumn, input.primaryKey)
+      .where(tablePageProcessedConfig.primaryKeyColumn, input.primaryKeyValue)
       .update(values);
 
     if (tablePageConfig.afterUpdate) {
-      await tablePageConfig.afterUpdate(input.primaryKey, values);
+      await tablePageConfig.afterUpdate(input.primaryKeyValue, values);
     }
 
     return {};
@@ -735,8 +755,9 @@ export abstract class DataSourceAdapter {
    * Delete the table records (Table RPC)
    * @returns The table records
    */
-  async deleteTableRecords(input: TablePageInputDelete, databaseSchema: RelationalDatabaseSchema, tablePageConfigDefault: TablePageConfig): Promise<true> {
-    const tablePageConfig = input.tablePageConfig ?? tablePageConfigDefault;
+  async deleteTableRecords(rootTablePageConfig: TablePageConfig, input: TablePageDeleteRecordInput, databaseSchema: RelationalDatabaseSchema): Promise<true> {
+    const tablePageConfig = !input.nestedTableKey ? rootTablePageConfig : getNestedTablePageConfigByTablePageNestedTableKey(rootTablePageConfig, input.nestedTableKey);
+
     const { tablePageProcessedConfig } = getTableData({ tablePageConfig, databaseSchema });
     const table = tablePageConfig.table;
 
@@ -756,7 +777,7 @@ export abstract class DataSourceAdapter {
     // Check if the records can be deleted
     if (tablePageConfig.validateRecordBeforeDelete) {
       // Check every primary key value
-      for (const primaryKey of input.primaryKeys) {
+      for (const primaryKey of input.primaryKeyValues) {
         if (!await tablePageConfig.validateRecordBeforeDelete(primaryKey)) {
           throw new Error(`Record #${primaryKey} cannot be deleted`);
         }
@@ -764,12 +785,12 @@ export abstract class DataSourceAdapter {
     }
 
     await this.client.table(table)
-      .whereIn(tablePageProcessedConfig.primaryKeyColumn, input.primaryKeys)
+      .whereIn(tablePageProcessedConfig.primaryKeyColumn, input.primaryKeyValues)
       .del();
 
     if (tablePageConfig.afterDelete) {
       // Call afterDelete for each primary key
-      for (const primaryKey of input.primaryKeys) {
+      for (const primaryKey of input.primaryKeyValues) {
         await tablePageConfig.afterDelete(primaryKey);
       }
     }

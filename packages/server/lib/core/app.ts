@@ -1,7 +1,7 @@
 import * as jose from 'jose';
 import { ExtendAppContextFunction } from '../models/appContext.model';
 import { PROJECT_DIR } from '../constants/projectDir';
-import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, RpcActionBody, TablePageInputSelect, TablePageInputDelete, TablePageInputUpdate, TablePageInputInsert, isSchemaEmpty, schemaPlaceholder, ApiResponse, TablePageInputSelectSingle, Page, TablePageConfig, TablePageInputSelectUsingExecuteQuery, TablePageSelectResult, DashboardPageConfig, DashboardPageInputGetStatData, DashboardPageInputGetCardData, DashboardPageGetStatDataResult, DashboardPageGetCardDataResult } from '@kottster/common';
+import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, RpcActionBody, TablePageGetRecordsInput, TablePageDeleteRecordInput, TablePageUpdateRecordInput, TablePageCreateRecordInput, isSchemaEmpty, schemaPlaceholder, ApiResponse, TablePageGetRecordInput, Page, TablePageConfig, TablePageCustomDataFetcherInput, TablePageGetRecordsResult, DashboardPageConfig, DashboardPageGetStatDataInput, DashboardPageGetCardDataInput, DashboardPageGetStatDataResult, DashboardPageGetCardDataResult, KottsterApiResult, checkUserForRoles } from '@kottster/common';
 import { DataSourceRegistry } from './dataSourceRegistry';
 import { ActionService } from '../services/action.service';
 import { DataSourceAdapter } from '../models/dataSourceAdapter.model';
@@ -54,7 +54,7 @@ export class KottsterApp {
   /**
    * Used to store the token cache
    */
-  private tokenCache = new Map<string, { data: { user: User; appId: string }; expires: number }>();
+  private tokenCache = new Map<string, { data: User; expires: number }>();
   
   public extendContext: ExtendAppContextFunction;
 
@@ -234,12 +234,12 @@ export class KottsterApp {
         let result: any;
 
         try {
-          if (page.allowedRoleIds?.length && !page.allowedRoleIds.includes(user.role.id) && this.stage === Stage.production) {
+          if (page.allowedRoleIds?.length && !checkUserForRoles(user, page.allowedRoleIds) && this.stage === Stage.production) {
             throw new Error('You do not have access to this page');
           }
 
           if (body.action === 'dashboard_getStatData') {
-            const input = body.input as DashboardPageInputGetStatData;
+            const input = body.input as DashboardPageGetStatDataInput;
             const stat = dashboardPageConfig.stats?.find(s => s.key === input.statKey);
             if (!stat) {
               res.status(404).json({ error: `Specified stat "${input.statKey}" not found` });
@@ -276,7 +276,7 @@ export class KottsterApp {
             }
           }
           else if (body.action === 'dashboard_getCardData') {
-            const input = body.input as DashboardPageInputGetCardData;
+            const input = body.input as DashboardPageGetCardDataInput;
             const card = dashboardPageConfig.cards?.find(c => c.key === input.cardKey);
             if (!card) {
               res.status(404).json({ error: `Specified card "${input.cardKey}" not found` });
@@ -374,22 +374,22 @@ export class KottsterApp {
       }
 
       try {
-        const body = await req.body as RpcActionBody<'table_select' | 'table_selectOne' | 'table_insert' | 'table_update' | 'table_delete'>;
+        const body = await req.body as RpcActionBody<'table_getRecords' | 'table_getRecord' | 'table_createRecord' | 'table_updateRecord' | 'table_deleteRecord'>;
         let result: any;
 
         try {
           const dataSourceAdapter = dataSource?.adapter as DataSourceAdapter | undefined;
           const databaseSchema = dataSourceAdapter ? await dataSourceAdapter.getDatabaseSchema() : undefined;
 
-          if (page.allowedRoleIds?.length && !page.allowedRoleIds.includes(user.role.id) && this.stage === Stage.production) {
+          if (page.allowedRoleIds?.length && !checkUserForRoles(user, page.allowedRoleIds) && this.stage === Stage.production) {
             throw new Error('You do not have access to this page');
           }
           
           // If the table select action is used and fetch strategy is 'customFetch', we need to execute the custom query right away
-          if (body.action === 'table_select' && tablePageConfig.fetchStrategy === 'customFetch') {
-            result = tablePageConfig.customDataFetcher ? await tablePageConfig.customDataFetcher(body.input as TablePageInputSelectUsingExecuteQuery) : {
+          if (body.action === 'table_getRecords' && tablePageConfig.fetchStrategy === 'customFetch') {
+            result = tablePageConfig.customDataFetcher ? await tablePageConfig.customDataFetcher(body.input as TablePageCustomDataFetcherInput) : {
               records: [],
-            } as TablePageSelectResult;
+            } as TablePageGetRecordsResult;
           } else {
             if (!dataSource) {
               throw new Error(`Data source "${tablePageConfig.dataSource}" not found`);
@@ -401,29 +401,29 @@ export class KottsterApp {
               throw new Error(`Database schema for "${tablePageConfig.dataSource}" not found`);
             }
             
-            if (body.action === 'table_select') {
-              result = await dataSourceAdapter?.getTableRecords(body.input as TablePageInputSelect, databaseSchema, tablePageConfig);
-            } else if (body.action === 'table_selectOne') {
-              result = await dataSourceAdapter.getOneTableRecord(body.input as TablePageInputSelectSingle, databaseSchema, tablePageConfig);
-            } else if (body.action === 'table_insert') {
-              if (tablePageConfig.allowedRoleIdsToInsert?.length && this.stage === Stage.production && !tablePageConfig.allowedRoleIdsToInsert.includes(user.role.id)) {
+            if (body.action === 'table_getRecords') {
+              result = await dataSourceAdapter?.getTableRecords(tablePageConfig, body.input as TablePageGetRecordsInput, databaseSchema);
+            } else if (body.action === 'table_getRecord') {
+              result = await dataSourceAdapter.getOneTableRecord(tablePageConfig, body.input as TablePageGetRecordInput, databaseSchema);
+            } else if (body.action === 'table_createRecord') {
+              if (tablePageConfig.allowedRoleIdsToInsert?.length && this.stage === Stage.production && !checkUserForRoles(user, tablePageConfig.allowedRoleIdsToInsert)) {
                 throw new Error('You do not have permission to create records in this table');
               }
 
-              result = await dataSourceAdapter.insertTableRecord(body.input as TablePageInputInsert, databaseSchema, tablePageConfig);
-            } else if (body.action === 'table_update') {
-              if (tablePageConfig.allowedRoleIdsToUpdate?.length && this.stage === Stage.production && !tablePageConfig.allowedRoleIdsToUpdate.includes(user.role.id)) {
+              result = await dataSourceAdapter.insertTableRecord(tablePageConfig, body.input as TablePageCreateRecordInput, databaseSchema);
+            } else if (body.action === 'table_updateRecord') {
+              if (tablePageConfig.allowedRoleIdsToUpdate?.length && this.stage === Stage.production && !checkUserForRoles(user, tablePageConfig.allowedRoleIdsToUpdate)) {
                 throw new Error('You do not have permission to update records in this table');
               }
 
-              result = await dataSourceAdapter.updateTableRecords(body.input as TablePageInputUpdate, databaseSchema, tablePageConfig);
-            } else if (body.action === 'table_delete') {
-              if (tablePageConfig.allowedRoleIdsToDelete?.length && this.stage === Stage.production && !tablePageConfig.allowedRoleIdsToDelete.includes(user.role.id)) {
+              result = await dataSourceAdapter.updateTableRecords(tablePageConfig, body.input as TablePageUpdateRecordInput, databaseSchema);
+            } else if (body.action === 'table_deleteRecord') {
+              if (tablePageConfig.allowedRoleIdsToDelete?.length && this.stage === Stage.production && !checkUserForRoles(user, tablePageConfig.allowedRoleIdsToDelete)) {
                 throw new Error('You do not have permission to delete records in this table');
               }
 
-              result = await dataSourceAdapter.deleteTableRecords(body.input as TablePageInputDelete, databaseSchema, tablePageConfig);
-            }
+              result = await dataSourceAdapter.deleteTableRecords(tablePageConfig, body.input as TablePageDeleteRecordInput, databaseSchema);
+            };
           };
         } catch (error) {
           throw new Error(error);
@@ -462,42 +462,58 @@ export class KottsterApp {
     }
   };
 
-  private async getDataFromToken(token: string): Promise<{ user: User; appId: string }> {
+  private async getDataFromToken(token: string): Promise<User> {
     // Check cache and return cached data if available
     const cached = this.tokenCache.get(token);
     if (cached && cached.expires > Date.now()) {
       return cached.data;
     }
 
-    const { payload } = await jose.jwtVerify(token, new TextEncoder().encode(this.secretKey));
-    const decodedToken = payload as unknown as JWTTokenPayload;
-    if (!decodedToken.appId || decodedToken.appId !== this.appId || !decodedToken.userId) {
-      throw new Error('Invalid JWT token');
-    }
+    let user: User;
 
-    const response = await fetch(`${process.env.KOTTSTER_API_BASE_URL || 'https://api.kottster.app'}/v3/apps/${this.appId}/users/current`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`Failed to fetch user data by JWT token: ${response.statusText}`);
-    };
-    const user = await response.json() as User;
-    const result = { 
-      appId: decodedToken.appId,
-      user 
-    };
+    if (this.schema.enterpriseHub) {
+      const response = await fetch(`${this.schema.enterpriseHub.url}/apps/${this.appId}/users/current`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to verify token with enterprise console: ${response.statusText}`);
+      };
+      user = await response.json() as KottsterApiResult<'getCurrentUser'>; 
+    } else {
+      if (!this.secretKey) {
+        throw new Error('Secret key not set for JWT token verification');
+      }
+
+      const { payload } = await jose.jwtVerify(token, new TextEncoder().encode(this.secretKey));
+      const decodedToken = payload as unknown as JWTTokenPayload;
+      if (!decodedToken.appId || decodedToken.appId !== this.appId || !decodedToken.userId) {
+        throw new Error('Invalid JWT token');
+      }
+  
+      const response = await fetch(`${process.env.KOTTSTER_API_BASE_URL || 'https://api.kottster.app'}/v3/apps/${this.appId}/users/current`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`Failed to fetch user data by JWT token: ${response.statusText}`);
+      };
+      user = await response.json() as KottsterApiResult<'getCurrentUser'>;
+    }
 
     // Cache result
     this.tokenCache.set(token, {
-      data: result,
+      data: user,
       expires: Date.now() + 60 * 1000 // 60s
     });
     this.cleanupExpiredTokenCache();
   
-    return result;
+    return user;
   }
 
   public createRequestWithPageDataMiddleware(pageConfig: Page): RequestHandler {
@@ -530,19 +546,8 @@ export class KottsterApp {
       };
     }
 
-    if (!this.secretKey) {
-      return { 
-        isTokenValid: false, 
-        user: null,
-        invalidTokenErrorMessage: 'Invalid JWT token: secret key not set' 
-      };
-    }
-
     try {
-      const { user, appId } = await this.getDataFromToken(token);
-      if (String(appId) !== String(this.appId)) {
-        throw new Error('Invalid JWT token: invalid app ID');
-      }
+      const user = await this.getDataFromToken(token);
 
       // If a post-auth middleware is provided, call it
       if (this.postAuthMiddleware) {

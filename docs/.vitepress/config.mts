@@ -53,13 +53,7 @@ export default defineConfig({
     [
       'script',
       {
-        src: '/docs/js/aaib.js',
-      }
-    ],
-    [
-      'script',
-      {
-        src: 'https://unpkg.com/@aaib/javascript/dist/loader-v1.js',
+        src: '/docs/js/crisp.js',
       }
     ],
     [

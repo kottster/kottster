@@ -7,6 +7,7 @@ import { PageFileStructure, File, AppSchema, Page, DataSource } from "@kottster/
  * Service for reading files
  */
 export class FileReader {
+  constructor(private readonly isDevelopment?: boolean) {}
 
   /**
    * Read the schema from the kottster-app.json file
@@ -40,7 +41,7 @@ export class FileReader {
    * @returns The page directories
    */
   public getPagesDirectories(): string[] {
-    const dir = `${PROJECT_DIR}/app/pages`;
+    const dir = this.isDevelopment ? `${PROJECT_DIR}/app/pages` : `${PROJECT_DIR}/dist/server/pages`;
     if (!fs.existsSync(dir)) {
       return [];
     }
@@ -53,7 +54,7 @@ export class FileReader {
    * @returns The data source directories
    */
   public getDataSourceDirectories(): string[] {
-    const dir = `${PROJECT_DIR}/app/_server/data-sources`;
+    const dir = this.isDevelopment ? `${PROJECT_DIR}/app/_server/data-sources` : `${PROJECT_DIR}/dist/server/data-sources`;
     if (!fs.existsSync(dir)) {
       return [];
     }
@@ -70,7 +71,7 @@ export class FileReader {
     const result: Omit<DataSource, 'status' | 'adapter'>[] = [];
 
     for (const dir of dataSourceDirectories) {
-      const dataSourceJsonPath = path.join(PROJECT_DIR, `app/_server/data-sources/${dir}/dataSource.json`);
+      const dataSourceJsonPath = path.join(PROJECT_DIR, this.isDevelopment ? `app/_server/data-sources/${dir}/dataSource.json` : `dist/server/data-sources/${dir}/dataSource.json`);
       if (!fs.existsSync(dataSourceJsonPath)) {
         console.warn(`Data source config not found for directory: ${dir}`);
         continue;
@@ -136,7 +137,7 @@ export class FileReader {
    * @returns The page structure or null if the page does not exist
    */
   public getPageFileStructure(pageKey: string): PageFileStructure | null {
-    const dirPath = `app/pages/${pageKey}`;
+    const dirPath = this.isDevelopment ? `app/pages/${pageKey}` : `dist/server/pages/${pageKey}`;
     const absoluteDirPath = `${PROJECT_DIR}/${dirPath}`;
     
     const filePaths = this.getAllFilePathsInDirectory(absoluteDirPath);

@@ -1,4 +1,4 @@
-import { PageFileStructure } from "@kottster/common";
+import { PageFileStructure, Stage } from "@kottster/common";
 import { DevAction } from "../models/action.model";
 import { FileReader } from "../services/fileReader.service";
 import { FileWriter } from "../services/fileWriter.service";
@@ -14,7 +14,7 @@ interface Data {
 export class CreatePage extends DevAction {
   public async executeDevAction(data: Data) {
     const fileWriter = new FileWriter({ usingTsc: this.app.usingTsc });
-    const fileReader = new FileReader();
+    const fileReader = new FileReader(this.app.stage === Stage.development);
     const appSchema = fileReader.readSchemaJsonFile();
 
     // Add page file

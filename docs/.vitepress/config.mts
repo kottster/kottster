@@ -106,8 +106,6 @@ export default defineConfig({
     ],
   ],
 
-  
-
   sitemap: {
     hostname: 'https://kottster.app',
   },

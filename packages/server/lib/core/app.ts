@@ -45,7 +45,7 @@ export class KottsterApp {
   private readonly secretKey: string;
   public readonly usingTsc: boolean;
   public readonly readOnlyMode: boolean = false;
-  public readonly stage: Stage = process.env.NODE_ENV === Stage.development ? Stage.development : Stage.production;
+  public readonly stage: Stage = process.env.KOTTSTER_APP_STAGE === Stage.development ? Stage.development : Stage.production;
   public dataSources: DataSource[] = [];
   public schema: AppSchema;
   private customEnsureValidToken?: (request: Request) => Promise<EnsureValidTokenResponse>;
@@ -123,7 +123,7 @@ export class KottsterApp {
           return;
         }
       } catch (error) {
-        console.error('Error handling internal API request:', error);
+        console.error('Internal API error:', error);
         res.status(500).json({ error: 'Internal Server Error' });
         return;
       }
@@ -153,7 +153,7 @@ export class KottsterApp {
         result: await this.executeAction(action, actionData),
       };
     } catch (error) {
-      console.error('Error handling Kottster API request:', error);
+      console.error('Kottster API error:', error);
       
       result = {
         status: 'error',
@@ -472,7 +472,7 @@ export class KottsterApp {
     let user: User;
 
     if (this.schema.enterpriseHub) {
-      const response = await fetch(`${this.schema.enterpriseHub.url}/apps/${this.appId}/users/current`, {
+      const response = await fetch(`${this.schema.enterpriseHub.url}/v1/apps/${this.appId}/users/current`, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,

@@ -7,12 +7,12 @@
         </svg>
     `);
     
-    discordButton.href = 'https://kottster.app/discord'; // Replace with your Discord invite
+    discordButton.href = 'https://kottster.app/discord';
     discordButton.target = '_blank';
     discordButton.rel = 'noopener noreferrer';
     discordButton.innerHTML = `
         <img src="${discordIconSvg}" alt="Discord" style="width: 20px; height: 20px;">
-        <span>Need Help?</span>
+        <span>Join our Discord</span>
     `;
     
     discordButton.style.cssText = `
@@ -27,7 +27,6 @@
         font-family: Arial, sans-serif;
         font-size: 14px;
         font-weight: bold;
-        box-shadow: 0 4px 12px rgba(88, 101, 242, 0.3);
         z-index: 9999;
         transition: all 0.3s ease;
         display: flex;
@@ -38,13 +37,11 @@
     discordButton.addEventListener('mouseenter', function() {
         this.style.backgroundColor = '#4752C4';
         this.style.transform = 'translateY(-2px)';
-        this.style.boxShadow = '0 6px 16px rgba(88, 101, 242, 0.4)';
     });
     
     discordButton.addEventListener('mouseleave', function() {
         this.style.backgroundColor = '#5865F2';
         this.style.transform = 'translateY(0)';
-        this.style.boxShadow = '0 4px 12px rgba(88, 101, 242, 0.3)';
     });
     
     document.body.appendChild(discordButton);

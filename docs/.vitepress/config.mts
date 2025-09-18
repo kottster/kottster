@@ -54,7 +54,7 @@ export default defineConfig({
     [
       'script',
       {
-        src: '/docs/js/crisp.js',
+        src: '/docs/js/discord.js',
       }
     ],
     [

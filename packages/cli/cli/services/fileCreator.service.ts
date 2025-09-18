@@ -75,6 +75,8 @@ export class FileCreator {
     
     // Create files
     this.createFileFromTemplate('vite.config.js', path.join(this.projectDir, `vite.config.${this.jsExt}`));
+    this.createFileFromTemplate('Dockerfile', path.join(this.projectDir, 'Dockerfile'));
+    this.createFileFromTemplate('docker-compose.yml', path.join(this.projectDir, 'docker-compose.yml'));
     this.createFileFromTemplate('app/index.html', path.join(this.projectDir, `app/index.html`));
     this.createFileFromTemplate('app/main.jsx', path.join(this.projectDir, `app/main.${this.jsxExt}`));
     this.createFileFromTemplate('app/_server/app.js', path.join(this.projectDir, `app/_server/app.${this.jsExt}`));

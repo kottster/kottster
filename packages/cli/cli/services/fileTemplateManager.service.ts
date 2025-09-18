@@ -3,6 +3,8 @@ import { stripIndent } from "@kottster/common";
 type TemplateVars = {
   'vite.config.js': undefined;
   'tsconfig.json': undefined;
+  'Dockerfile': undefined;
+  'docker-compose.yml': undefined;
   'app/_server/app.js': undefined;
   'app/_server/server.js': undefined;
   'app/_server/data-sources/postgres/index.js': {
@@ -125,6 +127,48 @@ export class FileTemplateManager {
           "noEmit": true
         }
       }
+    `),
+
+    'Dockerfile': stripIndent(`
+      # For production deployment
+
+      FROM node:22-alpine AS builder
+      WORKDIR /app
+
+      COPY package*.json ./
+      RUN npm install
+
+      COPY . .
+      RUN npm run build
+
+      FROM node:22-alpine
+      WORKDIR /app
+
+      COPY package*.json ./
+      RUN npm install --omit=dev
+
+      COPY --from=builder /app/dist ./dist
+
+      ENV PORT=3000
+      EXPOSE $PORT
+
+      CMD ["node", "dist/server/server.cjs"]
+    `),
+
+    'docker-compose.yml': stripIndent(`
+      # For production deployment
+
+      version: '3.8'
+
+      services:
+        app:
+          build:
+            context: .
+            dockerfile: Dockerfile
+          ports:
+            - "3000:3000"
+          environment:
+            - PORT=3000
     `),
 
     'app/_server/app.js': stripIndent(`

@@ -55,6 +55,7 @@ export default defineConfig({
       'script',
       {
         src: '/docs/js/discord.js',
+        defer: 'true'
       }
     ],
     [

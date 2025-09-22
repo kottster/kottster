@@ -45,7 +45,12 @@ export async function startProjectDev(options: Options): Promise<void> {
     const serverEnv = { 
       ...process.env,
 
+      // Set NODE_ENV=development just in case
       NODE_ENV: 'development',
+
+      // Kottster app uses it's environment variable to determine the stage,
+      KOTTSTER_APP_STAGE: 'development',
+      VITE_KOTTSTER_APP_STAGE: 'development',
       
       DEV_API_SERVER_PORT: devApiServerPortStr,
       VITE_DEV_API_SERVER_PORT: devApiServerPortStr,

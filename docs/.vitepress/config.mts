@@ -55,7 +55,7 @@ export default defineConfig({
       'script',
       {
         src: '/docs/js/discord.js',
-        defer: 'true',
+        defer: 'true'
       }
     ],
     [
@@ -106,8 +106,6 @@ export default defineConfig({
       }
     ],
   ],
-
-  
 
   sitemap: {
     hostname: 'https://kottster.app',

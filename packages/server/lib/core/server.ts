@@ -57,8 +57,7 @@ export class KottsterServer {
   }
 
   private setupServiceRoutes() {
-    this.expressApp.use('/internal-api/', this.app.getInternalApiRoute());
-    // this.expressApp.use('/devsync-api/', this.app.getDevSyncApiRoute());
+    this.expressApp.use('/internal-api', this.app.getInternalApiRoute());
   }
 
   private setupWebSocketHealthCheck() {
@@ -87,7 +86,7 @@ export class KottsterServer {
 
   private async setupDynamicDataSources() {
     const isDevelopment = this.app.stage === Stage.development;
-    const fileReader = new FileReader();
+    const fileReader = new FileReader(isDevelopment);
 
     // Dynamically load data sources from the data-sources directory
     const dataSourcesDir = isDevelopment ? `${PROJECT_DIR}/app/_server/data-sources` : `${PROJECT_DIR}/dist/server/data-sources`;
@@ -96,7 +95,6 @@ export class KottsterServer {
       if (!fs.existsSync(dataSourcesDir)) {
         return;
       }
-
       const dataSources: DataSource[] = [];
       const dataSourceConfigs = fileReader.getDataSourceConfigs();
 
@@ -138,40 +136,43 @@ export class KottsterServer {
   
   private async setupDynamicRoutes() {
     const isDevelopment = this.app.stage === Stage.development;
-    const fileReader = new FileReader();
+    const fileReader = new FileReader(isDevelopment);
     const pageConfigs = fileReader.getPageConfigs();
 
-    // Set routes for pages specified in the schema
     if (pageConfigs) {
       for (const pageConfig of pageConfigs) {
-        const pagesDir = isDevelopment ? `${PROJECT_DIR}/app/pages` : `${PROJECT_DIR}/dist/server/pages`;
-        const usingTsc = this.app.usingTsc;
-        const apiPath = path.join(pagesDir, pageConfig.key, isDevelopment ? `api.server.${usingTsc ? 'ts' : 'js'}` : 'api.cjs');
-
-        // If the page is custom or has a defined api.server.js file, load it
-        if (pageConfig.type === 'custom' || fs.existsSync(apiPath)) {
-          try {
-            const routeModule = await import(apiPath);
-            if (routeModule.default && typeof routeModule.default === 'function') {
-              const routePath = `/api/${pageConfig.key}`;
-
-              this.expressApp.post(routePath, this.app.createRequestWithPageDataMiddleware(pageConfig), routeModule.default);
+        try {
+          const pagesDir = isDevelopment ? `${PROJECT_DIR}/app/pages` : `${PROJECT_DIR}/dist/server/pages`;
+          const usingTsc = this.app.usingTsc;
+          const apiPath = path.join(pagesDir, pageConfig.key, isDevelopment ? `api.server.${usingTsc ? 'ts' : 'js'}` : 'api.cjs');
+  
+          // If the page is custom or has a defined api.server.js file, load it
+          if (pageConfig.type === 'custom' || fs.existsSync(apiPath)) {
+            try {
+              const routeModule = await import(apiPath);
+              if (routeModule.default && typeof routeModule.default === 'function') {
+                const routePath = `/api/${pageConfig.key}`;
+  
+                this.expressApp.post(routePath, this.app.createRequestWithPageDataMiddleware(pageConfig), routeModule.default);
+              }
+            } catch (error) {
+              console.error(`Failed to load route "${pageConfig.key}":`, error);
             }
-          } catch (error) {
-            console.error(`Failed to load route "${pageConfig.key}":`, error);
-          }
-        } else {
-          if (pageConfig.type === 'table') {
-            if (!pageConfig.config.dataSource) {
-              console.warn(`Page "${pageConfig.key}" does not have a data source specified. Skipping route setup.`);
-              continue;
+          } else {
+            if (pageConfig.type === 'table') {
+              if (!pageConfig.config.dataSource) {
+                console.warn(`Page "${pageConfig.key}" does not have a data source specified. Skipping route setup.`);
+                continue;
+              }
+  
+              this.expressApp.post(`/api/${pageConfig.key}`, this.app.createRequestWithPageDataMiddleware(pageConfig), this.app.defineTableController(pageConfig.config));
             }
-
-            this.expressApp.post(`/api/${pageConfig.key}`, this.app.createRequestWithPageDataMiddleware(pageConfig), this.app.defineTableController(pageConfig.config));
+            if (pageConfig.type === 'dashboard') {
+              this.expressApp.post(`/api/${pageConfig.key}`, this.app.createRequestWithPageDataMiddleware(pageConfig), this.app.defineDashboardController(pageConfig.config));
+            }
           }
-          if (pageConfig.type === 'dashboard') {
-            this.expressApp.post(`/api/${pageConfig.key}`, this.app.createRequestWithPageDataMiddleware(pageConfig), this.app.defineDashboardController(pageConfig.config));
-          }
+        } catch (error) {
+          console.error(`Error setting up route for page "${pageConfig.key}":`, error);
         }
       };
     }
@@ -196,7 +197,7 @@ export class KottsterServer {
         }
       });
     } else {
-      throw new Error(`Client directory not found: ${clientDir}`);
+      console.warn(`Client directory not found: ${clientDir}`);
     }
   }
 

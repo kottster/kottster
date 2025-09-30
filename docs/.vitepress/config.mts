@@ -158,10 +158,10 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
       text: 'App Configuration',
       collapsed: true,
       items: [
+        { text: 'Identity provider', link: '/app-configuration/identity-provider' },
+        { text: 'Data sources', link: '/data-sources' },
         { text: 'Brending', link: '/app-configuration/brendning' },
         { text: 'Sidebar', link: '/app-configuration/sidebar' },
-        { text: 'Data sources', link: '/data-sources' },
-        { text: 'Authentication', link: '/security/authentication' },
       ]
     },
 
@@ -171,7 +171,6 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
       items: [
         { text: 'Roles and permissions', link: '/security/roles-and-permissions' },
         { text: 'Access to database', link: '/security/database-access' },
-        { text: 'Authentication', link: '/security/authentication' },
         { text: 'Database usage', link: '/security/database-usage' },
       ]
     },

@@ -52,7 +52,7 @@ Your data stays with you.
 
 - **Built-in Auth**
 
-  User login and management [comes included](./security/authentication.md). No need to build authentication yourself.
+  User login and management [comes included](./app-configuration/identity-provider.md). No need to build your own authentication system.
 
 ## Easy to start, flexible to grow
 

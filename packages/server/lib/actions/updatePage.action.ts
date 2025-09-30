@@ -1,18 +1,13 @@
-import { Page, Stage } from "@kottster/common";
+import { InternalApiBody, InternalApiResult, Page, Stage } from "@kottster/common";
 import { DevAction } from "../models/action.model";
 import { FileReader } from "../services/fileReader.service";
 import { FileWriter } from "../services/fileWriter.service";
-
-interface Data {
-  key: string;
-  page: Partial<Page>;
-}
 
 /**
  * Update a page
  */
 export class UpdatePage extends DevAction {
-  public async executeDevAction(data: Data) {
+  public async execute(data: InternalApiBody<'updatePage'>): Promise<InternalApiResult<'updatePage'>> {
     const fileWriter = new FileWriter({ usingTsc: this.app.usingTsc });
     const fileReader = new FileReader(this.app.stage === Stage.development);
     const { key, page } = data;
@@ -33,7 +28,5 @@ export class UpdatePage extends DevAction {
         fileWriter.writeSchemaJsonFile(appSchema);
       }
     }
-
-    return {};
   }
 }

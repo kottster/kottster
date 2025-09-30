@@ -81,7 +81,6 @@ export class FileReader {
         const content = fs.readFileSync(dataSourceJsonPath, 'utf8');
         const config = JSON.parse(content);
         result.push({ 
-          version: config.version,
           name: dir, 
           type: config.type,
           tablesConfig: config.tablesConfig || {},

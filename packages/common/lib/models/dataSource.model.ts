@@ -32,7 +32,6 @@ enum DataSourceStatus {
 }
 
 export interface DataSource<T = any> {
-  version: string;
   type: DataSourceType;
   name: string;
   adapter: T;
@@ -44,7 +43,7 @@ export interface DataSource<T = any> {
 }
 
 // Available on the client side
-export interface PublicDataSource extends Omit<DataSource, 'adapter'> {
+export interface PublicDataSource extends Omit<DataSource, 'adapter' | 'tablesConfig'> {
   name: string;
   adapterType: DataSourceAdapterType;
   databaseSchema?: RelationalDatabaseSchema;

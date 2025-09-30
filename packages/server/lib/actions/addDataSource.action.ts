@@ -1,26 +1,9 @@
-import { DataSourceType, stripIndent, dataSourcesTypeData } from "@kottster/common";
+import { DataSourceType, stripIndent, dataSourcesTypeData, InternalApiBody, InternalApiResult } from "@kottster/common";
 import { exec } from "child_process";
 import spawn from 'cross-spawn';
 import { PROJECT_DIR } from "../constants/projectDir";
 import { DevAction } from "../models/action.model";
 import randomstring from 'randomstring';
-
-interface Data {
-  type: DataSourceType;
-
-  replaceDataSource?: string;
-  
-  connectionDetails: {
-    /** The connection details */
-    connection: string | Record<string, any>;
-
-    /** The database schema if applicable */
-    searchPath?: string[];
-  };
-
-  /** The name of the data source to be created or replaced */
-  name?: string;
-}
 
 /**
  * Verify and add data source to the project
@@ -34,7 +17,7 @@ export class AddDataSource extends DevAction {
   private readonly dbErrorEndMarker = '__DB_ERROR_END__';
   private readonly dbErrorRegex = new RegExp(`${this.dbErrorStartMarker}(.*?)${this.dbErrorEndMarker}`, 's');
 
-  public async executeDevAction(data: Data) {
+  public async execute(data: InternalApiBody<'addDataSource'>): Promise<InternalApiResult<'addDataSource'>> {
     return new Promise((resolve, reject) => {
       const { type, connectionDetails, name } = data;
       const executableCode = this.getExecutableCode(type, connectionDetails);
@@ -121,7 +104,7 @@ export class AddDataSource extends DevAction {
             return;
           }
 
-          resolve(data);
+          resolve();
         });
       });
       
@@ -132,7 +115,7 @@ export class AddDataSource extends DevAction {
     });
   }
 
-  private getExecutableCode(type: DataSourceType, connectionDetails: Data['connectionDetails']) {
+  private getExecutableCode(type: DataSourceType, connectionDetails: InternalApiBody<'addDataSource'>['connectionDetails']) {
     const dataSourceData = dataSourcesTypeData[type];
 
     const adapterClassName = this.getAdapterClassName(type);
@@ -168,7 +151,7 @@ export class AddDataSource extends DevAction {
     `);
   }
 
-  private getCommand(type: DataSourceType, name: string, connectionDetails: Data['connectionDetails']) {
+  private getCommand(type: DataSourceType, name: string, connectionDetails: InternalApiBody<'addDataSource'>['connectionDetails']) {
     const dataOption = JSON.stringify(connectionDetails).replace(/"/g, '\\"');
 
     return `npm run dev:add-data-source ${type} -- --skipInstall --name "${name}" --data "${dataOption}"`;

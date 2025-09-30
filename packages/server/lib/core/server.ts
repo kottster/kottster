@@ -107,7 +107,6 @@ export class KottsterServer {
               const dataSourceModule = await import(dataSourcePath);
               if (dataSourceModule.default && typeof dataSourceModule.default === 'object') {
                 const dataSource = createDataSource({
-                  version: dataSourceConfig.version,
                   type: dataSourceConfig.type,
                   name: dataSourceConfig.name,
                   tablesConfig: dataSourceConfig.tablesConfig || {},
@@ -128,7 +127,7 @@ export class KottsterServer {
       }
 
       const dataSourceRegistry = new DataSourceRegistry(dataSources);
-      this.app.registerDataSources(dataSourceRegistry);
+      this.app.loadFromDataSourceRegistry(dataSourceRegistry);
     } catch (error) {
       console.error('Error reading data sources directory:', error);
     }
@@ -219,6 +218,9 @@ export class KottsterServer {
     await this.setupDynamicDataSources();
     await this.setupDynamicRoutes();
     this.setupStaticFiles();
+    
+    // Initialize the app
+    await this.app.initialize();
 
     this.server = this.expressApp.listen(this.port, () => {
       if (this.app.stage === Stage.production) {

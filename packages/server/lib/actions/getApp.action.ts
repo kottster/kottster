@@ -1,0 +1,47 @@
+import { IdentityProviderUser, InternalApiBody, InternalApiResult, Page, Stage } from "@kottster/common";
+import { Action } from "../models/action.model";
+import { FileReader } from "../services/fileReader.service";
+
+/**
+ * Get the app data
+ */
+export class GetApp extends Action {
+  private cachedPages: Page[] | null = null;
+
+  public async execute(_: InternalApiBody<'getApp'>, user?: IdentityProviderUser): Promise<InternalApiResult<'getApp'>> {
+    
+    const roles = user ? await this.app.identityProvider.getRoles() : [];
+    const userPermissions = user ? await this.app.identityProvider.getUserPermissions(user.id) : [];
+    const fileReader = new FileReader(this.app.stage === Stage.development);
+
+    // Cache pages in production to avoid reading files every time
+    const pages = this.app.stage === Stage.production && this.cachedPages
+      ? this.cachedPages
+      : fileReader.getPageConfigs();
+    
+    if (this.app.stage === Stage.production && !this.cachedPages) {
+      this.cachedPages = pages;
+    }
+    
+    // In production, use the in-memory schema; in development, read from file
+    const appSchema = this.app.stage === Stage.production ? this.app.schema : fileReader.readSchemaJsonFile();
+
+    return {
+      schema: {
+        ...appSchema,
+        pages,
+        dataSources: this.app.dataSources.map((dataSource) => {
+          return {
+            name: dataSource.name,
+            type: dataSource.type,
+          };
+        }),
+        enterpriseHub: appSchema.enterpriseHub,
+      },
+
+      user,
+      roles,
+      userPermissions,
+    };
+  }
+}

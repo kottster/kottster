@@ -1,5 +1,6 @@
-import { Stage } from "@kottster/common";
+import { IdentityProviderUser, IdentityProviderUserPermission, Stage } from "@kottster/common";
 import { KottsterApp } from "../core/app";
+import { Request } from "express";
 
 /**
  * The base class for actions
@@ -8,7 +9,28 @@ import { KottsterApp } from "../core/app";
 export abstract class Action {
   constructor(protected readonly app: KottsterApp) {}
 
-  public abstract execute(data: unknown): Promise<unknown>;
+  protected requiredPermissions: (keyof typeof IdentityProviderUserPermission)[] = [];
+
+  public async executeWithCheckings(data: unknown, user?: IdentityProviderUser, req?: Request): Promise<unknown> {
+    // Ensure that user has the required permissions
+    if (this.requiredPermissions.length > 0) {
+      if (!user) {
+        throw new Error("This action requires authentication.");
+      }
+
+      for (const permission of this.requiredPermissions) {
+        const hasPermission = await this.app.identityProvider.userHasPermissions(user.id, [permission]);
+
+        if (!hasPermission) {
+          throw new Error(`This action requires the '${permission}' permission.`);
+        }
+      }
+    }
+
+    return this.execute(data, user, req);
+  };
+
+  protected abstract execute(data: unknown, user?: IdentityProviderUser, req?: Request): Promise<unknown>;
 }
 
 /**
@@ -18,14 +40,14 @@ export abstract class Action {
 export abstract class DevAction {
   constructor(protected readonly app: KottsterApp) {}
 
-  public execute(data: unknown): Promise<unknown> {
+  public executeWithCheckings(data: unknown): Promise<unknown> {
     // Ensure that the action can only be executed in development stage
     if (this.app.stage !== Stage.development) {
       throw new Error("This action can only be executed in development stage.");
     }
 
-    return this.executeDevAction(data);
+    return this.execute(data);
   };
   
-  public abstract executeDevAction(data: unknown): Promise<unknown>;
+  protected abstract execute(data: unknown): Promise<unknown>;
 }

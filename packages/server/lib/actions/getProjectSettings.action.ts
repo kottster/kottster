@@ -1,14 +1,11 @@
+import { InternalApiResult } from "@kottster/common";
 import { DevAction } from "../models/action.model";
-
-interface Result {
-  usingTsc: boolean;
-}
 
 /**
  * Get the project settings
  */
 export class GetProjectSettings extends DevAction {
-  public async executeDevAction(): Promise<Result> {
+  public async execute(): Promise<InternalApiResult<'getProjectSettings'>> {
     return {
       usingTsc: this.app.usingTsc,
     };

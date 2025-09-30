@@ -1,21 +1,58 @@
 import * as jose from 'jose';
 import { ExtendAppContextFunction } from '../models/appContext.model';
 import { PROJECT_DIR } from '../constants/projectDir';
-import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, RpcActionBody, TablePageGetRecordsInput, TablePageDeleteRecordInput, TablePageUpdateRecordInput, TablePageCreateRecordInput, isSchemaEmpty, schemaPlaceholder, ApiResponse, TablePageGetRecordInput, Page, TablePageConfig, TablePageCustomDataFetcherInput, TablePageGetRecordsResult, DashboardPageConfig, DashboardPageGetStatDataInput, DashboardPageGetCardDataInput, DashboardPageGetStatDataResult, DashboardPageGetCardDataResult, KottsterApiResult, checkUserForRoles } from '@kottster/common';
+import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, RpcActionBody, TablePageGetRecordsInput, TablePageDeleteRecordInput, TablePageUpdateRecordInput, TablePageCreateRecordInput, isSchemaEmpty, schemaPlaceholder, TablePageGetRecordInput, Page, TablePageConfig, TablePageCustomDataFetcherInput, TablePageGetRecordsResult, DashboardPageConfig, DashboardPageGetStatDataInput, DashboardPageGetCardDataInput, DashboardPageGetStatDataResult, DashboardPageGetCardDataResult, KottsterApiResult, checkUserForRoles, IdentityProviderUser, InternalApiSchema } from '@kottster/common';
 import { DataSourceRegistry } from './dataSourceRegistry';
 import { ActionService } from '../services/action.service';
 import { DataSourceAdapter } from '../models/dataSourceAdapter.model';
 import { parse as parseCookie } from 'cookie';
 import { Request, Response, NextFunction } from 'express';
 import { createServer } from '../factories/createServer';
+import { IdentityProvider } from './identityProvider';
+import { HttpException, UnauthorizedException } from '../exceptions/httpException';
 
 type RequestHandler = (req: Request, res: Response, next: NextFunction) => void;
 
-type PostAuthMiddleware = (user: User, request: Request) => void | Promise<void>;
+type PostAuthMiddleware = (user: IdentityProviderUser, request: Request) => void | Promise<void>;
 
 export interface KottsterAppOptions {
-  secretKey?: string;
   schema: AppSchema | Record<string, never>;
+  
+  /**
+   * The secret key used to sign JWT tokens
+   */
+  secretKey?: string;
+
+  /**
+   * The root admin username
+   */
+  rootUsername?: string;
+
+  /**
+   * The root admin password
+   */
+  rootPassword?: string;
+
+  /**
+   * The root admin custom permissions
+   */
+  rootCustomPermissions?: string[];
+
+  /**
+   * The salt used to sign JWT tokens
+   */
+  jwtSecretSalt?: string;
+
+  /**
+   * The identity provider configuration
+   */
+  identityProvider: IdentityProvider;
+
+  /**
+   * The Kottster API token for the appen.
+   * If not provided, some features that require server-side requests to Kottster API will not work (e.g. sql query generation, AI features, etc.)
+   */
+  kottsterApiToken?: string;
 
   /** 
    * Custom validation middleware
@@ -33,7 +70,7 @@ export interface KottsterAppOptions {
 
 interface EnsureValidTokenResponse {
   isTokenValid: boolean;
-  user: User | null;
+  user: IdentityProviderUser | null;
   invalidTokenErrorMessage?: string;
 }
 
@@ -42,11 +79,19 @@ interface EnsureValidTokenResponse {
  */
 export class KottsterApp {
   public readonly appId: string;
+  
   private readonly secretKey: string;
+  private readonly kottsterApiToken?: string;
+
   public readonly usingTsc: boolean;
   public readonly readOnlyMode: boolean = false;
   public readonly stage: Stage = process.env.KOTTSTER_APP_STAGE === Stage.development ? Stage.development : Stage.production;
+  
+  // TODO: store registry instead of data sources
   public dataSources: DataSource[] = [];
+
+  public identityProvider: IdentityProvider;
+
   public schema: AppSchema;
   private customEnsureValidToken?: (request: Request) => Promise<EnsureValidTokenResponse>;
   private postAuthMiddleware?: PostAuthMiddleware;
@@ -58,21 +103,38 @@ export class KottsterApp {
   
   public extendContext: ExtendAppContextFunction;
 
+  public getSecretKey() {
+    return `${this.secretKey}`;
+  }
+
+  public getKottsterApiToken() {
+    return this.kottsterApiToken;
+  }
+
   constructor(options: KottsterAppOptions) {
     this.appId = options.schema.id ?? '';
     this.secretKey = options.secretKey ?? '';
+    this.kottsterApiToken = options.kottsterApiToken;
     this.usingTsc = checkTsUsage(PROJECT_DIR);
     this.schema = (!isSchemaEmpty(options.schema) ? options.schema : schemaPlaceholder) as AppSchema;
     this.customEnsureValidToken = options.__ensureValidToken;
     this.postAuthMiddleware = options.postAuthMiddleware;
     this.readOnlyMode = options.__readOnlyMode ?? false;
+    
+    // Set identity provider
+    this.identityProvider = options.identityProvider;
+    this.identityProvider.setApp(this);
+  }
+
+  async initialize() {
+    await this.identityProvider.initialize();
   }
 
   /**
-   * Register data sources
+   * Load from a data source registry
    * @param registry The data source registry
    */
-  public registerDataSources(registry: DataSourceRegistry<{}>) {
+  public loadFromDataSourceRegistry(registry: DataSourceRegistry<{}>) {
     this.dataSources = Object.values(registry.dataSources);
 
     this.dataSources.forEach(dataSource => {
@@ -95,8 +157,8 @@ export class KottsterApp {
     this.extendContext = fn;
   }
 
-  public async executeAction(action: string, data: any) {
-    return await ActionService.getAction(this, action).execute(data);
+  public async executeAction(action: string, data: any, user?: IdentityProviderUser, req?: Request): Promise<any> {
+    return await ActionService.getAction(this, action).executeWithCheckings(data, user, req);
   }
 
   /**
@@ -123,6 +185,15 @@ export class KottsterApp {
           return;
         }
       } catch (error) {
+        if (error instanceof HttpException) {
+          res.status(error.statusCode).json({
+            status: 'error',
+            statusCode: error.statusCode,
+            message: error.message
+          });
+          return;
+        }
+        
         console.error('Internal API error:', error);
         res.status(500).json({ error: 'Internal Server Error' });
         return;
@@ -130,38 +201,43 @@ export class KottsterApp {
     }
   }
 
-  private async handleInternalApiRequest(request: Request): Promise<any> {
-    let result: ApiResponse;
-    
+  private async handleInternalApiRequest(request: Request): Promise<{
+    status: 'success' | 'error';
+    result?: any;
+    error?: string;
+  }> {
     try {
-      const { isTokenValid, invalidTokenErrorMessage } = await this.ensureValidToken(request);
+      const { isTokenValid, invalidTokenErrorMessage, user } = await this.ensureValidToken(request);
 
-      const action = request.query.action as string | undefined;
+      const action = request.query.action as keyof InternalApiSchema | undefined;
       const actionData = request.body;
-      
-      // If the action is 'getAppSchema', we don't need to throw an error for invalid token
-      if (!isTokenValid && action !== 'getAppSchema' && action !== 'initApp') {
-        throw new Error(`Invalid JWT token: ${invalidTokenErrorMessage}`);
-      }
 
       if (!action) {
         throw new Error('Action not found in request');
       }
-  
-      result = {
+      
+      // If the action is 'getApp', we don't need to throw an error for invalid token
+      if (!isTokenValid && action && !(['getApp', 'initApp', 'login'] as (keyof InternalApiSchema)[]).includes(action)) {
+        throw new UnauthorizedException(`Invalid JWT token: ${invalidTokenErrorMessage}`);
+      }
+      
+      return {
         status: 'success',
-        result: await this.executeAction(action, actionData),
+        result: await this.executeAction(action, actionData, user ?? undefined, request),
       };
     } catch (error) {
+      // If the error is an instance of HttpException, we can rethrow it
+      if (error instanceof HttpException) {
+        throw error;
+      }
+
       console.error('Kottster API error:', error);
       
-      result = {
+      return {
         status: 'error',
         error: error.message,
       };
     }
-
-    return result;
   }
 
   /**
@@ -462,6 +538,9 @@ export class KottsterApp {
     }
   };
 
+  /**
+   * @deprecated Legacy, use identity provider instead
+   */
   private async getDataFromToken(token: string): Promise<User> {
     // Check cache and return cached data if available
     const cached = this.tokenCache.get(token);
@@ -527,27 +606,27 @@ export class KottsterApp {
   }
 
   private async ensureValidToken(request: Request): Promise<EnsureValidTokenResponse> {
-    // If a custom token validation function is provided, use it
-    if (this.customEnsureValidToken) {
-      return this.customEnsureValidToken(request);
-    }
-
-    let token = request.get('authorization')?.replace('Bearer ', '');
-    if (!token) {
-      const cookieHeader = request.get('Cookie');
-      const cookieData = parseCookie(cookieHeader ?? '');
-      token = cookieData.jwtToken;
-    }
-    if (!token) {
-      return { 
-        isTokenValid: false, 
-        user: null,
-        invalidTokenErrorMessage: 'Invalid JWT token: token not passed' 
-      };
-    }
-
     try {
-      const user = await this.getDataFromToken(token);
+      // If a custom token validation function is provided, use it
+      if (this.customEnsureValidToken) {
+        return this.customEnsureValidToken(request);
+      }
+
+      let token = request.get('authorization')?.replace('Bearer ', '');
+      if (!token) {
+        const cookieHeader = request.get('Cookie');
+        const cookieData = parseCookie(cookieHeader ?? '');
+        token = cookieData.jwtToken;
+      }
+      if (!token) {
+        return { 
+          isTokenValid: false, 
+          user: null,
+          invalidTokenErrorMessage: 'Invalid JWT token: token not passed' 
+        };
+      }
+    
+      const user = await this.identityProvider.verifyTokenAndGetUser(token);
 
       // If a post-auth middleware is provided, call it
       if (this.postAuthMiddleware) {
@@ -559,6 +638,7 @@ export class KottsterApp {
         user,
       };
     } catch (error) {
+      console.error('Error verifying token', error)
       return { 
         isTokenValid: false, 
         user: null, 

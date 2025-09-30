@@ -1,17 +1,13 @@
-import { Stage } from "@kottster/common";
+import { InternalApiBody, InternalApiResult, Stage } from "@kottster/common";
 import { DevAction } from "../models/action.model";
 import { FileReader } from "../services/fileReader.service";
 import { FileWriter } from "../services/fileWriter.service";
-
-interface Data {
-  key: string;
-}
 
 /**
  * Delete a page
  */
 export class DeletePage extends DevAction {
-  public async executeDevAction(data: Data) {
+  public async execute(data: InternalApiBody<'deletePage'>): Promise<InternalApiResult<'deletePage'>> {
     const fileWriter = new FileWriter({ usingTsc: this.app.usingTsc });
     const fileReader = new FileReader(this.app.stage === Stage.development);
     const { key } = data;
@@ -25,7 +21,5 @@ export class DeletePage extends DevAction {
       appSchema.menuPageOrder = appSchema.menuPageOrder.filter(pageKey => pageKey !== key);
       fileWriter.writeSchemaJsonFile(appSchema);
     }
-    
-    return null;
   }
 }

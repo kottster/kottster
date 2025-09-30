@@ -1,5 +1,5 @@
 import { Stage } from "./stage.model";
-import { User } from "./user.model";
+import { User } from "./idp.model";
 
 export type AppContext = {
   [key: string]: any;

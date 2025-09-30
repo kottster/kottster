@@ -1,11 +1,8 @@
-// Core
-export { KottsterApp, KottsterAppOptions } from './core/app';
-export { DataSourceRegistry } from './core/dataSourceRegistry';
-
 // Factories
 export { createApp } from './factories/createApp';
 export { createDataSource } from './factories/createDataSource';
 export { createServer } from './factories/createServer';
+export { createIdentityProvider } from './factories/createIdentityProvider';
 
 // Adapters
 export { KnexPg as KnexPgAdapter } from './adapters/knex/knexPg';

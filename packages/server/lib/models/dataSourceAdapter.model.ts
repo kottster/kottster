@@ -481,9 +481,6 @@ export abstract class DataSourceAdapter {
       // Process each property of the record except _related
       await Promise.all(Object.entries(record).filter(([key]) => key !== '_related').map(async ([key, value]) => {
         const columnSchema = tableSchema.columns.find(column => column.name === key);
-        if (record.id === 1140 && key === 'created_at') {
-          console.debug('Returned created_at', record.created_at, record.created_at instanceof Date ? record.created_at.toISOString() : undefined);
-        };
         
         if (!columnSchema) {
           preparedRecord[key] = value;

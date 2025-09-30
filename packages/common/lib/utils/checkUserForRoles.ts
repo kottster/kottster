@@ -1,8 +1,16 @@
-import { AppData } from "../models/appData.model";
-import { User } from "../models/user.model";
+import { ROOT_USER_ID } from "../constants/idp";
+import { ClientIdentityProviderUser, IdentityProviderUser, User } from "../models/idp.model";
 
-export function checkUserForRoles(user: User | AppData['user'], roleIds: string[]) {
-  const userRoleIds = ('roles' in user ? user.roles?.map(r => r.id) : user.roleIds) || [];
+export function checkUserForRoles(user: IdentityProviderUser | ClientIdentityProviderUser | User | ClientIdentityProviderUser, roleIds: string[]) {
+  if (!user) {
+    return false;
+  }
 
-  return roleIds.some(rid => userRoleIds.includes(rid));
+  // It's assumed that the root user has all roles
+  if (user.id === ROOT_USER_ID) {
+    return true;
+  }
+  
+  const userRoleIds = (('roles' in user ? user.roles?.map(r => r.id) : user.roleIds) || []).map(v => v.toString());
+  return roleIds.some(rid => userRoleIds.includes(rid.toString()));
 }

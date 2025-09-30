@@ -148,6 +148,7 @@ export class FileTemplateManager {
       RUN npm install --omit=dev
 
       COPY --from=builder /app/dist ./dist
+      COPY app.db ./app.db
 
       ENV PORT=3000
       EXPOSE $PORT
@@ -172,17 +173,32 @@ export class FileTemplateManager {
     `),
 
     'app/_server/app.js': stripIndent(`
-      import { createApp } from '@kottster/server';
+      import { createApp, createIdentityProvider } from '@kottster/server';
       import schema from '../../kottster-app.json';
 
+      /* 
+       * For security, consider moving the secret data to environment variables.
+       * See https://kottster.app/docs/deploying#before-you-deploy
+       */
       export const app = createApp({
         schema,
+        secretKey: '<your-secret-key-here>',
 
-        /* 
-        * For security, consider moving the secret key to an environment variable: 
-        * https://kottster.app/docs/deploying#before-you-deploy
-        */
-        secretKey: process.env.SECRET_KEY,
+        
+        /*
+         * The identity provider configuration.
+         * See https://kottster.app/docs/app-configuration/identity-provider
+         */
+        identityProvider: createIdentityProvider('sqlite', {
+          fileName: 'app.db',
+
+          passwordHashAlgorithm: 'bcrypt',
+          jwtSecretSalt: '<your-jwt-secret-salt-here>',
+          
+          /* The root admin user credentials */
+          rootUsername: 'admin',
+          rootPassword: 'admin',
+        }),
       });
     `),
 

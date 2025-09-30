@@ -136,19 +136,34 @@ export class FileWriter {
    * Write app/_server/app.ts file with the secret key
    * @param secretKey The secret key
    */
-  writeAppServerFileWithSecretKey(secretKey: string): void {
+  writeAppServerFile(secretKey: string, jwtSecretSalt: string, kottsterApiToken: string | undefined, rootUsername: string, rootPassword: string): void {
     const content = stripIndent(`
-      import { createApp } from '@kottster/server';
+      import { createApp, createIdentityProvider } from '@kottster/server';
       import schema from '../../kottster-app.json';
 
+      /* 
+       * For security, consider moving the secret data to environment variables.
+       * See https://kottster.app/docs/deploying#before-you-deploy
+       */
       export const app = createApp({
         schema,
-
-        /* 
-         * For security, consider moving the secret key to an environment variable: 
-         * https://kottster.app/docs/deploying#before-you-deploy
-         */
         secretKey: '${secretKey}',
+        ${kottsterApiToken ? `kottsterApiToken: '${kottsterApiToken}',` : ''}
+
+        /*
+         * The identity provider configuration.
+         * See https://kottster.app/docs/app-configuration/identity-provider
+         */
+        identityProvider: createIdentityProvider('sqlite', {
+          fileName: 'app.db',
+
+          passwordHashAlgorithm: 'bcrypt',
+          jwtSecretSalt: '${jwtSecretSalt}',
+          
+          /* The root admin user credentials */
+          rootUsername: '${rootUsername}',
+          rootPassword: '${rootPassword}',
+        }),
       });
     `);
 

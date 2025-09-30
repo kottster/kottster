@@ -7,7 +7,8 @@ const emptyResult: InternalApiResult<'getKottsterContext'> = {
 };
 
 /**
- * Get the information about the current Kottster version, and what limits are in place for the current app instance.
+ * Get the information about the current Kottster version, 
+ * and what limits are in place for the kottster api token in use
  */
 export class GetKottsterContext extends Action {
   public async execute(): Promise<InternalApiResult<'getKottsterContext'>> {

@@ -35,9 +35,11 @@ Your local Kottster app automatically extracts and stores database schema inform
 
 **How it works in development:**
 
-When you generate new pages during development mode, your local app includes this locally-stored schema information in the request to our platform (external API). This allows the page generator to create appropriate page structures and components that match your database design.
+In visual editor, you can use features that requires making requests to our platform (external API), such as generating SQL queries or exploring ready-to-use page templates. 
 
-This approach ensures that database schema information is only shared when you actively request page generation.
+When you use such features, your local app includes this locally-stored schema information in the request to Kottster API.
+
+This approach ensures that database schema information is only shared when you actively use features that require it. <span style="color: #099268;">**Your actual database credentials, connection details or stored data are never shared with our platform or any external services.**</span>
 
 ### Complete control
 

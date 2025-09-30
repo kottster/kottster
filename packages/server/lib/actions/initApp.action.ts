@@ -22,7 +22,6 @@ export class InitApp extends DevAction {
       console.error('Failed to obtain API token from Kottster API. Some features that require Kottster API access will not work.', error);
     }
 
-    // First, write the app server file with the secret key to avoid 401 errors after writing the schema file
     const secretKey = generateRandomString(32);
     const jwtSecretSalt = generateRandomString(16);
     fileWrtier.writeAppServerFile(
@@ -40,6 +39,7 @@ export class InitApp extends DevAction {
       },
     });
 
+    // We have to build a jwt secret here because identity provider is not yet initialized when this action runs
     const jwtSecret = `${id}${secretKey}${jwtSecretSalt}`;
     const rootUserJwtToken = await this.app.identityProvider.generateTokenForRootUser(86400, jwtSecret);
 

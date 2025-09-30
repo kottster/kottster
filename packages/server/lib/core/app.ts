@@ -216,7 +216,6 @@ export class KottsterApp {
         throw new Error('Action not found in request');
       }
       
-      // If the action is 'getApp', we don't need to throw an error for invalid token
       if (!isTokenValid && action && !(['getApp', 'initApp', 'login'] as (keyof InternalApiSchema)[]).includes(action)) {
         throw new UnauthorizedException(`Invalid JWT token: ${invalidTokenErrorMessage}`);
       }

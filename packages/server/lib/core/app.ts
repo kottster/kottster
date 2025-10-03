@@ -45,7 +45,7 @@ export interface KottsterAppOptions {
   /**
    * The identity provider configuration
    */
-  identityProvider: IdentityProvider;
+  identityProvider?: IdentityProvider;
 
   /**
    * The Kottster API token for the appen.
@@ -121,8 +121,12 @@ export class KottsterApp {
     this.readOnlyMode = options.__readOnlyMode ?? false;
     
     // Set identity provider
-    this.identityProvider = options.identityProvider;
-    this.identityProvider.setApp(this);
+    if (!options.identityProvider) {
+      throw new Error('Your KottsterApp must be configured with an identity provider. See https://kottster.app/docs/upgrade-to-v3-2 for more details.');
+    } else {
+      this.identityProvider = options.identityProvider;
+      this.identityProvider.setApp(this);
+    }
   }
 
   async initialize() {

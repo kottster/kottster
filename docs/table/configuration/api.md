@@ -10,20 +10,7 @@ This function is used in the optional `api.server.js` file within a page directo
 
 ## Basic usage
 
-**Example:**
-
-```tsx [app/pages/users/api.server.js]
-import { app } from '../../_server/app';
-import page from './page.json';
-
-const controller = app.defineTableController({
-  ...page.config,
-});
-
-export default controller;
-```
-
-### Extending page configuration
+### Configuring the main table
 
 When you need customization beyond what the visual editor provides, you can add additional configuration to the `page.json` settings in the controller file.
 
@@ -35,13 +22,25 @@ import page from './page.json';
 
 const controller = app.defineTableController({
   ...page.config,
-  // Add additional configuration here
+
+  // Additional configuration here
+  validateRecordBeforeInsert: (values) => {
+    if (!values.email.includes('@')) {
+      throw new Error('Invalid email');
+    }
+
+    return true;
+  },
 });
 
 export default controller;
 ```
 
-**For customization of nested tables:**
+### Configuring nested tables
+
+You can configure nested tables by extending the `nested` property in the table controller.
+
+**Example:**
 
 ```typescript [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
@@ -49,13 +48,28 @@ import page from './page.json';
 
 const controller = app.defineTableController({
   ...page.config,
-  // Add additional configuration for the main table
+
+  // Additional configuration for the main table
+  validateRecordBeforeInsert: (values) => {
+    if (!values.email.includes('@')) {
+      throw new Error('Invalid email');
+    }
+
+    return true;
+  },
 
   nested: {
     ...page.config.nested,
-    ordersByUserIdTable: {
-      ...page.config.nested.ordersByUserIdTable,
-      // Add additional configuration for the nested table
+    orders__p__user_id: {
+      ...page.config.nested.orders__p__user_id,
+
+      // Additional configuration for the nested table
+      validateRecordBeforeInsert: (values) => {
+        if (!values.amount || values.amount <= 0) {
+          throw new Error('Amount must be greater than zero');
+        }
+        return true;
+      },
     },
   },
 });

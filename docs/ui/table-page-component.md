@@ -8,6 +8,66 @@ The `TablePage` component displays a dynamic table for viewing and managing data
 
 The component is tightly connected to the [`defineTableController`](../table/configuration/api.md) settings, which manage both API interactions and table behavior. If you want extra control over **how the main table looks or works on the client side**, you need to use the `TablePage` component.
 
+## Basic usage
+
+### Configuring the main table
+
+**Example:**
+
+```jsx [app/pages/users/index.jsx]
+import { TablePage } from '@kottster/react';
+
+export default () => (
+  <TablePage
+    // Configuration here
+    customColumns={[
+      {
+        column: 'fullName',
+        label: 'Full name',
+        position: 1,
+        render: ({ first_name, last_name }) => `${first_name} ${last_name}`,
+      },
+    ]}
+  />
+);
+```
+
+### Configuring nested tables
+
+You can also configure nested tables by setting the `nested` property in the `TablePage` component.
+
+**Example:**
+
+```jsx [app/pages/users/index.jsx]
+import { TablePage } from '@kottster/react';
+
+export default () => (
+  <TablePage
+    // Configuration props for the main table
+    customColumns={[
+      {
+        column: 'fullName',
+        label: 'Full name',
+        position: 1,
+        render: ({ first_name, last_name }) => `${first_name} ${last_name}`,
+      },
+    ]}
+    nested={{
+      orders__p__user_id: {
+        // Configuration props for the nested table
+        customColumns: [
+          {
+            column: 'orderTitle',
+            label: 'Order Title',
+            position: 1,
+            render: ({ id, title }) => `${id}. ${title}`,
+          },
+        ],
+      },
+    }}
+  />
+);
+```
 
 ## Properties
 
@@ -128,3 +188,9 @@ The component is tightly connected to the [`defineTableController`](../table/con
   `ReactNode`, optional
 
   A custom component displayed below the page header.
+
+- ### nested
+
+  An object that defines properties for nested tables. Each key in this object corresponds to a nested table configuration.
+
+  Each nested table configuration has all the properties of a regular table configuration.

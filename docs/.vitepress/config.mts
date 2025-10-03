@@ -235,7 +235,7 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
     // TODO: Remove this section when sidebar is fixed
     {
       text: 'UI Library',
-      collapsed: true,
+      collapsed: false,
       items: [
         { text: 'Overview', link: '/ui/overview' },
         {

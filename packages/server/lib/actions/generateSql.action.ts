@@ -24,7 +24,7 @@ export class GenerateSql extends DevAction {
     const dataSourceAdapter = dataSource.adapter as DataSourceAdapter;
     const databaseSchema = await dataSourceAdapter.getDatabaseSchema();
 
-    const result = await kottsterApi.generateSql(this.app.appId, kottsterApiToken, {
+    const result = await kottsterApi.generateSql(this.app, {
       request: data.request,
       dataSource: {
         name: dataSource.name,

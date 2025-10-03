@@ -1,7 +1,6 @@
-import * as jose from 'jose';
 import { ExtendAppContextFunction } from '../models/appContext.model';
 import { PROJECT_DIR } from '../constants/projectDir';
-import { AppSchema, checkTsUsage, DataSource, JWTTokenPayload, Stage, User, RpcActionBody, TablePageGetRecordsInput, TablePageDeleteRecordInput, TablePageUpdateRecordInput, TablePageCreateRecordInput, isSchemaEmpty, schemaPlaceholder, TablePageGetRecordInput, Page, TablePageConfig, TablePageCustomDataFetcherInput, TablePageGetRecordsResult, DashboardPageConfig, DashboardPageGetStatDataInput, DashboardPageGetCardDataInput, DashboardPageGetStatDataResult, DashboardPageGetCardDataResult, KottsterApiResult, checkUserForRoles, IdentityProviderUser, InternalApiSchema } from '@kottster/common';
+import { AppSchema, checkTsUsage, DataSource, Stage, User, RpcActionBody, TablePageGetRecordsInput, TablePageDeleteRecordInput, TablePageUpdateRecordInput, TablePageCreateRecordInput, isSchemaEmpty, schemaPlaceholder, TablePageGetRecordInput, Page, TablePageConfig, TablePageCustomDataFetcherInput, TablePageGetRecordsResult, DashboardPageConfig, DashboardPageGetStatDataInput, DashboardPageGetCardDataInput, DashboardPageGetStatDataResult, DashboardPageGetCardDataResult, checkUserForRoles, IdentityProviderUser, InternalApiSchema } from '@kottster/common';
 import { DataSourceRegistry } from './dataSourceRegistry';
 import { ActionService } from '../services/action.service';
 import { DataSourceAdapter } from '../models/dataSourceAdapter.model';
@@ -46,7 +45,7 @@ export interface KottsterAppOptions {
   /**
    * The identity provider configuration
    */
-  identityProvider: IdentityProvider;
+  identityProvider?: IdentityProvider;
 
   /**
    * The Kottster API token for the appen.
@@ -122,8 +121,12 @@ export class KottsterApp {
     this.readOnlyMode = options.__readOnlyMode ?? false;
     
     // Set identity provider
-    this.identityProvider = options.identityProvider;
-    this.identityProvider.setApp(this);
+    if (!options.identityProvider) {
+      throw new Error('Your KottsterApp must be configured with an identity provider. See https://kottster.app/docs/upgrade-to-v3-2 for more details.');
+    } else {
+      this.identityProvider = options.identityProvider;
+      this.identityProvider.setApp(this);
+    }
   }
 
   async initialize() {
@@ -527,72 +530,6 @@ export class KottsterApp {
 
     return func as RequestHandler & { procedures: T };
   };
-
-  private cleanupExpiredTokenCache(): void {
-    const now = Date.now();
-    for (const [token, cached] of this.tokenCache.entries()) {
-      if (cached.expires <= now) {
-        this.tokenCache.delete(token);
-      }
-    }
-  };
-
-  /**
-   * @deprecated Legacy, use identity provider instead
-   */
-  private async getDataFromToken(token: string): Promise<User> {
-    // Check cache and return cached data if available
-    const cached = this.tokenCache.get(token);
-    if (cached && cached.expires > Date.now()) {
-      return cached.data;
-    }
-
-    let user: User;
-
-    if (this.schema.enterpriseHub) {
-      const response = await fetch(`${this.schema.enterpriseHub.url}/v1/apps/${this.appId}/users/current`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`Failed to verify token with enterprise console: ${response.statusText}`);
-      };
-      user = await response.json() as KottsterApiResult<'getCurrentUser'>; 
-    } else {
-      if (!this.secretKey) {
-        throw new Error('Secret key not set for JWT token verification');
-      }
-
-      const { payload } = await jose.jwtVerify(token, new TextEncoder().encode(this.secretKey));
-      const decodedToken = payload as unknown as JWTTokenPayload;
-      if (!decodedToken.appId || decodedToken.appId !== this.appId || !decodedToken.userId) {
-        throw new Error('Invalid JWT token');
-      }
-  
-      const response = await fetch(`${process.env.KOTTSTER_API_BASE_URL || 'https://api.kottster.app'}/v3/apps/${this.appId}/users/current`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) {
-        throw new Error(`Failed to fetch user data by JWT token: ${response.statusText}`);
-      };
-      user = await response.json() as KottsterApiResult<'getCurrentUser'>;
-    }
-
-    // Cache result
-    this.tokenCache.set(token, {
-      data: user,
-      expires: Date.now() + 60 * 1000 // 60s
-    });
-    this.cleanupExpiredTokenCache();
-  
-    return user;
-  }
 
   public createRequestWithPageDataMiddleware(pageConfig: Page): RequestHandler {
     const handler: RequestHandler = (req, res, next) => {

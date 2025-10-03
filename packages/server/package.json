@@ -1,6 +1,6 @@
 {
   "name": "@kottster/server",
-  "version": "3.2.1",
+  "version": "3.2.3",
   "description": "Instant admin panel for your project",
   "keywords": [
     "admin",
@@ -20,8 +20,9 @@
     "lint": "npx eslint ./lib",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
     "prepare": "husky",
-    "prepare-npm-package": "yarn add @kottster/common@latest && rimraf package-lock.json && npm run update-locks && npm run lint --fix && npm run build",
-    "update-locks": "yarn install && synp --source-file yarn.lock"
+    "prepare-npm-package": "yarn add @kottster/common@latest && yarn generate-version && rimraf package-lock.json && npm run update-locks && npm run lint --fix && npm run build",
+    "update-locks": "yarn install && synp --source-file yarn.lock",
+    "generate-version": "echo \"export const VERSION = '$npm_package_version';\" > lib/version.ts"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -38,7 +39,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.2.0",
-    "@kottster/common": "^3.2.1",
+    "@kottster/common": "^3.2.2",
     "@trpc/server": "^10.45.2",
     "@types/dotenv": "^8.2.0",
     "@types/express": "^5.0.2",

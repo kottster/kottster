@@ -293,6 +293,7 @@ export interface KottsterApiSchema {
 
   generateSql: {
     body: {
+      anonymousId?: string;
       request: string;
       dataSource: PublicDataSource;
       params: (

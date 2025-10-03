@@ -26,7 +26,10 @@ export class FileReader {
    * Read the package.json file
    * @returns The package.json content
    */
-  public readPackageJson(): unknown {
+  public readPackageJson(): {
+    version?: string;
+    dependencies?: Record<string, string>;
+  } {
     const filePath = `${PROJECT_DIR}/package.json`;
     if (!fs.existsSync(filePath)) {
       throw new Error(`File not found: ${filePath}`);

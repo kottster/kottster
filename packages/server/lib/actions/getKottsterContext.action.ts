@@ -1,4 +1,4 @@
-import { InternalApiResult } from "@kottster/common";
+import { IdentityProviderUser, InternalApiBody, InternalApiResult } from "@kottster/common";
 import { Action } from "../models/action.model";
 import { KottsterApi } from "../services/kottsterApi.service";
 
@@ -11,7 +11,7 @@ const emptyResult: InternalApiResult<'getKottsterContext'> = {
  * and what limits are in place for the kottster api token in use
  */
 export class GetKottsterContext extends Action {
-  public async execute(): Promise<InternalApiResult<'getKottsterContext'>> {
+  public async execute(_: InternalApiBody<'getKottsterContext'>, user: IdentityProviderUser): Promise<InternalApiResult<'getKottsterContext'>> {
     const kottsterApi = new KottsterApi();
     const kottsterApiToken = this.app.getKottsterApiToken();
     if (!kottsterApiToken) {
@@ -19,7 +19,7 @@ export class GetKottsterContext extends Action {
     }
 
     try {
-      const data = await kottsterApi.getKottsterContext(this.app, kottsterApiToken);
+      const data = await kottsterApi.getKottsterContext(this.app, user);
   
       return {
         imposedLimits: data?.imposedLimits ?? {},

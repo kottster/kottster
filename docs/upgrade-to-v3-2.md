@@ -4,7 +4,7 @@ description: "Instructions for upgrading Kottster to version 3.2, which introduc
 
 # Upgrade to v3.2
 
-With the release of [Kottster v3.2](http://localhost:3000/blog/kottster-is-now-fully-self-hosted), Kottster is now **fully self-hosted**, including authentication, user management, and app management. This change removes the need for external services and lets you run Kottster completely offline.  
+With the release of [Kottster v3.2](https://kottster.app/blog/kottster-is-now-fully-self-hosted), Kottster is now **fully self-hosted**, including authentication, user management, and app management. This change removes the need for external services and lets you run Kottster completely offline.  
 
 ## Recommended upgrade path
 

@@ -25,7 +25,7 @@ export default controller;
 
 ### Extending page configuration
 
-When you need customization beyond what the visual editor provides, you can add additional configuration to the `page.json` settings in the controller file.
+When you need customization beyond what the visual builder provides, you can add additional configuration to the `page.json` settings in the controller file.
 
 **Example:**
 

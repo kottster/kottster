@@ -6,7 +6,7 @@ description: "Table page component for displaying and managing data with search,
 
 The `TablePage` component displays a dynamic table for viewing and managing data from a database table. It includes features like search, sorting, filtering, and a form for inserting or updating records.
 
-The component is tightly connected to the [`defineTableController`](../table/configuration/api.md) settings, which manage both API interactions and table behavior. If you want extra control over **how the main table looks or works on the client side**, you need to use the `TablePage` component.
+The component is tightly connected to the [`table page configuration`](../table/configuration/api.md) and backend API. You need to modify the `TablePage` component if you want extra control over **how the main table looks or works on the client side**.
 
 ## Basic usage
 

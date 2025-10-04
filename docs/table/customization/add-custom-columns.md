@@ -45,7 +45,7 @@ Learn more about **columns and their parameters** in the [API reference](../conf
 
 ## Calculated columns
 
-**Using the visual editor or the `calculatedColumns` in the `defineTableController` function**
+**Using the visual builder or the `calculatedColumns` in the `defineTableController` function**
 
 For more complex scenarios where you need to perform SQL calculations on the server side, you can use the [`calculatedColumns`](../configuration/api.md#calculatedcolumns) configuration. This is particularly useful for aggregate functions like counting related records or performing mathematical operations.
 

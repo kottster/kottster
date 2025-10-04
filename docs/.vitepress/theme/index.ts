@@ -1,5 +1,6 @@
 import DefaultTheme from 'vitepress/theme';
 import mixpanel from 'mixpanel-browser';
+import 'virtual:group-icons.css';
 
 export default {
   ...DefaultTheme,

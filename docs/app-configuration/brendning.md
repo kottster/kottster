@@ -61,5 +61,5 @@ For better performance and reliability, you can store your logo locally:
 ```
 
 ::: tip
-Make sure your logo image is optimized for web use and works well at different sizes across your application.
+Make sure your logo image is optimized for web use and works well at different sizes across your application. Use PNG with transparency or SVG for best results.
 :::

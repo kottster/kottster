@@ -17,7 +17,7 @@ Based on these roles, you can define which parts of your app users have access t
 
 ## Setting up page access
 
-You can control which roles have access to specific pages using the visual editor. This can be done when creating a new page or editing an existing one. For [table pages](../table/introduction.md), you can control permissions for creating, updating, and deleting records based on user roles.
+You can control which roles have access to specific pages using the visual builder. This can be done when creating a new page or editing an existing one. For [table pages](../table/introduction.md), you can additionally control permissions for creating, updating, and deleting records based on user roles.
 
 ## Root user
 

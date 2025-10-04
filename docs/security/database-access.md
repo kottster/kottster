@@ -35,15 +35,15 @@ Your local Kottster app automatically extracts and stores database schema inform
 
 **How it works in development:**
 
-In visual editor, you can use features that requires making requests to our platform (external API), such as generating SQL queries or exploring ready-to-use page templates. 
+In visual builder, you can use optional features that requires making requests to our platform (external API), such as generating SQL queries using AI or create pages using ready-to-use page templates. 
 
 When you use such features, your local app includes this locally-stored schema information in the request to Kottster API.
 
-This approach ensures that database schema information is only shared when you actively use features that require it. <span style="color: #099268;">**Your actual database credentials, connection details or stored data are never shared with our platform or any external services.**</span>
+This approach ensures that database schema information is only shared when you actively use features that require it. <span style="color: #099268;">**Your actual database credentials, connection details or stored data are not accessible by our platform or any external services.**</span>
 
 ### Complete control
 
-The content of these connection files can be modified according to your development needs. You have full control over:
+The content of these data source connection files in `app/_server/data-sources/` can be modified according to your development needs. You have full control over:
 
 - Connection parameters
 - Authentication details

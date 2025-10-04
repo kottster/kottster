@@ -6,7 +6,7 @@ description: "Learn how to use custom data fetchers in Kottster to fetch data fo
 
 For dashboard pages in Kottster, you can define custom data fetchers to retrieve data from any source, including external APIs or unsupported databases. This is useful when you want to fetch data that is not directly available in your database or when you need to implement custom logic for data retrieval.
 
-To set up a custom data fetcher, you need to use custom fetch (`customFetch`) as a fetch strategy for your stats or charts in the dashboard configuration. This can be configured using the visual editor or by adding a `customDataFetcher` function for a stat or chart config before passing it to [`defineTableController`](./api.md).
+To set up a custom data fetcher, you need to use custom fetch (`customFetch`) as a fetch strategy for your stats or charts in the dashboard configuration. This can be configured using the visual builder or by adding a `customDataFetcher` function for a stat or chart config before passing it to [`defineTableController`](./api.md).
 
 ## customDataFetcher function
 

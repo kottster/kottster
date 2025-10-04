@@ -24,16 +24,8 @@ After the initial schema extraction, Kottster app doesn't need to query your dat
 
 **Table views**: When a user opens a table view, Kottster runs multiple SELECT queries to the target table and its related tables to display the data.
 
-**CRUD operations**: All basic Create, Update, and Delete operations run as single queries to your database.
+**CRUD operations**: All basic Create, Update, and Delete operations run as single queries to your database. It happens only when users intentionally perform these actions.
 
 ### Data privacy
 
 Your database credentials and connection details are stored locally within your Kottster app and are never shared with our platform or any external services. Learn more about [how Kottster accesses your database](./database-access.md). The database data is only accessible by your app’s backend, ensuring that all data operations are secure and private.
-
-## Database-friendly approach
-
-- **Query only on interaction**: No background processes or automatic data syncing
-- **Efficient caching**: Schema information is cached to minimize database requests
-- **On-demand loading**: Data is fetched only when users request it
-
-This approach ensures Kottster works with your existing database without any performance overhead or interference with your other apps.

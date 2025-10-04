@@ -8,7 +8,7 @@ For table pages in Kottster, you can define custom SQL queries to fetch data dir
 
 To set up custom SQL queries, you need to use raw SQL query (`rawSqlQuery`) as a fetch strategy. You can define both the main query to fetch records and an optional count query for pagination.
 
-All of this can be set up using the visual editor or by manually editing the `customSqlQuery` and `customSqlCountQuery` parameters inside [`defineTableController`](./api.md).
+All of this can be set up using the visual builder or by manually editing the `customSqlQuery` and `customSqlCountQuery` parameters inside [`defineTableController`](./api.md).
 
 ## Basic SQL queries
 

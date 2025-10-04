@@ -12,7 +12,7 @@ This function is used in the optional `api.server.js` file within a page directo
 
 ### Configuring the main table
 
-When you need customization beyond what the visual editor provides, you can add additional configuration to the `page.json` settings in the controller file.
+When you need customization beyond what the visual builder provides, you can add additional configuration to the `page.json` settings in the controller file.
 
 **Example:**
 

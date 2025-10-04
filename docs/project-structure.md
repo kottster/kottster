@@ -49,7 +49,7 @@ This page explains the purpose of each file and folder in your project.
 
       - #### `app.js`
 
-          The file with app initialization logic. It creates a new Kottster app instance and sets up data sources.
+          The file with app initialization logic. It creates a new Kottster app instance with all the configuration.
 
       - #### `server.js`
 

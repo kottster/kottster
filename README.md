@@ -10,8 +10,8 @@
 
 # Instant admin panel for your app
 
-Get a custom Node.js admin panel. Create pages to **view and manage data in your database**, <br />
-or **build fully custom pages** from scratch. Secure, self-hosted, and easy to set up.
+Get a custom Node.js admin panel. Create pages to **view and manage data in your database tables**, <br />
+**compose dashboards**, or build fully custom pages. Secure, self-hosted, and easy to set up.
   
 </div>
 

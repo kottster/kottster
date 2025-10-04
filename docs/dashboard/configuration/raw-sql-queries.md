@@ -6,7 +6,7 @@ description: "Learn how to use custom SQL queries in Kottster dashboard pages to
 
 Dashboard pages in Kottster support custom SQL queries to fetch and aggregate data directly from your database for stats and visualizations.
 
-When creating a dashboard page using the visual editor, raw SQL query (`rawSqlQuery`) is set as the default fetch strategy. You can configure queries through the visual editor or by manually editing the `sqlQuery` parameter in [`defineDashboardController`](./api.md).
+When creating a dashboard page using the visual builder, raw SQL query (`rawSqlQuery`) is set as the default fetch strategy. You can configure queries through the visual builder or by manually editing the `sqlQuery` parameter in [`defineDashboardController`](./api.md).
 
 ## Stats
 

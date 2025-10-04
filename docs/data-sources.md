@@ -28,7 +28,7 @@ After creating an app, you’ll land on the "**Getting Started**" page, where yo
 
 On the same "**Getting Started**" page, you can choose "**Add file manually**" option to get instructions on how to add a data source using the CLI.
 
-After you execute the command, a folder with the data source will be created in the `_server/data-sources/` directory.
+After you execute the command, a folder with the data source will be created in the `app/_server/data-sources/` directory.
 
 This method is extremely useful if you want to set additional parameters for connection, such as SSL or custom connection options.
 
@@ -37,11 +37,11 @@ This method is extremely useful if you want to set additional parameters for con
 Each data source configuration contains a `tablesConfig` object that allows you to define restrictions and permissions for each table globally. This configuration should be specified in the `dataSource.json` file. By default, if table configuration is not provided, the table is included in all requests.
 
 The following table configuration options are available:
-- **`excluded`**: Excludes the table from any requests. By default, all tables are included.
-- **`excludedColumns`**: Excludes the specified columns from any requests. By default, all columns are included.
-- **`preventInsert`**: Prevents insert operations. By default, insert operations are allowed.
-- **`preventUpdate`**: Prevents update operations. By default, update operations are allowed.
-- **`preventDelete`**: Prevents delete operations. By default, delete operations are allowed.
+- **`excluded`**: Excludes the table from any requests. If not specified, the table is included by default.
+- **`excludedColumns`**: Excludes the specified columns from any requests. If not specified, all columns are included by default.
+- **`preventInsert`**: Prevents insert operations. If not specified, insert operations are allowed by default.
+- **`preventUpdate`**: Prevents update operations. If not specified, update operations are allowed by default.
+- **`preventDelete`**: Prevents delete operations. If not specified, delete operations are allowed by default.
 
 Example of a data source configuration:
 
@@ -62,6 +62,6 @@ Example of a data source configuration:
 }
 ```
 
-In the example above, access to the `payment_methods` table is completely excluded, including all its columns. Even in development mode, this table will not be visible in the visual editor.
+In the example above, access to the `payment_methods` table is completely excluded, including all its columns. Even in development mode, this table will not be visible in the visual builder.
 
-The `users` table is still accessible, but with certain restrictions. The `password` column is excluded from all requests, it won't be returned in any queries and won't be available in the visual editor. Additionally, insert, update, and delete operations are prevented for this table.
+The `users` table is still accessible, but with certain restrictions. The `password` column is excluded from all requests, it won't be returned in any queries and won't be available in the visual builder. Additionally, insert, update, and delete operations are prevented for this table.

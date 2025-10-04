@@ -124,15 +124,7 @@ export default defineConfig({
       }
     },
     plugins: [
-      groupIconVitePlugin({
-        // customIcon: {
-        //   vitepress: localIconLoader(
-        //     import.meta.url,
-        //     '../public/vitepress-logo-mini.svg'
-        //   ),
-        //   firebase: 'logos:firebase'
-        // }
-      }),
+      groupIconVitePlugin({}),
     ]
   },
 })
@@ -187,7 +179,7 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
             { text: 'Raw SQL queries', link: '/table/configuration/raw-sql-queries' },
             { text: 'Custom data fetcher', link: '/table/configuration/custom-data-fetcher' },
             { text: 'Calculated columns', link: '/table/configuration/calculated-columns' },
-            { text: 'Relationships', link: '/table/configuration/relationships' },    
+            // { text: 'Relationships', link: '/table/configuration/relationships' },    
           ],
         },
         { text: 'TablePage component', link: '/ui/table-page-component' },

@@ -2,6 +2,9 @@
 description: "Define custom relationships between tables in Kottster. Learn how to set up one-to-one, one-to-many, and many-to-many relationships."
 ---
 
+<!-- TODO: This page is hidden because it's outdated. Update the content and unhide it later. -->
+
+
 # Relationships
 
 By default, **Kottster automatically detects relationships between tables based on their foreign keys**. However, you can also define relationships manually if you need to override the default behavior or if your database schema doesn't follow the standard conventions.
@@ -113,7 +116,6 @@ const controller = app.defineTableController({
       targetTableKeyColumn: 'id',
       targetTableForeignKeyColumn: 'project_id',
       columns: ['id', 'title', 'status'],
-      searchableColumns: ['title', 'status'],
     },
   ],
 });
@@ -152,9 +154,6 @@ To define this relationship in Kottster, include the following object in `relati
   /** The array of columns in the target table to include 
       in queries and display by default */ 
   columns: [],
-  
-  /** The array of columns in the target table available for search */ 
-  searchableColumns: []
 }
 ```
 
@@ -186,7 +185,6 @@ const controller = app.defineTableController({
       targetTable: 'authors',
       targetTableKeyColumn: 'id',
       columns: ['id', 'full_name'],
-      searchableColumns: ['full_name'],
     },
   ],
 });

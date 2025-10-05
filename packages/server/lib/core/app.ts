@@ -1,6 +1,6 @@
 import { ExtendAppContextFunction } from '../models/appContext.model';
 import { PROJECT_DIR } from '../constants/projectDir';
-import { AppSchema, checkTsUsage, DataSource, Stage, User, RpcActionBody, TablePageGetRecordsInput, TablePageDeleteRecordInput, TablePageUpdateRecordInput, TablePageCreateRecordInput, isSchemaEmpty, schemaPlaceholder, TablePageGetRecordInput, Page, TablePageConfig, TablePageCustomDataFetcherInput, TablePageGetRecordsResult, DashboardPageConfig, DashboardPageGetStatDataInput, DashboardPageGetCardDataInput, DashboardPageGetStatDataResult, DashboardPageGetCardDataResult, checkUserForRoles, IdentityProviderUser, InternalApiSchema } from '@kottster/common';
+import { AppSchema, checkTsUsage, DataSource, Stage, User, RpcActionBody, TablePageGetRecordsInput, TablePageDeleteRecordInput, TablePageUpdateRecordInput, TablePageCreateRecordInput, isSchemaEmpty, schemaPlaceholder, TablePageGetRecordInput, Page, TablePageConfig, TablePageCustomDataFetcherInput, TablePageGetRecordsResult, DashboardPageConfig, DashboardPageGetStatDataInput, DashboardPageGetCardDataInput, DashboardPageGetStatDataResult, DashboardPageGetCardDataResult, checkUserForRoles, IdentityProviderUser, InternalApiSchema, PartialTablePageConfig, transformStringToTablePageNestedTableKey, PartialDashboardPageConfig, DashboardPageConfigStat, DashboardPageConfigCard } from '@kottster/common';
 import { DataSourceRegistry } from './dataSourceRegistry';
 import { ActionService } from '../services/action.service';
 import { DataSourceAdapter } from '../models/dataSourceAdapter.model';
@@ -9,6 +9,7 @@ import { Request, Response, NextFunction } from 'express';
 import { createServer } from '../factories/createServer';
 import { IdentityProvider } from './identityProvider';
 import { HttpException, UnauthorizedException } from '../exceptions/httpException';
+import { FileReader } from '../services/fileReader.service';
 
 type RequestHandler = (req: Request, res: Response, next: NextFunction) => void;
 
@@ -94,6 +95,16 @@ export class KottsterApp {
   public schema: AppSchema;
   private customEnsureValidToken?: (request: Request) => Promise<EnsureValidTokenResponse>;
   private postAuthMiddleware?: PostAuthMiddleware;
+
+  public loadedPageConfigs: Page[] = [];
+
+  public loadPageConfigs(): Page[] {
+    const isDevelopment = this.stage === Stage.development;
+    const fileReader = new FileReader(isDevelopment);
+    this.loadedPageConfigs = fileReader.getPageConfigs();
+
+    return this.loadedPageConfigs;
+  }
 
   /**
    * Used to store the token cache
@@ -293,7 +304,7 @@ export class KottsterApp {
    * @param dashboardPageConfig The dashboard page config
    * @returns The express request handler
    */
-  public defineDashboardController(dashboardPageConfig: DashboardPageConfig) {
+  public defineDashboardController(partialDashboardPageConfig: PartialDashboardPageConfig) {
     const func: RequestHandler = async (req, res) => {
       const { isTokenValid, user, invalidTokenErrorMessage } = await this.ensureValidToken(req);
       if (!isTokenValid || !user) {
@@ -302,10 +313,40 @@ export class KottsterApp {
       }
 
       const page = (req as Request & { page?: Page }).page;
-      if (!page) {
+      if (!page || page.type !== 'dashboard') {
         res.status(404).json({ error: 'Specified page not found' });
         return;
       }
+
+      // Merge the partial config with the page config
+      const dashboardPageConfig: DashboardPageConfig = {
+        ...page.config,
+        ...partialDashboardPageConfig as Partial<DashboardPageConfig>,
+        stats: [
+          ...(page.config.stats ?? []),
+          ...(partialDashboardPageConfig.stats ?? [])
+        ].reduce((acc, stat) => {
+          const existingIndex = acc.findIndex(s => s.key === stat.key);
+          if (existingIndex >= 0) {
+            acc[existingIndex] = { ...acc[existingIndex], ...stat } as DashboardPageConfigStat;
+          } else {
+            acc.push(stat as DashboardPageConfigStat);
+          }
+          return acc;
+        }, [] as NonNullable<DashboardPageConfig['stats']>),
+        cards: [
+          ...(page.config.cards ?? []),
+          ...(partialDashboardPageConfig.cards ?? [])
+        ].reduce((acc, card) => {
+          const existingIndex = acc.findIndex(c => c.key === card.key);
+          if (existingIndex >= 0) {
+            acc[existingIndex] = { ...acc[existingIndex], ...card } as DashboardPageConfigCard;
+          } else {
+            acc.push(card as DashboardPageConfigCard);
+          }
+          return acc;
+        }, [] as NonNullable<DashboardPageConfig['cards']>)
+      };
 
       try {
         const body = await req.body as RpcActionBody<'dashboard_getCardData' | 'dashboard_getStatData'>;
@@ -421,30 +462,51 @@ export class KottsterApp {
    * @returns The express request handler
    */
   public defineTableController<T extends Record<string, (input: any) => any>>(
-    tablePageConfig: TablePageConfig,
+    partialTablePageConfig: PartialTablePageConfig,
     procedures?: T
   ): RequestHandler  & { procedures: T } {
-    // Check if specified data source exists
-    const dataSource = this.dataSources.find(ds => ds.name === tablePageConfig.dataSource);
-    if (!dataSource && (tablePageConfig.fetchStrategy === 'databaseTable' || tablePageConfig.fetchStrategy === 'rawSqlQuery')) {
-      throw new Error(`Data source "${tablePageConfig.dataSource}" not found`);
-    }
-
     const func: RequestHandler = async (req, res, next) => {
-      const body = await req.body as RpcActionBody<'custom'>;
-      const action = body.action;
-
       const { isTokenValid, user, invalidTokenErrorMessage } = await this.ensureValidToken(req);
       if (!isTokenValid || !user) {
         res.status(401).json({ error: `Invalid JWT token: ${invalidTokenErrorMessage}` });
         return;
       }
-
+      
       const page = (req as Request & { page?: Page }).page;
-      if (!page) {
+      if (!page || page.type !== 'table') {
         res.status(404).json({ error: 'Specified page not found' });
         return;
       }
+
+      // Merge the partial config with the page config
+      const tablePageConfig: TablePageConfig = {
+        ...page.config,
+        ...partialTablePageConfig as Partial<TablePageConfig>,
+        nested: {
+          ...page.config.nested,
+          ...Object.keys(partialTablePageConfig.nested || {}).reduce((acc, key) => {
+            const tablePageNestedTableKey = transformStringToTablePageNestedTableKey(key);
+            acc[key] = {
+              // We need to pass these required properties for nested table config
+              table: tablePageNestedTableKey[tablePageNestedTableKey.length - 1]?.table,
+              fetchStrategy: 'databaseTable',
+
+              ...page.config.nested?.[key],
+              ...partialTablePageConfig.nested?.[key] as Partial<TablePageConfig>,
+            };
+            return acc;
+          }, {} as Record<string, TablePageConfig>)
+        }
+      };
+      
+      // Check if specified data source exists
+      const dataSource = this.dataSources.find(ds => ds.name === tablePageConfig.dataSource);
+      if (!dataSource && (tablePageConfig.fetchStrategy === 'databaseTable' || tablePageConfig.fetchStrategy === 'rawSqlQuery')) {
+        throw new Error(`Data source "${tablePageConfig.dataSource}" not found`);
+      }
+
+      const body = await req.body as RpcActionBody<'custom'>;
+      const action = body.action;
 
       // If the request is a custom one, handle it by the custom controller
       if (action === 'custom') {

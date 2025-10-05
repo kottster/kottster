@@ -101,7 +101,10 @@ export class PageGeneratorService {
     }
   ];
 
-  static async generateDashboardPage(page: Page & { type: 'dashboard' }): Promise<PageFileStructure> {
+  static async generateDashboardPage(page: Page & { type: 'dashboard' }, usingTsc: boolean): Promise<PageFileStructure> {
+    const indexFileName = `index.${usingTsc ? 'tsx' : 'jsx'}`;
+    const apiFileName = `api.server.${usingTsc ? 'ts' : 'js'}`;
+    
     return {
       pageKey: page.key,
       dirPath: `app/pages/${page.key}`,
@@ -111,6 +114,34 @@ export class PageGeneratorService {
           filePath: `app/pages/${page.key}/page.json`,
           fileContent: JSON.stringify({ ...page, key: undefined } as Omit<PublicPage & { type: 'dashboard' }, 'key'>, null, 2),
         },
+        {
+          fileName: indexFileName,
+          filePath: `app/pages/${page.key}/${indexFileName}`,
+          fileContent: stripIndent(`
+            import { DashboardPage } from '@kottster/react';
+
+            export default () => (
+              <DashboardPage
+                // Add your customizations for the dashboard component here.
+                // Learn more: https://kottster.app/docs/ui/dashboard-page-component
+              />
+            );
+          `)
+        },
+        {
+          fileName: apiFileName,
+          filePath: `app/pages/${page.key}/${apiFileName}`,
+          fileContent: stripIndent(`
+            import { app } from '${usingTsc ? '@' : '../..'}/_server/app';
+
+            const controller = app.defineDashboardController({
+              // Add your customizations for the dashboard here.
+              // Learn more: https://kottster.app/docs/dashboard/configuration/api
+            });
+
+            export default controller;
+          `)
+        }
       ]
     };
   }
@@ -131,10 +162,8 @@ export class PageGeneratorService {
             import { notifications } from '@mantine/notifications';
             import { Center, Stack, Text, Code, Loader } from '@mantine/core';
             ${usingTsc ? `import { type Procedures } from './api.server';\n` : ''}
-            /**
-             * Learn more about building custom pages:
-             * https://kottster.app/docs/custom-pages/introduction
-             */
+            // Learn more about building custom pages:
+            // https://kottster.app/docs/custom-pages/introduction
 
             export default () => {
               const callProcedure = useCallProcedure${usingTsc ? `<Procedures>` : ''}();
@@ -192,7 +221,7 @@ export class PageGeneratorService {
           fileContent: stripIndent(`
             import { app } from '${usingTsc ? '@' : '../..'}/_server/app';
 
-            /**
+            /*
              * Custom server procedures for your page
              * 
              * These functions run on the server and can be called from your React components
@@ -216,6 +245,7 @@ export class PageGeneratorService {
   }
 
   static async generateTablePage(page: Page & { type: 'table' }, usingTsc: boolean): Promise<PageFileStructure> {
+    const indexFileName = `index.${usingTsc ? 'tsx' : 'jsx'}`;
     const apiFileName = `api.server.${usingTsc ? 'ts' : 'js'}`;
 
     return {
@@ -227,31 +257,34 @@ export class PageGeneratorService {
           filePath: `app/pages/${page.key}/page.json`,
           fileContent: JSON.stringify({ ...page, key: undefined } as Omit<PublicPage & { type: 'table' }, 'key'>, null, 2),
         },
-        ...(page.config.fetchStrategy === 'customFetch' ? [{
+        {
+          fileName: indexFileName,
+          filePath: `app/pages/${page.key}/${indexFileName}`,
+          fileContent: stripIndent(`
+            import { TablePage } from '@kottster/react';
+
+            export default () => (
+              <TablePage
+                // Add your customizations for the table component here.
+                // Learn more: https://kottster.app/docs/ui/table-page-component
+              />
+            );
+          `)
+        },
+        {
           fileName: apiFileName,
           filePath: `app/pages/${page.key}/${apiFileName}`,
           fileContent: stripIndent(`
-            ${usingTsc ? `import { TablePageConfig } from '@kottster/common';\n` : ''}            import { app } from '${usingTsc ? '@' : '../..'}/_server/app';
-            import page from './page.json';
+            import { app } from '${usingTsc ? '@' : '../..'}/_server/app';
 
             const controller = app.defineTableController({
-              ...page.config${usingTsc ? ` as TablePageConfig` : ''},
-              customDataFetcher: async ({ page }) => {
-                /**
-                 * Implement your custom fetch logic here...
-                 * Learn more: https://kottster.app/docs/table/configuration/custom-queries
-                 */
-                
-                return {
-                  records: [],
-                  total: 0,
-                }
-              },
+              // Add your customizations for the table here.
+              // Learn more: https://kottster.app/docs/table/configuration/api
             });
 
             export default controller;
           `)
-        }] : [])
+        }
       ]
     }
   }
@@ -341,10 +374,8 @@ export class PageGeneratorService {
       import { PeriodPicker } from './ui/periodPicker';
       import { Stat } from './ui/stat';
       ${usingTsc ? `import { type DailyReportsDataItem, type GrowthChartDataItem, type Metrics, type SourcesChartDataItem } from './mockup';\n import { type Procedures } from './api.server';\n` : ''}
-      /**
-       * Learn more about building custom pages:
-       * https://kottster.app/docs/custom-pages/introduction
-       */
+      // Learn more about building custom pages:
+      // https://kottster.app/docs/custom-pages/introduction
       
       export default () => {
         const callProcedure = useCallProcedure${usingTsc ? `<Procedures>` : ''}();
@@ -564,7 +595,7 @@ export class PageGeneratorService {
           generateDailyReportsMockupData,
         } from './mockup';
 
-        /**
+        /*
          * Custom server procedures for your page
          * 
          * These functions run on the server and can be called from your React components
@@ -758,10 +789,8 @@ export class PageGeneratorService {
         import { type DailyReportsDataItem } from '../mockup';
         ` : ''}
 
-        /**
-         * Learn more about Table component:
-         * https://mantine.dev/core/table/
-         */
+        // Learn more about Table component:
+        // https://mantine.dev/core/table/
         ${usingTsc ? `
         interface DailyReportsTableProps {
           data: DailyReportsDataItem[];
@@ -869,10 +898,8 @@ export class PageGeneratorService {
         import { type GrowthChartDataItem } from '../mockup';
         ` : ''}
 
-        /**
-         * Learn more about LineChart component:
-         * https://mantine.dev/charts/line-chart/
-         */
+        // Learn more about LineChart component:
+        // https://mantine.dev/charts/line-chart/
 
         ${usingTsc ? `
         interface GrowthChartProps {
@@ -934,10 +961,8 @@ export class PageGeneratorService {
         import { type SourcesChartDataItem } from '../mockup';
         ` : ''}
 
-        /**
-         * Learn more about BarChart component:
-         * https://mantine.dev/charts/bar-chart/
-         */
+        // Learn more about BarChart component:
+        // https://mantine.dev/charts/bar-chart/
 
         ${usingTsc ? `
         interface SourcesChartProps {
@@ -997,10 +1022,8 @@ export class PageGeneratorService {
       ${component !== 'BarChart' ? `import dayjs from 'dayjs';\n` : ''}      import { PeriodPicker } from './ui/periodPicker';
       import { Stat } from './ui/stat';
       ${usingTsc ? `import { type ChartDataItem } from './mockup';      import { type Procedures } from './api.server';\n` : ''}
-      /**
-       * Learn more about building custom pages:
-       * https://kottster.app/docs/custom-pages/introduction
-       */
+      // Learn more about building custom pages:
+      // https://kottster.app/docs/custom-pages/introduction
 
       export default () => {
         const callProcedure = useCallProcedure${usingTsc ? `<Procedures>` : ''}();
@@ -1156,7 +1179,7 @@ export class PageGeneratorService {
         import { app } from '${usingTsc ? '@' : '../..'}/_server/app';
         import { generateChartMockupData } from './mockup';
 
-        /**
+        /*
          * Custom server procedures for your page
          * 
          * These functions run on the server and can be called from your React components
@@ -1363,10 +1386,8 @@ export class PageGeneratorService {
         `}
       } from './mockup';
       ${usingTsc ? `import { type Procedures } from './api.server';\n` : ''}
-      /**
-       * Learn more about building custom pages:
-       * https://kottster.app/docs/custom-pages/introduction
-       */
+      // Learn more about building custom pages:
+      // https://kottster.app/docs/custom-pages/introduction
 
       export default () => {
         const callProcedure = useCallProcedure${usingTsc ? `<Procedures>` : ''}();
@@ -1727,16 +1748,13 @@ export class PageGeneratorService {
 
   static getEmptyPage(usingTsc: boolean, pageKey: string): [string, Record<string, string>] {
     const entryFileContent = stripIndent(`
-      import { useEffect, useState } from 'react';
       import { Page, useCallProcedure } from '@kottster/react';
       ${usingTsc ? `import { type Procedures } from './api.server';\n` : ''}
-      /**
-       * Learn more about building custom pages:
-       * https://kottster.app/docs/custom-pages/introduction
-       */
+      // Learn more about building custom pages:
+      // https://kottster.app/docs/custom-pages/introduction
 
       export default () => {
-        const callProcedure = useCallProcedure${usingTsc ? `<Procedures>` : ''}();
+        // const callProcedure = useCallProcedure${usingTsc ? `<Procedures>` : ''}();
 
         return (
           <Page>
@@ -1751,7 +1769,7 @@ export class PageGeneratorService {
       [usingTsc ? 'api.server.ts' : 'api.server.js']: stripIndent(`
         import { app } from '${usingTsc ? '@' : '../..'}/_server/app';
 
-        /**
+        /*
          * Custom server procedures for your page
          * 
          * These functions run on the server and can be called from your React components
@@ -1832,10 +1850,8 @@ export class PageGeneratorService {
       import { DatePickerInput } from '@mantine/dates';
       import dayjs from 'dayjs';
 
-      /**
-       * Learn more about DatePickerInput component:
-       * https://mantine.dev/dates/date-picker-input/
-       */
+      // Learn more about DatePickerInput component:
+      // https://mantine.dev/dates/date-picker-input/
 
       ${usingTsc ? `
       enum Period {

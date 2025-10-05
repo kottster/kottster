@@ -1,4 +1,5 @@
 import os from 'os';
+import crypto from 'crypto';
 
 interface NewProjectCommandOptions {
   packageManager?: string;
@@ -16,7 +17,7 @@ export class KottsterApi {
   /**
    * Send usage data to the server when a new project is created using "@kottster/cli new".
    * Usage data includes only the following information:
-   * - Username of the user (being used to identify the commands coming from the same user)
+   * - Cryptographically hashed username (to differentiate users without storing personal info)
    * - Command stage (start, finish, error)
    * - Current date and time
    * - Platform (Windows, macOS, Linux)
@@ -62,7 +63,7 @@ export class KottsterApi {
         },
         body: JSON.stringify({
           command: 'new',
-          username,
+          username: username ? crypto.createHash('sha256').update(username).digest('hex') : undefined,
           stage,
           dateTime,
           platform,

@@ -48,7 +48,7 @@ export const dataSourcesTypeData: Record<string, DataSourceTypeData> = {
   [DataSourceType.sqlite]: {
     packages: {
       ...knexPackages,
-      'better-sqlite3': '^11.8.1',
+      'better-sqlite3': '^12.4.1',
     },
     fileTemplateName: 'app/_server/data-sources/sqlite/index.js',
     knexClientStr: 'better-sqlite3',

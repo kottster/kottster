@@ -51,11 +51,13 @@ export async function startProjectDev(options: Options): Promise<void> {
       // Kottster app uses it's environment variable to determine the stage,
       KOTTSTER_APP_STAGE: 'development',
       VITE_KOTTSTER_APP_STAGE: 'development',
+
+      VITE_PROJECT_DIR: process.cwd(),
       
       DEV_API_SERVER_PORT: devApiServerPortStr,
       VITE_DEV_API_SERVER_PORT: devApiServerPortStr,
       
-      DEV_API_DEV_API_SERVER_URL: devApiServerUrl,
+      DEV_API_SERVER_URL: devApiServerUrl,
       VITE_DEV_API_SERVER_URL: devApiServerUrl,
 
       CACHE_KEY: `${Date.now()}${process.pid.toString()}`,

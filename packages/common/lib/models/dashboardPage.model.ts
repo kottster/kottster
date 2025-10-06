@@ -134,6 +134,11 @@ export interface DashboardPageConfig {
   cards?: DashboardPageConfigCard[];
 }
 
+export interface PartialDashboardPageConfig extends Partial<Omit<DashboardPageConfig, 'stats' | 'cards'>> {
+  stats?: Partial<DashboardPageConfigStat>[];
+  cards?: Partial<DashboardPageConfigCard>[];
+}
+
 export interface DashboardPageGetStatDataResult {
   value?: number | string;
   total?: number | string;

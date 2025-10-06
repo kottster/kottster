@@ -61,5 +61,5 @@ For better performance and reliability, you can store your logo locally:
 ```
 
 ::: tip
-Make sure your logo image is optimized for web use and works well at different sizes across your application. Use PNG with transparency or SVG for best results.
+Make sure your logo image is optimized for web use and works well at different sizes across your application. The recommended size for the logo is 64x64 pixels. Use PNG with transparency for best results.
 :::

@@ -53,11 +53,8 @@ For more complex scenarios where you need to perform SQL calculations on the ser
 
 ```js [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
-import page from './page.json';
 
 const controller = app.defineTableController({
-  ...page.config,
-  
   // Define columns calculated at the database level with SQL
   calculatedColumns: [
     {

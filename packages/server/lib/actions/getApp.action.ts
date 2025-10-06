@@ -17,7 +17,7 @@ export class GetApp extends Action {
     // Cache pages in production to avoid reading files every time
     const pages = this.app.stage === Stage.production && this.cachedPages
       ? this.cachedPages
-      : fileReader.getPageConfigs();
+      : this.app.loadedPageConfigs;
     
     if (this.app.stage === Stage.production && !this.cachedPages) {
       this.cachedPages = pages;

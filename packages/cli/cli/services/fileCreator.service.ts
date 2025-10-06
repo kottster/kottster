@@ -161,7 +161,8 @@ export class FileCreator {
       dependencies: {
         'react': '^19.x',
         'react-dom': '^19.x',
-        "react-router-dom": "^7.x",
+        'react-router-dom': '^7.x',
+        'better-sqlite3': '^12.x',
 
         '@kottster/common': KOTTSTER_COMMON_DEP_VER ?? '^3.x',
         '@kottster/cli': KOTTSTER_CLI_DEP_VER ?? '^3.x',

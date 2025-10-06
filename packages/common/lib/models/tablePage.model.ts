@@ -298,6 +298,12 @@ export interface TablePageConfig {
   };
 }
 
+export interface PartialTablePageConfig extends Partial<Omit<TablePageConfig, 'nested'>> {
+  nested?: {
+    [key: string]: PartialTablePageConfig;
+  }
+}
+
 export type TablePageRecord = Record<string, any>;
 
 export type TablePageRecordRelated = Record<string, {

@@ -46,27 +46,23 @@ This file defines the table page configuration and is the only required file. Yo
 If you need additional customization beyond what the visual builder provides, you can add these optional files:
 
 #### Backend controller (`api.server.js`)
-This file handles custom backend logic and database interactions. Use this when you need custom fetching logic, validations, or hooks beyond what's configured in `page.json`.
+This file handles custom backend logic and database interactions. You can modify it when you need custom fetching logic, validations, or hooks beyond what's configured in `page.json`.
 
 **Example:**
 
 ```js [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
-import page from './page.json';
 
-// Default export the controller for handling table requests
-const controller = app.defineTableController({
-  ...page.config,
-  // Add custom configuration or logic here
-});
+const controller = app.defineTableController({});
 
 export default controller;
 ```
 
-The backend controller uses [`defineTableController`](./configuration/api.md) to extend the base configuration from `page.json` with custom logic.
+You basically extend the base configuration from `page.json` with custom logic using [`defineTableController`](./configuration/api.md).
 
 #### Frontend component (`index.jsx`)
-This file defines custom user interface components. Use this when you need to customize the table display or add custom functionality.
+
+The file should export the [`TablePage`](../ui/table-page-component.md) component, which renders the table page and automatically connects to your backend configuration. You can customize the UI and add additional components by passing props to the `TablePage` component.
 
 **Example:**
 
@@ -77,8 +73,6 @@ export default () => (
   <TablePage />
 );
 ```
-
-The frontend component returns the [`TablePage`](../ui/table-page-component.md) component, which automatically connects to your backend configuration. You don't need to pass additional parameters as it's tightly integrated with the backend API.
 
 ## Creating table pages
 
@@ -98,7 +92,7 @@ The visual builder manages the `page.json` file automatically. Even though you c
 
 ### Option 2: Manual creation
 
-For more control or custom requirements, you can manually create the `page.json` file in your `./app/pages/<pageKey>` directory. Add optional `api.server.js` and `index.jsx` files only if you need additional customization beyond the base table functionality.
+For more control or custom requirements, you can manually create the `page.json` file in your `./app/pages/<pageKey>` directory. Add optional `api.server.js` and `index.jsx` files if needed.
 
 ## Examples
 

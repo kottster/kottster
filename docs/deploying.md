@@ -15,39 +15,72 @@ Before deployment, ensure your environment meets these prerequisites:
 
 ## Before you deploy
 
-### Step 1: Generate a production secret key
+### Use environment variables for secrets
 
-1. Go to the [Kottster dashboard](https://web.kottster.app/)
-2. Select your app
-3. Go to app settings and find the "Production secret key" section
-4. Click the button "Regenerate secret key" to create a new production secrey key
-5. Copy this key — you'll need it for your app configuration
+We recommend **using environment variables** to set secret keys and other sensitive information. This prevents accidental exposure in your code or version control.
 
-![Updating secret production key for Kottster admin panel](updating-secret-production-key.png)
+Open `app/_server/app.js` and update it to use environment variables for the following settings:
 
-> **Important:** By default, your development and production keys are the same. For security reasons, always create a separate production key before deploying.
-
-### Step 2: Update your app configuration
-
-We recommend **using environment variables** to set different secret keys for development and production.
-
-Open `app/_server/app.js` file and update it to use separate keys based on the environment, like this:
-
-```javascript
-import { createApp } from '@kottster/server';
+```javascript [app/_server/app.js]
+import { createApp, createIdentityProvider } from '@kottster/server';
 import schema from '../../kottster-app.json';
 
 export const app = createApp({
   schema,
-  secretKey: process.env.NODE_ENV === 'development' // [!code highlight]
-    ? '<your-dev-secret-key>' // [!code highlight]
-    : process.env.SECRET_KEY, // [!code highlight]
+  secretKey: process.env.SECRET_KEY || '<your-secret-key>', // [!code highlight]
+
+  identityProvider: createIdentityProvider('sqlite', {
+    fileName: 'app.db',
+
+    passwordHashAlgorithm: 'bcrypt',
+    jwtSecretSalt: process.env.JWT_SECRET_SALT || '<your-jwt-secret-salt>', // [!code highlight]
+    
+    /* The root admin user credentials */
+    rootUsername: 'admin',
+    rootPassword: process.env.ROOT_USER_PASSWORD || 'adminpass', // [!code highlight]
+  }),
 });
 ```
 
-> **Note:** The `NODE_ENV` variable is set to `development` by default when running `npm run dev`. When you run `npm run start`, it’s set to `production`.
+For a better approach, use `NODE_ENV` to set different values for development and production, and use `getEnvOrThrow` to ensure required variables are actually set in production:
 
-In production, make sure to set the `SECRET_KEY` environment variable to your production secret key.
+```javascript [app/_server/app.js]
+import { getEnvOrThrow } from '@kottster/common';
+import { createApp, createIdentityProvider } from '@kottster/server';
+import schema from '../../kottster-app.json';
+
+const isProduction = process.env.NODE_ENV === 'production';
+
+const SECRET_KEY = getEnvOrThrow('SECRET_KEY');
+const JWT_SECRET_SALT = getEnvOrThrow('JWT_SECRET_SALT');
+const ROOT_USER_PASSWORD = getEnvOrThrow('ROOT_USER_PASSWORD');
+
+export const app = createApp({
+  schema,
+  secretKey: isProduction // [!code highlight]
+    ? SECRET_KEY // [!code highlight]
+    : '<your-secret-key>', // [!code highlight]
+
+  identityProvider: createIdentityProvider('sqlite', {
+    fileName: 'app.db',
+
+    passwordHashAlgorithm: 'bcrypt',
+    jwtSecretSalt: isProduction // [!code highlight]
+      ? JWT_SECRET_SALT // [!code highlight]
+      : '<your-jwt-secret-salt>', // [!code highlight]
+
+    /* The root admin user credentials */
+    rootUsername: 'admin',
+    rootPassword: isProduction // [!code highlight]
+      ? ROOT_USER_PASSWORD // [!code highlight]
+      : 'adminpass', // [!code highlight]
+  }),
+});
+```
+
+> **Note:** `NODE_ENV` is automatically set to `development` when running `npm run dev` and `production` when running `npm run start`.
+
+Do not forget to **use environment variables for your database connection details** as well. See the [Database access and security](./security/database-access.md#production-best-practices) section for more details.
 
 ## Running in production
 

@@ -175,7 +175,7 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
           text: 'Configuration', 
           link: '/table/configuration/api',
           items: [
-            { text: 'API Reference', link: '/table/configuration/api' },    
+            { text: 'Configuration options', link: '/table/configuration/api' },
             { text: 'Raw SQL queries', link: '/table/configuration/raw-sql-queries' },
             { text: 'Custom data fetcher', link: '/table/configuration/custom-data-fetcher' },
             { text: 'Calculated columns', link: '/table/configuration/calculated-columns' },
@@ -207,7 +207,7 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
           text: 'Configuration', 
           link: '/dashboard/configuration/api',
           items: [
-            { text: 'API Reference', link: '/dashboard/configuration/api' },    
+            { text: 'Configuration options', link: '/dashboard/configuration/api' },    
             { text: 'Raw SQL queries', link: '/dashboard/configuration/raw-sql-queries' },
             { text: 'Custom data fetcher', link: '/dashboard/configuration/custom-data-fetcher' },
           ],

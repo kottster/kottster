@@ -46,10 +46,8 @@ This also simplifies forms for creating or updating users. Instead of typing a `
 
 ```js [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
-import page from './page.json';
 
 const controller = app.defineTableController({
-  ...page.config,
   relationships: [
     {
       relation: 'oneToOne',
@@ -104,10 +102,8 @@ Imagine we want to create a page to view data in the `projects` table. By defini
 
 ```js [app/pages/projects/api.server.js]
 import { app } from '../../_server/app';
-import page from './page.json';
 
 const controller = app.defineTableController({
-  ...page.config,
   relationships: [
     {
       relation: 'oneToMany',
@@ -167,10 +163,8 @@ Imagine we want to create a page to view data in the `books` table. By defining 
 
 ```js [app/pages/books/api.server.js]
 import { app } from '../../_server/app';
-import page from './page.json';
 
 const controller = app.defineTableController({
-  ...page.config,
   relationships: [
     {
       relation: 'manyToMany',

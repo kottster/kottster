@@ -67,11 +67,8 @@ export default () => (
 
 ```js [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
-import page from './page.json';
 
-const controller = app.defineTableController({
-  ...page.config
-}, {
+const controller = app.defineTableController({}, {
   sendWelcomeEmail: async (record) => {
     console.debug(`[server] Sending welcome email to ${record.email}`);
     

@@ -52,21 +52,23 @@ Here's a simple custom data fetcher for a stat
 
 ```js [app/pages/analytics/api.server.js]
 import { app } from '../../_server/app';
-import page from './page.json';
-
-// We assign a custom data fetcher to the first stat on the dashboard page
-page.config.stats[0].customDataFetcher = async () => {
-  // Fetch data from any source
-  const response = await fetch('https://dummyjson.com/users');
-  const data = await response.json();
-
-  return {
-    value: data.total,
-  };
-};
 
 const controller = app.defineDashboardController({
-  ...page.config,
+  stats: [
+    {
+      key: 'stat_1', // Use the key of the stat you want to customize
+      fetchStrategy: 'customFetch',
+      customDataFetcher: async () => {
+        // Fetch data from any source
+        const response = await fetch('https://dummyjson.com/users');
+        const data = await response.json();
+
+        return {
+          value: data.total,
+        };
+      },
+    }
+  ],
 });
 
 export default controller;
@@ -78,24 +80,25 @@ For line charts, area charts, and bar charts, you can define a custom data fetch
 
 ```js [app/pages/analytics/api.server.js]
 import { app } from '../../_server/app';
-import page from './page.json';
-
-// We assign a custom data fetcher to the first chart on the dashboard page
-page.config.cards[0].customDataFetcher = async () => {
-  // Fetch data from any source
-  // ...
-
-  return {
-    items: [
-      { date: '2023-01-01', users_count: 100, orders_count: 200 },
-      { date: '2023-01-02', users_count: 150, orders_count: 250 },
-      { date: '2023-01-03', users_count: 200, orders_count: 300 }
-    ]
-  };
-};
 
 const controller = app.defineDashboardController({
-  ...page.config,
+  cards: [
+    {
+      key: 'card_1', // Use the key of the card you want to customize
+      fetchStrategy: 'customFetch',
+      customDataFetcher: async () => {
+        // Your custom data fetching logic here
+
+        return {
+          items: [
+            { date: '2023-01-01', users_count: 100, orders_count: 200 },
+            { date: '2023-01-02', users_count: 150, orders_count: 250 },
+            { date: '2023-01-03', users_count: 200, orders_count: 300 }
+          ]
+        };
+      },
+    }
+  ],
 });
 
 export default controller;

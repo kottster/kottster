@@ -33,11 +33,8 @@ Here's a simple custom data fetcher that returns static data:
 
 ```js [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
-import page from './page.json';
 
 const controller = app.defineTableController({
-  ...page.config,
-
   customDataFetcher: async () => {
     // Fetch data from any source
     const sampleRecords = [
@@ -61,11 +58,8 @@ To enable pagination, return a `total` property with the total number of records
 
 ```js [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
-import page from './page.json';
 
 const controller = app.defineTableController({
-  ...page.config,
-  
   customDataFetcher: async ({ page, pageSize }) => {
     // Calculate offset for pagination
     const offset = (page - 1) * pageSize;
@@ -93,11 +87,8 @@ This will enable a search input in the table UI and pass the `search` parameter 
 
 ```js [app/pages/products/api.server.js]
 import { app } from '../../_server/app';
-import page from './page.json';
 
 const controller = app.defineTableController({
-  ...page.config,
-  
   customDataFetcher: async ({ page, pageSize, search }) => {
     const offset = (page - 1) * pageSize;
     let url = `https://dummyjson.com/products?limit=${pageSize}&skip=${offset}`;

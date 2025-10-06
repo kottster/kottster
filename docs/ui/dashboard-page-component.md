@@ -6,8 +6,7 @@ description: "DashboardPage component in Kottster displays dynamic dashboards wi
 
 The `DashboardPage` component displays a dynamic dashboard with various statistics, charts, and data visualizations.
 
-The component is tightly connected to the [`dashboard page configuration`](../dashboard/configuration/api.md) and backend API. You need to modify the `DashboardPage` component if you want extra control over **how the dashboard looks or works on the client side**.
-
+The component is tightly connected to the [dashboard page configuration](../dashboard/configuration/api.md) and backend API. You need to modify the `DashboardPage` component if you want extra control over **how the dashboard looks or works on the client side**.
 
 ## Properties
 

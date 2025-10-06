@@ -132,14 +132,13 @@ export class KottsterServer {
       console.error('Error reading data sources directory:', error);
     }
   }
-  
+
   private async setupDynamicRoutes() {
     const isDevelopment = this.app.stage === Stage.development;
-    const fileReader = new FileReader(isDevelopment);
-    const pageConfigs = fileReader.getPageConfigs();
+    const loadedPageConfigs = this.app.loadPageConfigs();
 
-    if (pageConfigs) {
-      for (const pageConfig of pageConfigs) {
+    if (loadedPageConfigs) {
+      for (const pageConfig of loadedPageConfigs) {
         try {
           const pagesDir = isDevelopment ? `${PROJECT_DIR}/app/pages` : `${PROJECT_DIR}/dist/server/pages`;
           const usingTsc = this.app.usingTsc;
@@ -164,7 +163,7 @@ export class KottsterServer {
                 continue;
               }
   
-              this.expressApp.post(`/api/${pageConfig.key}`, this.app.createRequestWithPageDataMiddleware(pageConfig), this.app.defineTableController(pageConfig.config));
+              this.expressApp.post(`/api/${pageConfig.key}`, this.app.createRequestWithPageDataMiddleware(pageConfig), this.app.defineTableController({}));
             }
             if (pageConfig.type === 'dashboard') {
               this.expressApp.post(`/api/${pageConfig.key}`, this.app.createRequestWithPageDataMiddleware(pageConfig), this.app.defineDashboardController(pageConfig.config));

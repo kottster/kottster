@@ -44,27 +44,23 @@ This file defines the dashboard page configuration and is the only required file
 If you need additional customization beyond what the visual builder provides, you can add these optional files:
 
 #### Backend controller (`api.server.js`)
-This file handles custom backend logic and data processing. Use this when you need custom data fetching, aggregations, or calculations beyond what's configured in `page.json`.
+
+You can modify this file when you need custom data fetching, aggregations, or other custom backend logic beyond what's configured in `page.json`.
 
 **Example:**
 
 ```js [app/pages/analytics/api.server.js]
 import { app } from '../../_server/app';
-import page from './page.json';
 
-// Default export the controller for handling dashboard requests
-const controller = app.defineDashboardController({
-  ...page.config,
-  // Add custom configuration or logic here
-});
+const controller = app.defineDashboardController({});
 
 export default controller;
 ```
 
-The backend controller uses [`defineDashboardController`](./configuration/api.md) to extend the base configuration from `page.json` with custom logic.
-
 #### Frontend component (`index.jsx`)
-This file defines custom user interface components. Use this when you need to customize the dashboard display or add custom visualizations.
+
+The file should export the [`DashboardPage`](../ui/dashboard-page-component.md) component, which renders the dashboard and automatically connects to your backend configuration. You can customize the UI and add additional components by passing props to the `DashboardPage` component.
+
 
 **Example:**
 
@@ -76,7 +72,6 @@ export default () => (
 );
 ```
 
-The frontend component returns the [`DashboardPage`](../ui/dashboard-page-component.md) component, which automatically connects to your backend configuration. You don't need to pass additional parameters as it's tightly integrated with the backend API.
 
 ## Creating dashboard pages
 

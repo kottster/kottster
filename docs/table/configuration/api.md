@@ -2,7 +2,7 @@
 description: "Define a table controller in Kottster to handle server-side requests for table pages. Customize table settings, relationships, and more."
 ---
 
-# API Reference
+# Table page configuration
 
 The `defineTableController` function creates a server-side controller that handles requests from table pages. It connects to your database and defines what data is available to the table component and how it behaves.
 
@@ -12,17 +12,14 @@ This function is used in the optional `api.server.js` file within a page directo
 
 ### Configuring the main table
 
-When you need customization beyond what the visual builder provides, you can add additional configuration to the `page.json` settings in the controller file.
+When you need customization beyond what the visual builder provides, you can pass additional configuration to the `defineTableController` function in the `api.server.js` file.
 
 **Example:**
 
 ```tsx [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
-import page from './page.json';
 
 const controller = app.defineTableController({
-  ...page.config,
-
   // Additional configuration here
   validateRecordBeforeInsert: (values) => {
     if (!values.email.includes('@')) {
@@ -38,17 +35,14 @@ export default controller;
 
 ### Configuring nested tables
 
-You can configure nested tables by extending the `nested` property in the table controller.
+You can also configure nested tables by adding a `nested` property in the table controller configuration. Each nested table can have its own configuration.
 
 **Example:**
 
 ```typescript [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
-import page from './page.json';
 
 const controller = app.defineTableController({
-  ...page.config,
-
   // Additional configuration for the main table
   validateRecordBeforeInsert: (values) => {
     if (!values.email.includes('@')) {
@@ -59,10 +53,7 @@ const controller = app.defineTableController({
   },
 
   nested: {
-    ...page.config.nested,
     orders__p__user_id: {
-      ...page.config.nested.orders__p__user_id,
-
       // Additional configuration for the nested table
       validateRecordBeforeInsert: (values) => {
         if (!values.amount || values.amount <= 0) {
@@ -721,11 +712,8 @@ You can extend your table controller with [custom server procedures](../../custo
 
 ```tsx [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
-import page from './page.json';
 
-const controller = app.defineTableController({
-  ...page.config,
-}, {
+const controller = app.defineTableController({}, {
   // Custom server procedures
   sendWelcomeEmail: async (data) => {
     const { userEmail } = data;

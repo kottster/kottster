@@ -54,11 +54,12 @@ The content of these data source connection files in `app/_server/data-sources/`
 
 ### Environment variables
 
-For production deployments, we strongly recommend moving connection details (credentials or connection strings) to environment variables. This approach provides additional security and makes it easier to manage different environments.
+For production deployments, we strongly recommend **moving connection details (credentials or connection strings) to environment variables**. This approach provides additional security and makes it easier to manage different environments.
 
 Here's an example data source configuration:
 
 ```javascript [app/_server/data-sources/postgres.js]
+import { getEnvOrThrow } from '@kottster/common';
 import { KnexPgAdapter } from '@kottster/server';
 import knex from 'knex';
 
@@ -66,7 +67,7 @@ const client = knex({
   client: 'pg',
   connection: process.env.NODE_ENV === 'development' // [!code highlight]
     ? 'postgresql://myuser:mypassword@localhost:5432/mydatabase' // [!code highlight]
-    : process.env.DB_CONNECTION, // [!code highlight]
+    : getEnvOrThrow('DB_CONNECTION'), // [!code highlight]
   searchPath: ['public'],
 });
 

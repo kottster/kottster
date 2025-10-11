@@ -351,7 +351,7 @@ export class KottsterApp {
       try {
         const body = await req.body as RpcActionBody<'dashboard_getCardData' | 'dashboard_getStatData'>;
         let result: any;
-
+        
         try {
           if (page.allowedRoleIds?.length && !checkUserForRoles(user, page.allowedRoleIds) && this.stage === Stage.production) {
             throw new Error('You do not have access to this page');
@@ -499,23 +499,22 @@ export class KottsterApp {
         }
       };
       
-      // Check if specified data source exists
-      const dataSource = this.dataSources.find(ds => ds.name === tablePageConfig.dataSource);
-      if (!dataSource && (tablePageConfig.fetchStrategy === 'databaseTable' || tablePageConfig.fetchStrategy === 'rawSqlQuery')) {
-        throw new Error(`Data source "${tablePageConfig.dataSource}" not found`);
-      }
-
-      const body = await req.body as RpcActionBody<'custom'>;
-      const action = body.action;
-
-      // If the request is a custom one, handle it by the custom controller
-      if (action === 'custom') {
-        return this.defineCustomController(procedures as T)(req, res, next);
-      }
-
+      
       try {
-        const body = await req.body as RpcActionBody<'table_getRecords' | 'table_getRecord' | 'table_createRecord' | 'table_updateRecord' | 'table_deleteRecord'>;
+        // Check if specified data source exists
+        const dataSource = this.dataSources.find(ds => ds.name === tablePageConfig.dataSource);
+        if (!dataSource && (tablePageConfig.fetchStrategy === 'databaseTable' || tablePageConfig.fetchStrategy === 'rawSqlQuery')) {
+          throw new Error(`Data source "${tablePageConfig.dataSource}" not found`);
+        }
+  
+        const body = await req.body as RpcActionBody<'table_getRecords' | 'table_getRecord' | 'table_createRecord' | 'table_updateRecord' | 'table_deleteRecord' | 'custom'>;
+        const action = body.action;
         let result: any;
+        
+        // If the request is a custom one, handle it by the custom controller
+        if (action === 'custom') {
+          return this.defineCustomController(procedures as T)(req, res, next);
+        }
 
         try {
           const dataSourceAdapter = dataSource?.adapter as DataSourceAdapter | undefined;

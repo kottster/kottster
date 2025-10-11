@@ -274,7 +274,24 @@ export class PageGeneratorService {
         {
           fileName: apiFileName,
           filePath: `app/pages/${page.key}/${apiFileName}`,
-          fileContent: stripIndent(`
+          fileContent: page.config.fetchStrategy === 'customFetch' ? stripIndent(`
+            import { app } from '${usingTsc ? '@' : '../..'}/_server/app';
+
+            const controller = app.defineTableController({
+              // Add your customizations for the table here.
+              // Learn more: https://kottster.app/docs/table/configuration/api
+
+              customDataFetcher: async () => {
+                // Fetch data for the table using custom logic
+                return {
+                  records: [],
+                  total: 0
+                };
+              },
+            });
+
+            export default controller;
+          `) : stripIndent(`
             import { app } from '${usingTsc ? '@' : '../..'}/_server/app';
 
             const controller = app.defineTableController({

@@ -1,4 +1,4 @@
-import { DataSourceAdapterType, FilterItem, FilterItemOperator, FieldInput, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, SqliteBaseType, sqliteBaseTypesByContentHint, sqliteBaseTypeToJsType } from "@kottster/common";
+import { DataSourceAdapterType, FilterItem, FilterItemOperator, FieldInput, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, SqliteBaseType, sqliteBaseTypesByContentHint, sqliteBaseTypeToJsType, RelationalDatabaseSchemaTable } from "@kottster/common";
 import { DataSourceAdapter } from "../../models/dataSourceAdapter.model";
 import { Knex } from "knex";
 import { ContentHint } from "@kottster/common/dist/models/contentHint.model";
@@ -127,7 +127,7 @@ export class KnexBetterSqlite3 extends DataSourceAdapter {
     return value;
   }
 
-  getSearchBuilder(searchableColumns: string[], searchValue: string) {
+  getSearchBuilder(searchableColumns: string[], searchValue: string, tableSchema: RelationalDatabaseSchemaTable) {
     return (builder: Knex.QueryBuilder) => {
       searchableColumns.forEach((column, index) => {
         if (index === 0) {

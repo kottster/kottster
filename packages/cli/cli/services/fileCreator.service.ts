@@ -2,6 +2,7 @@ import path from 'path'
 import fs from 'fs'
 import { dataSourcesTypeData, DataSourceType } from '@kottster/common'
 import { FileTemplateManager } from './fileTemplateManager.service'
+import { VERSION } from '../version'
 
 interface FileCreatorOptions {
   projectDir?: string
@@ -164,11 +165,13 @@ export class FileCreator {
         'react-router-dom': '^7.x',
         'better-sqlite3': '^12.x',
 
-        '@kottster/common': KOTTSTER_COMMON_DEP_VER ?? '^3.x',
-        '@kottster/cli': KOTTSTER_CLI_DEP_VER ?? '^3.x',
-        '@kottster/server': KOTTSTER_SERVER_DEP_VER ?? '^3.x',
-        '@kottster/react': KOTTSTER_REACT_DEP_VER ?? '^3.x',
-        
+        // Using exact same version as the CLI.
+        // This ensures compatibility between the core packages
+        '@kottster/common': KOTTSTER_COMMON_DEP_VER ?? VERSION,
+        '@kottster/cli': KOTTSTER_CLI_DEP_VER ?? VERSION,
+        '@kottster/server': KOTTSTER_SERVER_DEP_VER ?? VERSION,
+        '@kottster/react': KOTTSTER_REACT_DEP_VER ?? VERSION,
+
         ...(options.dependencies ?? {}),
       },
       devDependencies: {

@@ -55,9 +55,10 @@ export class KottsterServer {
       next();
     });
   }
-
+  
   private setupServiceRoutes() {
     this.expressApp.use('/internal-api', this.app.getInternalApiRoute());
+    this.expressApp.use('/download/:operationId', this.app.getDownloadRoute());
   }
 
   private setupWebSocketHealthCheck() {

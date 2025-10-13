@@ -1,6 +1,6 @@
 {
   "name": "@kottster/cli",
-  "version": "3.2.5",
+  "version": "3.3.0",
   "description": "CLI for Kottster",
   "main": "dist/index.js",
   "license": "Apache-2.0",
@@ -10,8 +10,9 @@
     "lint": "npx eslint ./cli",
     "test": "jest --coverage",
     "prepare": "husky",
-    "prepare-npm-package": "yarn add @kottster/common@latest && rimraf package-lock.json && npm run update-locks && npm run lint --fix && npm run build",
-    "update-locks": "yarn install && synp --source-file yarn.lock"
+    "prepare-npm-package": "yarn add @kottster/common@latest && yarn generate-version && rimraf package-lock.json && npm run update-locks && npm run lint --fix && npm run build",
+    "update-locks": "yarn install && synp --source-file yarn.lock",
+    "generate-version": "echo \"export const VERSION = '$npm_package_version';\" > cli/version.ts"
   },
   "bin": {
     "kottster": "dist/index.js"
@@ -32,7 +33,7 @@
     "@babel/traverse": "^7.24.1",
     "@babel/types": "^7.24.0",
     "@eslint/js": "^9.2.0",
-    "@kottster/common": "^3.2.5",
+    "@kottster/common": "^3.3.0",
     "@types/babel__traverse": "^7.20.5",
     "@types/cross-spawn": "^6.0.6",
     "@types/dotenv": "^8.2.0",

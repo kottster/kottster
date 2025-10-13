@@ -1,6 +1,6 @@
 import { ExtendAppContextFunction } from '../models/appContext.model';
 import { PROJECT_DIR } from '../constants/projectDir';
-import { AppSchema, checkTsUsage, DataSource, Stage, User, RpcActionBody, TablePageGetRecordsInput, TablePageDeleteRecordInput, TablePageUpdateRecordInput, TablePageCreateRecordInput, isSchemaEmpty, schemaPlaceholder, TablePageGetRecordInput, Page, TablePageConfig, TablePageCustomDataFetcherInput, TablePageGetRecordsResult, DashboardPageConfig, DashboardPageGetStatDataInput, DashboardPageGetCardDataInput, DashboardPageGetStatDataResult, DashboardPageGetCardDataResult, checkUserForRoles, IdentityProviderUser, InternalApiSchema, PartialTablePageConfig, transformStringToTablePageNestedTableKey, PartialDashboardPageConfig, DashboardPageConfigStat, DashboardPageConfigCard } from '@kottster/common';
+import { AppSchema, checkTsUsage, DataSource, Stage, User, RpcActionBody, TablePageGetRecordsInput, TablePageDeleteRecordInput, TablePageUpdateRecordInput, TablePageCreateRecordInput, isSchemaEmpty, schemaPlaceholder, TablePageGetRecordInput, Page, TablePageConfig, TablePageCustomDataFetcherInput, TablePageGetRecordsResult, DashboardPageConfig, DashboardPageGetStatDataInput, DashboardPageGetCardDataInput, DashboardPageGetStatDataResult, DashboardPageGetCardDataResult, checkUserForRoles, IdentityProviderUser, InternalApiSchema, PartialTablePageConfig, transformStringToTablePageNestedTableKey, PartialDashboardPageConfig, DashboardPageConfigStat, DashboardPageConfigCard, TablePageInitiateRecordsExportInput, TablePageInitiateRecordsExportResult, Procedure, ProcedureContext } from '@kottster/common';
 import { DataSourceRegistry } from './dataSourceRegistry';
 import { ActionService } from '../services/action.service';
 import { DataSourceAdapter } from '../models/dataSourceAdapter.model';
@@ -10,6 +10,8 @@ import { createServer } from '../factories/createServer';
 import { IdentityProvider } from './identityProvider';
 import { HttpException, UnauthorizedException } from '../exceptions/httpException';
 import { FileReader } from '../services/fileReader.service';
+import { Exporter } from '../services/exporter.service';
+import dayjs from 'dayjs';
 
 type RequestHandler = (req: Request, res: Response, next: NextFunction) => void;
 
@@ -17,7 +19,7 @@ type PostAuthMiddleware = (user: IdentityProviderUser, request: Request) => void
 
 export interface KottsterAppOptions {
   schema: AppSchema | Record<string, never>;
-  
+
   /**
    * The secret key used to sign JWT tokens
    */
@@ -79,18 +81,19 @@ interface EnsureValidTokenResponse {
  */
 export class KottsterApp {
   public readonly appId: string;
-  
+
   private readonly secretKey: string;
   private readonly kottsterApiToken?: string;
 
   public readonly usingTsc: boolean;
   public readonly readOnlyMode: boolean = false;
   public readonly stage: Stage = process.env.KOTTSTER_APP_STAGE === Stage.development ? Stage.development : Stage.production;
-  
+
   // TODO: store registry instead of data sources
   public dataSources: DataSource[] = [];
 
   public identityProvider: IdentityProvider;
+  public exporter: Exporter;
 
   public schema: AppSchema;
   private customEnsureValidToken?: (request: Request) => Promise<EnsureValidTokenResponse>;
@@ -110,7 +113,7 @@ export class KottsterApp {
    * Used to store the token cache
    */
   private tokenCache = new Map<string, { data: User; expires: number }>();
-  
+
   public extendContext: ExtendAppContextFunction;
 
   public getSecretKey() {
@@ -130,7 +133,7 @@ export class KottsterApp {
     this.customEnsureValidToken = options.__ensureValidToken;
     this.postAuthMiddleware = options.postAuthMiddleware;
     this.readOnlyMode = options.__readOnlyMode ?? false;
-    
+
     // Set identity provider
     if (!options.identityProvider) {
       throw new Error('Your KottsterApp must be configured with an identity provider. See https://kottster.app/docs/upgrade-to-v3-2 for more details.');
@@ -138,6 +141,9 @@ export class KottsterApp {
       this.identityProvider = options.identityProvider;
       this.identityProvider.setApp(this);
     }
+
+    // Set up exporter
+    this.exporter = new Exporter();
   }
 
   async initialize() {
@@ -186,10 +192,10 @@ export class KottsterApp {
         next();
         return;
       }
-  
+
       try {
         const result = await this.handleInternalApiRequest(req);
-        
+
         if (result) {
           res.setHeader('Content-Type', 'application/json');
           res.status(200).json(result);
@@ -207,12 +213,74 @@ export class KottsterApp {
           });
           return;
         }
-        
+
         console.error('Internal API error:', error);
         res.status(500).json({ error: 'Internal Server Error' });
         return;
       }
     }
+  }
+
+  public getDownloadRoute() {
+    return async (req: Request, res: Response) => {
+      try {
+        if (req.method !== 'GET') {
+          res.status(405).json({ error: 'Method Not Allowed' });
+          return;
+        }
+
+        const operationId = req.params.operationId;
+        if (!operationId) {
+          res.status(400).json({ error: 'Bad Request' });
+          return;
+        }
+
+        const operation = this.exporter.getOperation(operationId);
+        const dataSource = this.dataSources.find(ds => ds.name === operation?.dataSourceName);
+        if (!operation || !dataSource) {
+          res.status(404).json({ error: 'Not Found' });
+          return;
+        }
+
+        const dataSourceAdapter = dataSource.adapter as DataSourceAdapter | undefined;
+        if (!dataSourceAdapter) {
+          throw new Error(`Data source adapter for "${dataSource.name}" not found`);
+        }
+
+        const stream = await dataSourceAdapter.getTableRecordsStream(
+          ...operation.parameters
+        );
+
+        const filename = `export-${dayjs().format('YYYY-MM-DD-HH-mm-ss')}-${operationId}`;
+        const headers = this.exporter.getHeadersByFormat(operation.format, filename);
+        Object.entries(headers).forEach(([key, value]) => {
+          res.setHeader(key, value);
+        });
+
+        switch (operation.format) {
+          case 'json': {
+            this.exporter.convertToJSON(stream, res);
+            break;
+          };
+          case 'csv': {
+            this.exporter.convertToCSV(stream, res);
+            break;
+          }
+          case 'xlsx': {
+            this.exporter.convertToXLSX(stream, res);
+            break;
+          }
+          default: {
+            throw new Error('Unsupported export format');
+          }
+        };
+      } catch (error) {
+        console.error('Export route error:', error);
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'Export failed' });
+        }
+      }
+    };
   }
 
   private async handleInternalApiRequest(request: Request): Promise<{
@@ -229,11 +297,11 @@ export class KottsterApp {
       if (!action) {
         throw new Error('Action not found in request');
       }
-      
+
       if (!isTokenValid && action && !(['getApp', 'initApp', 'login'] as (keyof InternalApiSchema)[]).includes(action)) {
         throw new UnauthorizedException(`Invalid JWT token: ${invalidTokenErrorMessage}`);
       }
-      
+
       return {
         status: 'success',
         result: await this.executeAction(action, actionData, user ?? undefined, request),
@@ -245,7 +313,7 @@ export class KottsterApp {
       }
 
       console.error('Kottster API error:', error);
-      
+
       return {
         status: 'error',
         error: error.message,
@@ -258,22 +326,33 @@ export class KottsterApp {
    * @param procedures The procedures
    * @returns The express request handler
    */
-  public defineCustomController<T extends Record<string, (input: any) => any>>(
+  public defineCustomController<T extends Record<string, Procedure>>(
     procedures: T
   ): RequestHandler & { procedures: T } {
     const func: RequestHandler = async (req, res) => {
-      const { isTokenValid, invalidTokenErrorMessage } = await this.ensureValidToken(req);
-      if (!isTokenValid) {
+      const { isTokenValid, user, invalidTokenErrorMessage } = await this.ensureValidToken(req);
+      if (!isTokenValid || !user) {
         res.status(401).json({ error: `Invalid JWT token: ${invalidTokenErrorMessage}` });
         return;
       }
 
       const body = await req.body as RpcActionBody<'custom'>;
       const { procedure, procedureInput } = body.input;
+      const ctx: ProcedureContext = {
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          roleIds: user.roleIds,
+        },
+        req,
+      };
 
       if (procedure in procedures) {
         try {
-          const result = await procedures[procedure](procedureInput);
+          const result = await procedures[procedure](procedureInput, ctx);
           res.json({
             status: 'success',
             result,
@@ -351,7 +430,7 @@ export class KottsterApp {
       try {
         const body = await req.body as RpcActionBody<'dashboard_getCardData' | 'dashboard_getStatData'>;
         let result: any;
-        
+
         try {
           if (page.allowedRoleIds?.length && !checkUserForRoles(user, page.allowedRoleIds) && this.stage === Stage.production) {
             throw new Error('You do not have access to this page');
@@ -369,7 +448,7 @@ export class KottsterApp {
               if (!stat.dataSource) {
                 throw new Error(`Data source for stat not specified`);
               }
-  
+
               const dataSource = this.dataSources.find(ds => ds.name === stat.dataSource);
               if (!dataSource) {
                 throw new Error(`Data source "${stat.dataSource}" not found`);
@@ -406,7 +485,7 @@ export class KottsterApp {
               if (!card.dataSource) {
                 throw new Error(`Data source for card not specified`);
               }
-  
+
               const dataSource = this.dataSources.find(ds => ds.name === card.dataSource);
               if (!dataSource) {
                 throw new Error(`Data source "${card.dataSource}" not found`);
@@ -433,7 +512,7 @@ export class KottsterApp {
         } catch (error) {
           throw new Error(error);
         }
-        
+
         res.json({
           status: 'success',
           result,
@@ -461,17 +540,17 @@ export class KottsterApp {
    * @param pageSettings The page settings
    * @returns The express request handler
    */
-  public defineTableController<T extends Record<string, (input: any) => any>>(
+  public defineTableController<T extends Record<string, Procedure>>(
     partialTablePageConfig: PartialTablePageConfig,
     procedures?: T
-  ): RequestHandler  & { procedures: T } {
+  ): RequestHandler & { procedures: T } {
     const func: RequestHandler = async (req, res, next) => {
       const { isTokenValid, user, invalidTokenErrorMessage } = await this.ensureValidToken(req);
       if (!isTokenValid || !user) {
         res.status(401).json({ error: `Invalid JWT token: ${invalidTokenErrorMessage}` });
         return;
       }
-      
+
       const page = (req as Request & { page?: Page }).page;
       if (!page || page.type !== 'table') {
         res.status(404).json({ error: 'Specified page not found' });
@@ -498,19 +577,21 @@ export class KottsterApp {
           }, {} as Record<string, TablePageConfig>)
         }
       };
-      
-      
+
+
       try {
         // Check if specified data source exists
         const dataSource = this.dataSources.find(ds => ds.name === tablePageConfig.dataSource);
         if (!dataSource && (tablePageConfig.fetchStrategy === 'databaseTable' || tablePageConfig.fetchStrategy === 'rawSqlQuery')) {
           throw new Error(`Data source "${tablePageConfig.dataSource}" not found`);
         }
-  
-        const body = await req.body as RpcActionBody<'table_getRecords' | 'table_getRecord' | 'table_createRecord' | 'table_updateRecord' | 'table_deleteRecord' | 'custom'>;
+
+        const body = await req.body as RpcActionBody<'table_getRecords' | 'table_initiateRecordsExport' | 'table_getRecord' | 'table_createRecord' | 'table_updateRecord' | 'table_deleteRecord' | 'custom'>;
         const action = body.action;
-        let result: any;
         
+        // TODO: add typeing for result
+        let result: any;
+
         // If the request is a custom one, handle it by the custom controller
         if (action === 'custom') {
           return this.defineCustomController(procedures as T)(req, res, next);
@@ -523,7 +604,7 @@ export class KottsterApp {
           if (page.allowedRoleIds?.length && !checkUserForRoles(user, page.allowedRoleIds) && this.stage === Stage.production) {
             throw new Error('You do not have access to this page');
           }
-          
+
           // If the table select action is used and fetch strategy is 'customFetch', we need to execute the custom query right away
           if (body.action === 'table_getRecords' && tablePageConfig.fetchStrategy === 'customFetch') {
             result = tablePageConfig.customDataFetcher ? await tablePageConfig.customDataFetcher(body.input as TablePageCustomDataFetcherInput) : {
@@ -539,9 +620,20 @@ export class KottsterApp {
             if (!databaseSchema) {
               throw new Error(`Database schema for "${tablePageConfig.dataSource}" not found`);
             }
-            
+
             if (body.action === 'table_getRecords') {
               result = await dataSourceAdapter?.getTableRecords(tablePageConfig, body.input as TablePageGetRecordsInput, databaseSchema);
+            } else if (body.action === 'table_initiateRecordsExport') {
+              const operationId = this.exporter.createOperation({
+                parameters: [
+                  tablePageConfig, body.input as TablePageGetRecordsInput, databaseSchema,
+                ],
+                dataSourceName: dataSource.name,
+                format: (body.input as TablePageInitiateRecordsExportInput).format,
+              });
+              result = {
+                operationId
+              } as TablePageInitiateRecordsExportResult;
             } else if (body.action === 'table_getRecord') {
               result = await dataSourceAdapter.getOneTableRecord(tablePageConfig, body.input as TablePageGetRecordInput, databaseSchema);
             } else if (body.action === 'table_createRecord') {
@@ -567,7 +659,7 @@ export class KottsterApp {
         } catch (error) {
           throw new Error(error);
         }
-        
+
         res.json({
           status: 'success',
           result,
@@ -616,30 +708,30 @@ export class KottsterApp {
         token = cookieData.jwtToken;
       }
       if (!token) {
-        return { 
-          isTokenValid: false, 
+        return {
+          isTokenValid: false,
           user: null,
-          invalidTokenErrorMessage: 'Invalid JWT token: token not passed' 
+          invalidTokenErrorMessage: 'Invalid JWT token: token not passed'
         };
       }
-    
+
       const user = await this.identityProvider.verifyTokenAndGetUser(token);
 
       // If a post-auth middleware is provided, call it
       if (this.postAuthMiddleware) {
         await this.postAuthMiddleware(user, request);
       }
-      
-      return { 
-        isTokenValid: true, 
+
+      return {
+        isTokenValid: true,
         user,
       };
     } catch (error) {
       console.error('Error verifying token', error)
-      return { 
-        isTokenValid: false, 
-        user: null, 
-        invalidTokenErrorMessage: error.message 
+      return {
+        isTokenValid: false,
+        user: null,
+        invalidTokenErrorMessage: error.message
       };
     }
   }

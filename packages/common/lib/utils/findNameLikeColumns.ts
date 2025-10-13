@@ -13,16 +13,35 @@ export function findNameLikeColumns(columns: RelationalDatabaseSchemaColumn[]): 
     'last_name',
     'username',
     'login',
-    'subject'
+    'subject',
+    'full_name',
+    'display_name',
+    'nickname',
+    'email',
+    'contact',
+    'label',
+    'caption',
+    'description',
+    'info',
+    'details',
+    'summary',
+    'alias',
+    'handle',
+    'screen_name',
+    'profile_name',
+    'given_name',
+    'family_name',
+    'initials',
+    'maiden_name',
+    'middle_name',
+    'company',
+    'organization',
   ];
   const possibleColumns = columns.filter((column) => !column.primaryKey && !column.foreignKey && !column.enumValues);
 
   let nameLikeColumns = possibleColumns.filter((column) => nameLikeColumnNames.includes(column.name)).map((column) => column.name);
   if (nameLikeColumns.length === 0) {
     nameLikeColumns = possibleColumns.filter((column) => nameLikeColumns.includes(column.name)).map((column) => column.name);
-  }
-  if (nameLikeColumns.length === 0) {
-    nameLikeColumns = possibleColumns.filter((column) => column.contentHint === 'string').map((column) => column.name);
   }
 
   nameLikeColumns = nameLikeColumns.slice(0, 2);

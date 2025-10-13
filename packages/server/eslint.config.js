@@ -11,6 +11,8 @@ module.exports = tseslint.config(
       '@typescript-eslint/ban-types': 'off',
       '@typescript-eslint/no-explicit-any': 'off',
       'no-useless-escape': 'off',
+      '@typescript-eslint/no-non-null-asserted-optional-chain': 'off',
+      'no-prototype-builtins': 'off',
     }
   }
 );

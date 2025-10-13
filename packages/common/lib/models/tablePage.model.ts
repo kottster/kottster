@@ -24,6 +24,10 @@ export interface TablePageGetRecordsInput extends TablePageInputBase {
   };
 }
 
+export interface TablePageInitiateRecordsExportInput extends TablePageGetRecordsInput {
+  format: 'csv' | 'json' | 'xlsx';
+}
+
 export interface TablePageCustomDataFetcherInput extends TablePageInputBase {
   page: number;
   pageSize: number;
@@ -318,6 +322,10 @@ export interface TablePageGetRecordsResult {
 
 export interface TablePageGetRecordResult {
   record: TablePageRecord;
+}
+
+export interface TablePageInitiateRecordsExportResult {
+  operationId: string;
 }
 
 export interface TablePageCreateRecordResult {}

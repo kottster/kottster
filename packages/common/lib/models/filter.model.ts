@@ -1,3 +1,5 @@
+import { TablePageNestedTableKey } from "./tablePage.model";
+
 export enum FilterItemOperator {
   equal = 'equal',
   notEqual = 'notEqual',
@@ -70,4 +72,5 @@ export interface FilterItem {
   value: FilterCondition extends { operator: infer O, value: infer V } 
     ? (O extends FilterItem['operator'] ? V : undefined) 
     : undefined;
+  nestedTableKey?: TablePageNestedTableKey;
 }

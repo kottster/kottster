@@ -1,7 +1,8 @@
 import { Knex } from "knex";
-import { DataSourceAdapterType, FieldInput, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TablePageDeleteRecordInput, TablePageCreateRecordInput, TablePageGetRecordsInput, TablePageUpdateRecordInput, TablePageCreateRecordResult, TablePageGetRecordsResult, TablePageRecord, TablePageUpdateRecordResult, TablePageRecordRelated, defaultTablePageSize, TablePageGetRecordInput, TablePageGetRecordResult, DataSourceTablesConfig, getTableData, TablePageConfig, FilterItem, OneToOneRelationship, OneToManyRelationship, ManyToManyRelationship, Stage, DataSource, DashboardPageGetStatDataInput, DashboardPageGetStatDataResult, DashboardPageConfigStat, DashboardPageConfigCard, DashboardPageGetCardDataResult, DashboardPageGetCardDataInput, getNestedTablePageConfigByTablePageNestedTableKey } from "@kottster/common";
+import { DataSourceAdapterType, FieldInput, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TablePageDeleteRecordInput, TablePageCreateRecordInput, TablePageGetRecordsInput, TablePageUpdateRecordInput, TablePageCreateRecordResult, TablePageGetRecordsResult, TablePageRecord, TablePageUpdateRecordResult, TablePageRecordRelated, defaultTablePageSize, TablePageGetRecordInput, TablePageGetRecordResult, DataSourceTablesConfig, getTableData, TablePageConfig, FilterItem, OneToOneRelationship, OneToManyRelationship, Stage, DataSource, DashboardPageGetStatDataInput, DashboardPageGetStatDataResult, DashboardPageConfigStat, DashboardPageConfigCard, DashboardPageGetCardDataResult, DashboardPageGetCardDataInput, getNestedTablePageConfigByTablePageNestedTableKey } from "@kottster/common";
 import { KottsterApp } from "../core/app";
 import { CachingService } from "../services/caching.service";
+import { Readable } from "stream";
 
 /**
  * The base class for all data source adapters
@@ -15,6 +16,9 @@ export abstract class DataSourceAdapter {
   private cachedFullDatabaseSchemaSchema: RelationalDatabaseSchema | null = null;
   private cachingService = new CachingService();
   protected name: string;
+  
+  // Chunk size for streaming
+  private readonly STREAM_CHUNK_SIZE: number = 50;
 
   constructor(protected client: Knex) {}
 
@@ -150,10 +154,73 @@ export abstract class DataSourceAdapter {
   abstract getSearchBuilder(searchableColumns: string[], searchValue: string): (builder: Knex.QueryBuilder) => void;
 
   /**
-   * Get the filter builder that will apply the filter query
-   * @returns The filter builder
+   * Apply the filters to the query
    */
-  abstract getFilterBuilder(filterItems: FilterItem[]): (builder: Knex.QueryBuilder) => void;
+  applyFilters(
+    query: Knex.QueryBuilder,
+    filterItems: FilterItem[],
+    mainTable: string,
+    databaseSchema: RelationalDatabaseSchema
+  ) {
+    const joinsAdded = new Set<string>();
+    
+    const mainTableSchema = databaseSchema.tables.find(t => t.name === mainTable);
+    if (!mainTableSchema) {
+      throw new Error(`Table schema not found for table: ${mainTable}`);
+    };
+
+    filterItems.forEach(filterItem => {
+      const nestedTableKeyItem = filterItem.nestedTableKey?.[0];
+
+      // TODO: Make so that joins set were containing 
+      // not just table names, but also the join conditions.
+      // It would prevent duplicate joins in more complex scenarios
+      
+      if (nestedTableKeyItem?.childForeignKey) {
+        const mainTableForeignKeyColumn = mainTableSchema.columns.find(
+          col => col.name === nestedTableKeyItem.childForeignKey && 
+                col.foreignKey?.table === nestedTableKeyItem.table
+        );
+  
+        // Handle joins for filters on related tables
+        if (!joinsAdded.has(mainTableForeignKeyColumn?.foreignKey?.table!)) {
+          query.join(
+            mainTableForeignKeyColumn?.foreignKey?.table!,
+            `main.${nestedTableKeyItem.childForeignKey}`,
+            `${mainTableForeignKeyColumn?.foreignKey?.table}.${mainTableForeignKeyColumn?.foreignKey?.column}`
+          );
+          joinsAdded.add(nestedTableKeyItem?.table!);
+        }
+      } else if (nestedTableKeyItem?.parentForeignKey) {
+        const foreignTableSchema = databaseSchema.tables.find(t => t.name === nestedTableKeyItem.table);
+        const foreignTableForeignKeyColumn = foreignTableSchema?.columns.find(
+          col => col.name === nestedTableKeyItem.parentForeignKey && 
+                col.foreignKey?.table === mainTable
+        );
+
+        if (!joinsAdded.has(foreignTableForeignKeyColumn?.foreignKey?.table!)) {
+          query.join(
+            foreignTableSchema?.name!, 
+            `main.${foreignTableForeignKeyColumn?.foreignKey?.column}`, 
+            `${foreignTableSchema?.name!}.${foreignTableForeignKeyColumn?.name}`
+          )
+          joinsAdded.add(nestedTableKeyItem?.table!);
+        }
+      }
+
+      if (nestedTableKeyItem) {
+        this.applyFilterCondition(query, filterItem, `${nestedTableKeyItem?.table}.${filterItem.column}`);
+      } else {
+        this.applyFilterCondition(query, filterItem, `main.${filterItem.column}`);
+      }
+    });
+  }
+
+  abstract applyFilterCondition(
+    builder: Knex.QueryBuilder,
+    filterItem: FilterItem,
+    columnReference: string,
+  ): void;
 
   /**
    * Get the stat data (Dashboard RPC)
@@ -191,38 +258,29 @@ export abstract class DataSourceAdapter {
   }
 
   /**
-   * Get the table records (Table RPC)
-   * @returns The table records
+   * Build the base query for table records
    */
-  async getTableRecords(rootTablePageConfig: TablePageConfig, input: TablePageGetRecordsInput, databaseSchema: RelationalDatabaseSchema): Promise<TablePageGetRecordsResult> {
-    const tablePageConfig = !input.nestedTableKey ? rootTablePageConfig : getNestedTablePageConfigByTablePageNestedTableKey(rootTablePageConfig, input.nestedTableKey);
+  private buildTableRecordsQuery(
+    rootTablePageConfig: TablePageConfig,
+    input: TablePageGetRecordsInput,
+    databaseSchema: RelationalDatabaseSchema,
+    options: { includeCount?: boolean } = {}
+  ) {
+    const tablePageConfig = !input.nestedTableKey 
+      ? rootTablePageConfig 
+      : getNestedTablePageConfigByTablePageNestedTableKey(rootTablePageConfig, input.nestedTableKey);
 
     const { 
       tableSchema, 
       tablePageProcessedConfig,
     } = getTableData({ tablePageConfig, databaseSchema });
-    
-    const customSqlQuery = tablePageConfig.customSqlQuery;
-    const customSqlCountQuery = tablePageConfig.customSqlCountQuery;
-
-    const table = tablePageConfig.table;
-    const limit = ((input.pageSize > 1000 ? 1000 : input.pageSize) || tablePageProcessedConfig.pageSize || defaultTablePageSize);
-    const knexQueryModifier = tablePageConfig.knexQueryModifier as ((knex: Knex.QueryBuilder) => Knex.QueryBuilder) | undefined;
-
-    // If a custom SQL query is provided, execute it and return the result directly
-    if (customSqlQuery) {
-      const records = await this.executeRawQuery(customSqlQuery, {
-        offset: (input.page - 1) * limit,
-        limit: input.pageSize,
-      });
-      const total = customSqlCountQuery ? await this.executeRawQueryForSingleValue(customSqlCountQuery, {}) : undefined;
-
-      return {
-        records: records as TablePageRecord[],
-        total: total !== undefined ? Number(total) : undefined,
-      };
+    if (!tableSchema) {
+      throw new Error(`Table schema for "${tablePageConfig.table}" not found`);
     }
     
+    const table = tablePageConfig.table;
+    const knexQueryModifier = tablePageConfig.knexQueryModifier;
+
     if (!table || !tablePageProcessedConfig.primaryKeyColumn) {
       throw new Error('Table name or primary key column not provided');
     }
@@ -233,81 +291,139 @@ export abstract class DataSourceAdapter {
 
     const tableAlias = 'main';
     let query = this.client(table).from({ [tableAlias]: table });
-    let countQuery = this.client(table).from({ [tableAlias]: table });
+    let countQuery = options.includeCount ? this.client(table).from({ [tableAlias]: table }) : null;
 
-    // Selecting records by a specific foreign record
+    // Foreign record filter
     if (input.getByForeignRecord) {
       const { relationship, recordPrimaryKeyValue } = input.getByForeignRecord;
       if (relationship.relation === 'oneToMany' && relationship.targetTableForeignKeyColumn) {
         query.where(relationship.targetTableForeignKeyColumn, recordPrimaryKeyValue);
-        countQuery.where(relationship.targetTableForeignKeyColumn, recordPrimaryKeyValue);
+        countQuery?.where(relationship.targetTableForeignKeyColumn, recordPrimaryKeyValue);
       }
     }
 
-    // Select specific columns
-    if (tablePageProcessedConfig.selectableColumns && tablePageProcessedConfig.selectableColumns.length > 0) {
-      if (tablePageProcessedConfig.primaryKeyColumn && !tablePageProcessedConfig.selectableColumns.includes(tablePageProcessedConfig.primaryKeyColumn)) {
-        tablePageProcessedConfig.selectableColumns.push(tablePageProcessedConfig.primaryKeyColumn);
-      }
-      query.select(tablePageProcessedConfig.selectableColumns);
-    } else {
-      query.select('*');
-    }
-    countQuery.count({ count: '*' });
-
-    // Add calculated columns to the select statement
+    // Calculated columns
     if (tablePageConfig.calculatedColumns) {
       tablePageConfig.calculatedColumns.forEach(calculatedColumn => {
         query.select(this.client.raw(`(${calculatedColumn.sqlExpression}) as "${calculatedColumn.alias}"`));
       });
     }
 
-    // Apply search
+    // Search
     if (input.search) {
       const searchValue = input.search.trim();
-
-      if (tablePageProcessedConfig.searchableColumns && tablePageProcessedConfig.searchableColumns.length > 0) {
+      if (tablePageProcessedConfig.searchableColumns?.length > 0) {
         query.where(this.getSearchBuilder(tablePageProcessedConfig.searchableColumns, searchValue));
-        countQuery.where(this.getSearchBuilder(tablePageProcessedConfig.searchableColumns, searchValue));
+        countQuery?.where(this.getSearchBuilder(tablePageProcessedConfig.searchableColumns, searchValue));
       }
     }
 
-    // Apply sorting
+    // Sorting
     if (input.sorting) {
-      if (tablePageProcessedConfig.sortableColumns && tablePageProcessedConfig.sortableColumns.includes(input.sorting.column)) {
-        query.orderBy(input.sorting.column, input.sorting.direction);
+      if (tablePageProcessedConfig.sortableColumns?.includes(input.sorting.column)) {
+        query.orderBy(`main.${input.sorting.column}`, input.sorting.direction);
       }
     } else if (tablePageProcessedConfig.defaultSortColumn && tablePageProcessedConfig.defaultSortDirection) {
-      query.orderBy(
-        tablePageProcessedConfig.defaultSortColumn, 
-        tablePageProcessedConfig.defaultSortDirection
-      );
+      query.orderBy(`main.${tablePageProcessedConfig.defaultSortColumn}`, tablePageProcessedConfig.defaultSortDirection);
     }
 
-    // Apply filters
+    // Filters
     if (input.filters?.length) {
-      query.where(this.getFilterBuilder(input.filters));
-      countQuery.where(this.getFilterBuilder(input.filters));
+      this.applyFilters(query, input.filters, tableSchema.name, databaseSchema);
+      if (countQuery) {
+        this.applyFilters(countQuery, input.filters, tableSchema.name, databaseSchema);
+      }
     }
 
-    // Apply Knex query modifier
+    // Apply Knex modifier
     if (knexQueryModifier) {
       query = knexQueryModifier(query);
-      countQuery = knexQueryModifier(countQuery);
+      countQuery = knexQueryModifier ? knexQueryModifier(countQuery) : countQuery;
     }
 
-    // Apply pagination
-    const offset = (input.page - 1) * limit;
-    query
-      .limit(limit)
-      .offset(offset);
+    // Select columns
+    if (tablePageProcessedConfig.selectableColumns?.length > 0) {
+      if (tablePageProcessedConfig.primaryKeyColumn && !tablePageProcessedConfig.selectableColumns.includes(tablePageProcessedConfig.primaryKeyColumn)) {
+        tablePageProcessedConfig.selectableColumns.push(tablePageProcessedConfig.primaryKeyColumn);
+      }
+      query.select(...(new Set(tablePageProcessedConfig.selectableColumns.map(c => `main.${c}`))));
+    } else {
+      query.select('main.*');
+    }
+    countQuery?.count({ count: this.type === DataSourceAdapterType.knex_pg ? 'main.*' : '*' });
 
-    const [records, [{ count }]] = await Promise.all([
+    return { query, countQuery, tablePageConfig, tablePageProcessedConfig, tableSchema, table };
+  }
+
+  /**
+   * Get the table records (Table RPC) - UPDATED
+   */
+  async getTableRecords(
+    rootTablePageConfig: TablePageConfig, 
+    input: TablePageGetRecordsInput, 
+    databaseSchema: RelationalDatabaseSchema
+  ): Promise<TablePageGetRecordsResult> {
+    // Handle custom SQL query
+    if (rootTablePageConfig.fetchStrategy === 'rawSqlQuery' && rootTablePageConfig.customSqlQuery) {
+      const limit = Math.min(input.pageSize || defaultTablePageSize, 1000);
+      const records = await this.executeRawQuery(rootTablePageConfig.customSqlQuery, {
+        offset: (input.page - 1) * limit,
+        limit: input.pageSize,
+      });
+      const total = rootTablePageConfig.customSqlCountQuery 
+        ? await this.executeRawQueryForSingleValue(rootTablePageConfig.customSqlCountQuery, {}) 
+        : undefined;
+
+      return {
+        records: records as TablePageRecord[],
+        total: total !== undefined ? Number(total) : undefined,
+      };
+    }
+
+    // Build queries
+    const { query, countQuery, tablePageProcessedConfig, tableSchema, table } = this.buildTableRecordsQuery(
+      rootTablePageConfig, 
+      input, 
+      databaseSchema, 
+      { includeCount: true }
+    );
+
+    // Apply pagination
+    const limit = Math.min(input.pageSize || tablePageProcessedConfig.pageSize || defaultTablePageSize, 1000);
+    const offset = (input.page - 1) * limit;
+    query.limit(limit).offset(offset);
+
+    // Execute queries
+    const [records, countQueryResult] = await Promise.all([
       query,
       countQuery
     ]);
+    const count = countQueryResult ? countQueryResult[0]?.count : undefined;
 
-    // If excluded columns are provided, remove them from all records
+    // Process all records at once
+    const processedRecords = await this.processTableRecords(
+      records,
+      table,
+      tablePageProcessedConfig,
+      tableSchema
+    );
+
+    return {
+      records: processedRecords,
+      total: Number(count ?? processedRecords.length),
+    };
+  }
+
+  /**
+   * Process records array
+   */
+  private async processTableRecords(
+    records: TablePageRecord[],
+    table: string,
+    tablePageProcessedConfig: TablePageConfig,
+    tableSchema: any
+  ): Promise<any[]> {
+    // Remove excluded columns from all records
     if (this.tablesConfig[table]?.excludedColumns) {
       records.forEach(record => {
         this.tablesConfig[table].excludedColumns?.forEach(column => {
@@ -316,15 +432,126 @@ export abstract class DataSourceAdapter {
       });
     }
 
+    // Enrich with related data
     await this.enrichRecordsWithRelatedData(records, tablePageProcessedConfig);
 
-    const preparedRecords = tableSchema ? await this.prepareRecords(records, tableSchema) : records;
+    // Prepare records according to schema
+    const preparedRecords = tableSchema 
+      ? await this.prepareRecords(records, tableSchema) 
+      : records;
 
-    return {
-      records: preparedRecords,
-      total: Number(count),
-    };
-  };
+    return preparedRecords;
+  }
+
+  /*
+   * Get table records as a stream
+   */
+  async getTableRecordsStream(
+    rootTablePageConfig: TablePageConfig,
+    input: TablePageGetRecordsInput,
+    databaseSchema: RelationalDatabaseSchema
+  ): Promise<Readable> {
+    // Handle custom SQL query
+    if (rootTablePageConfig.fetchStrategy === 'rawSqlQuery' && rootTablePageConfig.customSqlQuery) {
+      let offset = 0;
+      let hasMore = true;
+
+      const stream = new Readable({
+        objectMode: true,
+        read: async () => {
+          if (!hasMore) {
+            stream.push(null);
+            return;
+          }
+
+          try {
+            const records = await this.executeRawQuery(
+              rootTablePageConfig.customSqlQuery!,
+              {
+                offset,
+                limit: this.STREAM_CHUNK_SIZE,
+              }
+            );
+
+            const count = records.length;
+
+            for (const record of records) {
+              stream.push(record);
+            }
+
+            // If query returned fewer than chunk size or returned too many (pagination doesn't apply), end the stream
+            if (count !== this.STREAM_CHUNK_SIZE) {
+              hasMore = false;
+              stream.push(null);
+              return;
+            }
+
+            offset += this.STREAM_CHUNK_SIZE;
+          } catch (error) {
+            stream.destroy(error);
+          }
+        },
+      });
+
+      return stream;
+    }
+
+    // Build queries
+    const { query, tablePageProcessedConfig, tableSchema, table } = this.buildTableRecordsQuery(
+      rootTablePageConfig, 
+      input, 
+      databaseSchema,
+      { includeCount: false }
+    );
+    let offset = 0;
+    let hasMore = true;
+
+    // Create a readable stream that fetches data in chunks
+    const stream = new Readable({
+      objectMode: true,
+      read: async () => {
+        if (!hasMore) {
+          // Finish the stream
+          stream.push(null);
+          return;
+        }
+
+        try {
+          const chunkQuery = query.clone()
+            .limit(this.STREAM_CHUNK_SIZE)
+            .offset(offset);
+
+          const records = await chunkQuery;
+          const processedRecords = await this.processTableRecords(
+            records,
+            table,
+            tablePageProcessedConfig,
+            tableSchema
+          );
+
+          // Check if there are more records to fetch
+          if (records.length < this.STREAM_CHUNK_SIZE) {
+            hasMore = false;
+          }
+
+          for (const record of processedRecords) {
+            stream.push(record);
+          }
+
+          if (records.length < this.STREAM_CHUNK_SIZE) {
+            // Finish the stream
+            stream.push(null);
+          }
+          offset += this.STREAM_CHUNK_SIZE;
+
+        } catch (error) {
+          stream.destroy(error);
+        }
+      }
+    });
+
+    return stream;
+  }
 
   /**
    * Enrich the records with related data for visible relationships in the table
@@ -335,7 +562,6 @@ export abstract class DataSourceAdapter {
     const visibleRelationships = tablePageProcessedConfig.relationships?.filter(r => forForm ? true : !r.hiddenInTable) ?? [];
     const oneToOneRelationships = (visibleRelationships.filter(r => r.relation === 'oneToOne') ?? []) as OneToOneRelationship[];
     const oneToManyRelationships = (visibleRelationships.filter(r => r.relation === 'oneToMany') ?? []) as OneToManyRelationship[];
-    const manyToManyRelationships = (visibleRelationships.filter(r => r.relation === 'manyToMany') ?? []) as ManyToManyRelationship[];
     
     // Preload linked one-to-one records
     if (oneToOneRelationships.length > 0) {
@@ -418,34 +644,18 @@ export abstract class DataSourceAdapter {
     }
 
     // Preload linked one-to-many records
-    if (oneToManyRelationships.length > 0 || manyToManyRelationships.length > 0) {
-      await Promise.all([...oneToManyRelationships, ...manyToManyRelationships].map(async relationship => {
+    if (oneToManyRelationships.length > 0) {
+      await Promise.all(oneToManyRelationships.map(async relationship => {
         const foreignKeyValues = records.map(record => record[tablePageProcessedConfig.primaryKeyColumn!]);
         
         // TODO: replace with a single query
         const foreignTotalRecords: Record<string, number> = {};
-        if (relationship.relation === 'oneToMany' && relationship.targetTableForeignKeyColumn) {
+        if (relationship.targetTableForeignKeyColumn) {
           await Promise.all(
             foreignKeyValues.map(async keyValue => {
               const recordForeignRecords = await this.client(relationship.targetTable)
                 .count({ count: '*' })
                 .where(relationship.targetTableForeignKeyColumn!, keyValue);
-
-              foreignTotalRecords[keyValue] = recordForeignRecords[0]?.count ? Number(recordForeignRecords[0]?.count) : 0;
-            })
-          );
-        }
-
-        // TODO: replace with a single query
-        if (relationship.relation === 'manyToMany' && relationship.junctionTable) {
-          await Promise.all(
-            foreignKeyValues.map(async keyValue => {
-              // Select the count of the records in the target table using the junction table
-              const recordForeignRecords = await this.client(relationship.targetTable)
-                .join(relationship.junctionTable!, `${relationship.targetTable}.${relationship.targetTableKeyColumn}`, `${relationship.junctionTable}.${relationship.junctionTableTargetKeyColumn}`)
-                .join(tablePageProcessedConfig.table!, `${relationship.junctionTable}.${relationship.junctionTableSourceKeyColumn}`, `${tablePageProcessedConfig.table}.${tablePageProcessedConfig.primaryKeyColumn}`)
-                .where(`${tablePageProcessedConfig.table}.${tablePageProcessedConfig.primaryKeyColumn}`, keyValue)
-                .count({ count: `${relationship.targetTable}.${relationship.targetTableKeyColumn}` });
 
               foreignTotalRecords[keyValue] = recordForeignRecords[0]?.count ? Number(recordForeignRecords[0]?.count) : 0;
             })
@@ -578,24 +788,25 @@ export abstract class DataSourceAdapter {
 
     const query = this.client(table);
 
-    // Select specific columns
+    // Select columns
+    let columnsToSelect: string[] = [];
     if (columns?.length && !forPreview) {
-      const combinedColumns = selectableColumns.concat([primaryKeyColumn]) ?? [primaryKeyColumn];
-      query.select(combinedColumns.map(column => `${table}.${column}`));
+      columnsToSelect = selectableColumns.length > 0 ? selectableColumns.concat([primaryKeyColumn]) : [primaryKeyColumn];
     } else {
       if (forPreview) {
         const rootConfigAsParentConfig = !input.nestedTableKey || input.nestedTableKey.length < 2;
         const parentTablePageConfig = rootConfigAsParentConfig ? rootTablePageConfig : getNestedTablePageConfigByTablePageNestedTableKey(rootTablePageConfig, input.nestedTableKey!.slice(0, -1)!);
         const parentTablePageProcessedConfig = getTableData({ tablePageConfig: parentTablePageConfig, databaseSchema }).tablePageProcessedConfig;
         const columnConfig = parentTablePageProcessedConfig.columns?.find(c => c.column === input.nestedTableKey?.[input.nestedTableKey.length - 1]?.parentForeignKey);
-        query.select([primaryKeyColumn, ...(columnConfig?.relationshipPreviewColumns ?? [])].map(column => `${table}.${column}`));
+        columnsToSelect = [primaryKeyColumn, ...(columnConfig?.relationshipPreviewColumns ?? [])];
       } else if (!columns) {
         // If no columns are specified, select all columns
-        query.select('*');
+        columnsToSelect = [`*`];
       } else {
-        query.select(primaryKeyColumn!);
+        columnsToSelect = [primaryKeyColumn!];
       }
     }
+    query.select(...(new Set(columnsToSelect)));
 
     // Apply where conditions
     if (primaryKeyValues.length > 0) {

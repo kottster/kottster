@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.3.1] - 2025-10-18
+
+- Added basePath support
+- Added upgrade-kottster CLI command
+- Added DEV_API_SERVER_URL environment variable support
+- Added visible loader when server is restarting
+- Updated CLI messages for better clarity
+
 ## [3.3.0] - 2025-10-13
 
 - Added support for exporting data in CSV, JSON, and XLSX formats.

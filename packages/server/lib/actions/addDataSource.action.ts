@@ -154,7 +154,7 @@ export class AddDataSource extends DevAction {
   private getCommand(type: DataSourceType, name: string, connectionDetails: InternalApiBody<'addDataSource'>['connectionDetails']) {
     const dataOption = JSON.stringify(connectionDetails).replace(/"/g, '\\"');
 
-    return `npm run dev:add-data-source ${type} -- --skipInstall --name "${name}" --data "${dataOption}"`;
+    return `npm run dev:add-data-source ${type} -- --skipInstall --name "${name}" --data '${dataOption}'`;
   }
 
   private getAdapterClassName(type: DataSourceType) {

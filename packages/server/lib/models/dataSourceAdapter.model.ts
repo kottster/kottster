@@ -107,14 +107,17 @@ export abstract class DataSourceAdapter {
       databaseSchema = this.cachedFullDatabaseSchemaSchema;
     } else {
       databaseSchema = await this.getDatabaseSchemaRaw();
-      
-      // Save the full database schema in the cache
-      this.cachedFullDatabaseSchemaSchema = this.removeExcludedTablesAndColumns(databaseSchema);
-      if (this.app.stage === Stage.development) {
-        this.cachingService.saveValueToCache(slug, this.cachedFullDatabaseSchemaSchema);
-      }
 
-      console.log(`Database schema for "${this.name}" cached`);
+      // Ensure that the cached schema still hasn't been set while we were fetching the schema
+      if (!this.cachedFullDatabaseSchemaSchema) {
+        // Save the full database schema in the cache
+        this.cachedFullDatabaseSchemaSchema = this.removeExcludedTablesAndColumns(databaseSchema);
+        if (this.app.stage === Stage.development) {
+          this.cachingService.saveValueToCache(slug, this.cachedFullDatabaseSchemaSchema);
+        }
+  
+        console.log(`Database schema for "${this.name}" cached`);
+      }
 
       return this.cachedFullDatabaseSchemaSchema;
     }
@@ -451,6 +454,10 @@ export abstract class DataSourceAdapter {
     input: TablePageGetRecordsInput,
     databaseSchema: RelationalDatabaseSchema
   ): Promise<Readable> {
+    if (this.app.readOnlyMode) {
+      throw new Error('The record streaming is disabled in read-only mode');
+    }
+    
     // Handle custom SQL query
     if (rootTablePageConfig.fetchStrategy === 'rawSqlQuery' && rootTablePageConfig.customSqlQuery) {
       let offset = 0;

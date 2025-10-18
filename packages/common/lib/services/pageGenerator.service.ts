@@ -101,10 +101,8 @@ export class PageGeneratorService {
     }
   ];
 
-  static async generateDashboardPage(page: Page & { type: 'dashboard' }, usingTsc: boolean): Promise<PageFileStructure> {
-    const indexFileName = `index.${usingTsc ? 'tsx' : 'jsx'}`;
-    const apiFileName = `api.server.${usingTsc ? 'ts' : 'js'}`;
-    
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  static async generateDashboardPage(page: Page & { type: 'dashboard' }, _: boolean): Promise<PageFileStructure> {
     return {
       pageKey: page.key,
       dirPath: `app/pages/${page.key}`,
@@ -114,34 +112,6 @@ export class PageGeneratorService {
           filePath: `app/pages/${page.key}/page.json`,
           fileContent: JSON.stringify({ ...page, key: undefined } as Omit<PublicPage & { type: 'dashboard' }, 'key'>, null, 2),
         },
-        {
-          fileName: indexFileName,
-          filePath: `app/pages/${page.key}/${indexFileName}`,
-          fileContent: stripIndent(`
-            import { DashboardPage } from '@kottster/react';
-
-            export default () => (
-              <DashboardPage
-                // Add your customizations for the dashboard component here.
-                // Learn more: https://kottster.app/docs/ui/dashboard-page-component
-              />
-            );
-          `)
-        },
-        {
-          fileName: apiFileName,
-          filePath: `app/pages/${page.key}/${apiFileName}`,
-          fileContent: stripIndent(`
-            import { app } from '${usingTsc ? '@' : '../..'}/_server/app';
-
-            const controller = app.defineDashboardController({
-              // Add your customizations for the dashboard here.
-              // Learn more: https://kottster.app/docs/dashboard/configuration/api
-            });
-
-            export default controller;
-          `)
-        }
       ]
     };
   }
@@ -245,7 +215,6 @@ export class PageGeneratorService {
   }
 
   static async generateTablePage(page: Page & { type: 'table' }, usingTsc: boolean): Promise<PageFileStructure> {
-    const indexFileName = `index.${usingTsc ? 'tsx' : 'jsx'}`;
     const apiFileName = `api.server.${usingTsc ? 'ts' : 'js'}`;
 
     return {
@@ -257,51 +226,55 @@ export class PageGeneratorService {
           filePath: `app/pages/${page.key}/page.json`,
           fileContent: JSON.stringify({ ...page, key: undefined } as Omit<PublicPage & { type: 'table' }, 'key'>, null, 2),
         },
-        {
-          fileName: indexFileName,
-          filePath: `app/pages/${page.key}/${indexFileName}`,
-          fileContent: stripIndent(`
-            import { TablePage } from '@kottster/react';
+        
+        // {
+        //   fileName: indexFileName,
+        //   filePath: `app/pages/${page.key}/${indexFileName}`,
+        //   fileContent: stripIndent(`
+        //     import { TablePage } from '@kottster/react';
 
-            export default () => (
-              <TablePage
-                // Add your customizations for the table component here.
-                // Learn more: https://kottster.app/docs/ui/table-page-component
-              />
-            );
-          `)
-        },
-        {
-          fileName: apiFileName,
-          filePath: `app/pages/${page.key}/${apiFileName}`,
-          fileContent: page.config.fetchStrategy === 'customFetch' ? stripIndent(`
-            import { app } from '${usingTsc ? '@' : '../..'}/_server/app';
+        //     export default () => (
+        //       <TablePage
+        //         // Add your customizations for the table component here.
+        //         // Learn more: https://kottster.app/docs/ui/table-page-component
+        //       />
+        //     );
+        //   `)
+        // },
 
-            const controller = app.defineTableController({
-              // Add your customizations for the table here.
-              // Learn more: https://kottster.app/docs/table/configuration/api
-
-              customDataFetcher: async () => {
-                // Fetch data for the table using custom logic
-                return {
-                  records: [],
-                  total: 0
-                };
-              },
-            });
-
-            export default controller;
-          `) : stripIndent(`
-            import { app } from '${usingTsc ? '@' : '../..'}/_server/app';
-
-            const controller = app.defineTableController({
-              // Add your customizations for the table here.
-              // Learn more: https://kottster.app/docs/table/configuration/api
-            });
-
-            export default controller;
-          `)
-        }
+        ...(page.config.fetchStrategy === 'customFetch' ? [
+          {
+            fileName: apiFileName,
+            filePath: `app/pages/${page.key}/${apiFileName}`,
+            fileContent: page.config.fetchStrategy === 'customFetch' ? stripIndent(`
+              import { app } from '${usingTsc ? '@' : '../..'}/_server/app';
+  
+              const controller = app.defineTableController({
+                // Add your customizations for the table here.
+                // Learn more: https://kottster.app/docs/table/configuration/api
+  
+                customDataFetcher: async () => {
+                  // Fetch data for the table using custom logic
+                  return {
+                    records: [],
+                    total: 0
+                  };
+                },
+              });
+  
+              export default controller;
+            `) : stripIndent(`
+              import { app } from '${usingTsc ? '@' : '../..'}/_server/app';
+  
+              const controller = app.defineTableController({
+                // Add your customizations for the table here.
+                // Learn more: https://kottster.app/docs/table/configuration/api
+              });
+  
+              export default controller;
+            `)
+          }
+        ] : [])
       ]
     }
   }

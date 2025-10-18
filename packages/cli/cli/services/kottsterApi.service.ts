@@ -11,7 +11,7 @@ interface NewProjectCommandOptions {
  */
 export class KottsterApi {
   public static get API_BASE_URL() {
-    return 'https://api.kottster.app';
+    return process.env.KOTTSTER_API_BASE_URL || 'https://api.kottster.app';
   }
 
   /**
@@ -75,6 +75,24 @@ export class KottsterApi {
       });
     } catch (error) {
       // eslint-disable-next-line no-empty
+    }
+  }
+
+  /**
+   * Fetch the list of available Kottster versions.
+   * @returns An array of version strings
+   */
+  static async getAvailableVersions(): Promise<string[]> {
+    try {
+      const response = await fetch(`${this.API_BASE_URL}/v3/versions`);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch versions: ${response.statusText}`);
+      }
+      const data = await response.json() as string[];
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching available versions:', error);
+      return [];
     }
   }
 }

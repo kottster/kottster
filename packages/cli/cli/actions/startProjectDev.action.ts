@@ -1,9 +1,10 @@
 import { ChildProcess } from 'child_process';
 import spawn from 'cross-spawn';
-import { checkTsUsage } from '@kottster/common';
+import { checkTsUsage, normalizeAppBasePath, readAppSchema } from '@kottster/common';
 import chalk from 'chalk';
 import fs from 'fs';
 import portfinder from 'portfinder';
+import { VERSION } from '../version';
 
 interface Options {
   debug?: boolean;
@@ -13,6 +14,8 @@ interface Options {
  * Start the project in development mode.
  */
 export async function startProjectDev(options: Options): Promise<void> {
+  const projectDir = process.cwd();
+  const appSchema = readAppSchema();
   const usingTsc = checkTsUsage();
 
   // Look for a free port for the API server
@@ -41,6 +44,8 @@ export async function startProjectDev(options: Options): Promise<void> {
   let serverProcess: ChildProcess | null = null;
   let viteProcess: ChildProcess | null = null;
 
+  const normalizedBasePath = normalizeAppBasePath(appSchema.basePath);
+
   function startServer() {
     const serverEnv = { 
       ...process.env,
@@ -48,24 +53,24 @@ export async function startProjectDev(options: Options): Promise<void> {
       // Set NODE_ENV=development just in case
       NODE_ENV: 'development',
 
+      KOTTSTER_VERSION: VERSION,
+
       // Kottster app uses it's environment variable to determine the stage,
       KOTTSTER_APP_STAGE: 'development',
       VITE_KOTTSTER_APP_STAGE: 'development',
 
-      VITE_PROJECT_DIR: process.cwd(),
+      VITE_KOTTSTER_APP_BASE_PATH: normalizedBasePath,
+      VITE_PROJECT_DIR: projectDir,
       
       DEV_API_SERVER_PORT: devApiServerPortStr,
       VITE_DEV_API_SERVER_PORT: devApiServerPortStr,
       
-      DEV_API_SERVER_URL: devApiServerUrl,
-      VITE_DEV_API_SERVER_URL: devApiServerUrl,
+      DEV_API_SERVER_URL: (process.env.DEV_API_SERVER_URL || devApiServerUrl),
+      VITE_DEV_API_SERVER_URL: (process.env.DEV_API_SERVER_URL || devApiServerUrl),
 
       CACHE_KEY: `${Date.now()}${process.pid.toString()}`,
       
-      DEBUG_MODE: options.debug ? 'true' : undefined,
-      
-      // Disabling CJS warnings for Vite (https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated)
-      VITE_CJS_IGNORE_WARNING: 'true',
+      DEBUG_MODE: (process.env.DEBUG_MODE || options.debug) ? 'true' : undefined,
     };
 
     // Set the environment variables for the current process
@@ -82,7 +87,12 @@ export async function startProjectDev(options: Options): Promise<void> {
     if (!viteProcess) {
       viteProcess = spawn('vite', ['dev'], {
         stdio: 'inherit',
-        env: serverEnv,
+        env: {
+          ...serverEnv,
+
+          // Disabling CJS warnings for Vite (https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated)
+          VITE_CJS_IGNORE_WARNING: 'true'
+        },
       });
       viteProcess.on('error', (error) => {
         console.error(`${chalk.red('Server error:')}`, error);
@@ -109,10 +119,6 @@ export async function startProjectDev(options: Options): Promise<void> {
     );
     serverProcess.on('error', (error) => {
       console.error(`${chalk.red('Server error:')}`, error);
-    });
-    serverProcess.on('spawn', () => {
-      // Show server info on startup
-      console.info(`  ${chalk.green('➜')}  ${chalk.bold('API server')} is running on port ${chalk.bold(serverEnv.DEV_API_SERVER_PORT)}`);
     });
   };
 

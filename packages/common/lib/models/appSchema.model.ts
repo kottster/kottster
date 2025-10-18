@@ -10,6 +10,12 @@ export interface PublicAppSchemaDataSourceConfig {
 export interface AppSchema {
   id: string;
 
+  /**
+   * The base path for the app
+   * @example /admin/
+   */
+  basePath?: string;
+  
   meta: {
     name: string;
     icon: string;
@@ -30,7 +36,7 @@ export interface AppSchema {
 }
 
 // App schema that is passed to the client.
-export interface ClientAppSchema extends Pick<AppSchema, 'id' | 'meta' | 'menuPageOrder' | 'enterpriseHub'> {
+export interface ClientAppSchema extends Pick<AppSchema, 'id' | 'meta' | 'menuPageOrder' | 'enterpriseHub' | 'basePath'> {
   dataSources: PublicAppSchemaDataSourceConfig[];
 
   /**

@@ -71,6 +71,7 @@ export class FileTemplateManager {
       import { defineConfig } from 'vite';
       import { vitePlugin as kottster } from '@kottster/react';
       import react from '@vitejs/plugin-react';
+      import schema from './kottster-app.json';
 
       export default defineConfig({
         root: './app',
@@ -81,10 +82,10 @@ export class FileTemplateManager {
         build: {
           outDir: '../dist/client',
           emptyOutDir: true,
-          chunkSizeWarningLimit: 1000,
+          chunkSizeWarningLimit: 10000,
         },
         plugins: [
-          kottster(),
+          kottster({ schema }),
           react(),
         ],
         resolve: {

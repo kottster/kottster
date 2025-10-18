@@ -46,7 +46,7 @@ export async function collectNewProjectData(askProjectName: boolean = false): Pr
   const result = await inquirer.prompt(questions);
 
   return {
-    projectName: result.projectName || 'my-app',
+    projectName: result.projectName || 'kottster-app',
     packageManager: result.packageManager === 'skip installation' ? 'npm' : result.packageManager,
     skipPackageInstallation: result.packageManager === 'skip installation',
     useTypeScript: result.language === 'TypeScript'

@@ -17,7 +17,6 @@ export interface TablePageGetRecordsInput extends TablePageInputBase {
   };
   filters?: FilterItem[];
   
-  // TODO: Add many-to-many relation support
   getByForeignRecord?: {
     relationship: OneToManyRelationship;
     recordPrimaryKeyValue: string | number;

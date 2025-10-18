@@ -1,6 +1,6 @@
 import { ExtendAppContextFunction } from '../models/appContext.model';
 import { PROJECT_DIR } from '../constants/projectDir';
-import { AppSchema, checkTsUsage, DataSource, Stage, User, RpcActionBody, TablePageGetRecordsInput, TablePageDeleteRecordInput, TablePageUpdateRecordInput, TablePageCreateRecordInput, isSchemaEmpty, schemaPlaceholder, TablePageGetRecordInput, Page, TablePageConfig, TablePageCustomDataFetcherInput, TablePageGetRecordsResult, DashboardPageConfig, DashboardPageGetStatDataInput, DashboardPageGetCardDataInput, DashboardPageGetStatDataResult, DashboardPageGetCardDataResult, checkUserForRoles, IdentityProviderUser, InternalApiSchema, PartialTablePageConfig, transformStringToTablePageNestedTableKey, PartialDashboardPageConfig, DashboardPageConfigStat, DashboardPageConfigCard, TablePageInitiateRecordsExportInput, TablePageInitiateRecordsExportResult, Procedure, ProcedureContext } from '@kottster/common';
+import { AppSchema, checkTsUsage, DataSource, Stage, RpcActionBody, TablePageGetRecordsInput, TablePageDeleteRecordInput, TablePageUpdateRecordInput, TablePageCreateRecordInput, isSchemaEmpty, schemaPlaceholder, TablePageGetRecordInput, Page, TablePageConfig, TablePageCustomDataFetcherInput, TablePageGetRecordsResult, DashboardPageConfig, DashboardPageGetStatDataInput, DashboardPageGetCardDataInput, DashboardPageGetStatDataResult, DashboardPageGetCardDataResult, checkUserForRoles, IdentityProviderUser, InternalApiSchema, PartialTablePageConfig, transformStringToTablePageNestedTableKey, PartialDashboardPageConfig, DashboardPageConfigStat, DashboardPageConfigCard, TablePageInitiateRecordsExportInput, TablePageInitiateRecordsExportResult, Procedure, ProcedureContext, normalizeAppBasePath } from '@kottster/common';
 import { DataSourceRegistry } from './dataSourceRegistry';
 import { ActionService } from '../services/action.service';
 import { DataSourceAdapter } from '../models/dataSourceAdapter.model';
@@ -88,6 +88,7 @@ export class KottsterApp {
   public readonly usingTsc: boolean;
   public readonly readOnlyMode: boolean = false;
   public readonly stage: Stage = process.env.KOTTSTER_APP_STAGE === Stage.development ? Stage.development : Stage.production;
+  public readonly basePath: string = '/';
 
   // TODO: store registry instead of data sources
   public dataSources: DataSource[] = [];
@@ -109,11 +110,6 @@ export class KottsterApp {
     return this.loadedPageConfigs;
   }
 
-  /**
-   * Used to store the token cache
-   */
-  private tokenCache = new Map<string, { data: User; expires: number }>();
-
   public extendContext: ExtendAppContextFunction;
 
   public getSecretKey() {
@@ -133,6 +129,12 @@ export class KottsterApp {
     this.customEnsureValidToken = options.__ensureValidToken;
     this.postAuthMiddleware = options.postAuthMiddleware;
     this.readOnlyMode = options.__readOnlyMode ?? false;
+    
+    // Set base path
+    const basePath = options.schema.basePath;
+    if (basePath) {
+      this.basePath = normalizeAppBasePath(basePath);
+    }
 
     // Set identity provider
     if (!options.identityProvider) {
@@ -727,7 +729,6 @@ export class KottsterApp {
         user,
       };
     } catch (error) {
-      console.error('Error verifying token', error)
       return {
         isTokenValid: false,
         user: null,

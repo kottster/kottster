@@ -11,6 +11,7 @@ import { DataSourceRegistry } from "./dataSourceRegistry";
 import { FileReader } from "../services/fileReader.service";
 import { createDataSource } from "../factories/createDataSource";
 import { WebSocketServer } from 'ws';
+import { VERSION } from "../version";
 
 interface KottsterServerOptions {
   app: KottsterApp;
@@ -57,14 +58,14 @@ export class KottsterServer {
   }
   
   private setupServiceRoutes() {
-    this.expressApp.use('/internal-api', this.app.getInternalApiRoute());
-    this.expressApp.use('/download/:operationId', this.app.getDownloadRoute());
+    this.expressApp.use(`${this.app.basePath}internal-api`, this.app.getInternalApiRoute());
+    this.expressApp.use(`${this.app.basePath}download/:operationId`, this.app.getDownloadRoute());
   }
 
   private setupWebSocketHealthCheck() {
     this.wss = new WebSocketServer({ 
       server: this.server,
-      path: '/ws-health' 
+      path: `${this.app.basePath}ws-health`
     });
 
     this.wss.on('connection', (ws) => {
@@ -150,8 +151,7 @@ export class KottsterServer {
             try {
               const routeModule = await import(apiPath);
               if (routeModule.default && typeof routeModule.default === 'function') {
-                const routePath = `/api/${pageConfig.key}`;
-  
+                const routePath = `${this.app.basePath}api/${pageConfig.key}`;
                 this.expressApp.post(routePath, this.app.createRequestWithPageDataMiddleware(pageConfig), routeModule.default);
               }
             } catch (error) {
@@ -163,11 +163,10 @@ export class KottsterServer {
                 console.warn(`Page "${pageConfig.key}" does not have a data source specified. Skipping route setup.`);
                 continue;
               }
-  
-              this.expressApp.post(`/api/${pageConfig.key}`, this.app.createRequestWithPageDataMiddleware(pageConfig), this.app.defineTableController({}));
+              this.expressApp.post(`${this.app.basePath}api/${pageConfig.key}`, this.app.createRequestWithPageDataMiddleware(pageConfig), this.app.defineTableController({}));
             }
             if (pageConfig.type === 'dashboard') {
-              this.expressApp.post(`/api/${pageConfig.key}`, this.app.createRequestWithPageDataMiddleware(pageConfig), this.app.defineDashboardController(pageConfig.config));
+              this.expressApp.post(`${this.app.basePath}api/${pageConfig.key}`, this.app.createRequestWithPageDataMiddleware(pageConfig), this.app.defineDashboardController(pageConfig.config));
             }
           }
         } catch (error) {
@@ -184,10 +183,14 @@ export class KottsterServer {
 
     const clientDir = path.join(PROJECT_DIR, 'dist', 'client');
     if (fs.existsSync(clientDir)) {
-      this.expressApp.use(express.static(clientDir));
+      if (this.app.basePath === '/') {
+        this.expressApp.use(express.static(clientDir));
+      } else {
+        this.expressApp.use(this.app.basePath, express.static(clientDir));
+      }
       
       // Matching all GET requests
-      this.expressApp.get('/{*splat}', (req, res) => {
+      this.expressApp.get(`${this.app.basePath}{*splat}`, (req, res) => {
         const indexPath = path.join(clientDir, 'index.html');
         if (fs.existsSync(indexPath)) {
           res.sendFile(indexPath);
@@ -225,7 +228,7 @@ export class KottsterServer {
     this.server = this.expressApp.listen(this.port, () => {
       if (this.app.stage === Stage.production) {
         // Show server info on startup
-        console.info(`Server is running on ${chalk.bold(`http://localhost:${this.port}`)} in production mode`);
+        console.log(`\n${chalk.bold.green(`Kottster v${VERSION || '???'}`)} is running on ${chalk.cyan(`http://localhost:${this.port}${this.app.basePath}`)} ${chalk.gray('(production mode)')}\n`);
       }
 
       // Setup websocket health check if in development mode

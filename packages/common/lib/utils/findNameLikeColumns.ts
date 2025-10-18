@@ -44,7 +44,7 @@ export function findNameLikeColumns(columns: RelationalDatabaseSchemaColumn[]): 
     nameLikeColumns = possibleColumns.filter((column) => nameLikeColumns.includes(column.name)).map((column) => column.name);
   }
 
-  nameLikeColumns = nameLikeColumns.slice(0, 2);
+  nameLikeColumns = nameLikeColumns.slice(0, 1);
 
   return nameLikeColumns;
 }

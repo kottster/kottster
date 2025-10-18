@@ -150,9 +150,10 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
       text: 'App Configuration',
       collapsed: true,
       items: [
+        { text: 'Overview', link: '/app-configuration/overview' },
         { text: 'Identity provider', link: '/app-configuration/identity-provider' },
         { text: 'Data sources', link: '/data-sources' },
-        { text: 'Brending', link: '/app-configuration/brendning' },
+        { text: 'Branding', link: '/app-configuration/branding' },
         { text: 'Sidebar', link: '/app-configuration/sidebar' },
       ]
     },

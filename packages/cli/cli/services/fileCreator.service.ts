@@ -156,6 +156,7 @@ export class FileCreator {
       scripts: {
         'dev': 'kottster dev',
         'dev:add-data-source': 'kottster add-data-source',
+        'dev:upgrade-kottster': 'kottster upgrade',
         "build": "vite build && kottster build:server",
         "start": "node dist/server/server.cjs"
       },

@@ -20,11 +20,11 @@ class PackageInstaller {
    * @param packages A map of package names to versions.
    * @returns A promise that resolves when the installation is complete.
    */
-  public installPackages (packages?: Packages): Promise<void> {
+  public installPackages (packages?: Packages, exact?: boolean): Promise<void> {
     return new Promise((resolve, reject) => {
       const startTime = Date.now();
       const spinner = createSpinner(packages ? `Installing packages (${this.PACKAGE_MANAGER}): ${Object.keys(packages).join(', ')}` : 'Installing packages...').start()
-      const command = this.getInstallCommand(packages)
+      const command = this.getInstallCommand(packages, exact);
 
       exec(command, { cwd: this.PROJECT_DIR }, error => {
         const endTime = Date.now();
@@ -42,14 +42,14 @@ class PackageInstaller {
     });
   }
 
-  private getInstallCommand (packages?: Packages): string {
+  private getInstallCommand (packages?: Packages, exact?: boolean): string {
     switch (this.PACKAGE_MANAGER) {
       case 'npm':
-        return packages ? `npm install ${packages ? this.getPackageList(packages) : ''} --save --no-fund --no-audit` : `npm install --no-fund --no-audit`;
+        return packages ? `npm install ${packages ? this.getPackageList(packages) : ''} ${exact ? '--save-exact' : ''} --save --no-fund --no-audit` : `npm install --no-fund --no-audit`;
       case 'yarn':
-        return packages ? `yarn add ${packages ? this.getPackageList(packages) : ''}` : `yarn --silent`;
+        return packages ? `yarn add ${packages ? this.getPackageList(packages) : ''} ${exact ? '--exact' : ''}` : `yarn --silent`;
       case 'pnpm':
-        return packages ? `pnpm add ${packages ? this.getPackageList(packages) : ''}` : `pnpm install`;
+        return packages ? `pnpm add ${packages ? this.getPackageList(packages) : ''} ${exact ? '--save-exact' : ''}` : `pnpm install`;
       default:
         throw new Error('Unsupported package manager')
     }

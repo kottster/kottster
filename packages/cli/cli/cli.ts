@@ -4,6 +4,7 @@ import { newProject } from './actions/newProject.action';
 import { addDataSource } from './actions/addDataSource.action';
 import { startProjectDev } from './actions/startProjectDev.action';
 import { buildServer } from './actions/buildServer.action';
+import { upgradeKottster } from './actions/upgradeKottster.action';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -36,6 +37,13 @@ program
   .allowUnknownOption()
   .action(addDataSource)
 
+// Command to upgrade Kottster core packages
+program
+  .command('upgrade [version]')
+  .description('Upgrade Kottster core packages in the current project')
+  .allowUnknownOption()
+  .action(upgradeKottster)
+  
 // Command to build the server
 program
   .command('build:server')

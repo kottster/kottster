@@ -32,15 +32,16 @@ export async function addDataSource (dataSourceType: DataSourceType, options: Op
   if (!options.skipFileGeneration) {
     let data: Record<string, unknown> = {}; 
     try {
-      data = options.data ? JSON.parse(options.data) : {};
+      // Replace escaped quotes and parse the JSON data
+      data = options.data ? JSON.parse(options.data.replace(/\\"/g, '"')) : {};
     } catch (error) {
-      console.error('Invalid JSON data provided.');
+      console.error('Invalid JSON data provided:', error);
     }
 
     // Add the data source to the project
     const pathToFile = fileCreator.addDataSource(dataSourceType, options.name, data);
 
     console.log(chalk.green(`${dataSourceTypeInfo?.name} data source added successfully.`));
-    console.log(`Update the connection details in the generated file: \n${chalk.blue(pathToFile)}`);
+    console.log(`Update the connection details in the generated file: \n${chalk.cyan(pathToFile)}`);
   }
 }

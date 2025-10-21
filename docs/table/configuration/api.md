@@ -142,11 +142,11 @@ If you only need to change the way columns and fields are rendered, you can use 
 
   Allows users to insert new records into the table. If not specified, the default value is `true`.
 
-- ### allowedRoleIdsToInsert
+- ### allowedRolesToInsert
 
   `string[]`, optional
 
-  Specifies the role IDs that are allowed to insert records into the table. If not specified, all users can insert records unless `allowInsert` is set to `false`.
+  Specifies the role names that are allowed to insert records into the table. If not specified, all users can insert records unless `allowInsert` is set to `false`.
 
 - ### validateRecordBeforeInsert
 
@@ -205,11 +205,11 @@ If you only need to change the way columns and fields are rendered, you can use 
 
   Allows users to update records in the table. If not specified, the default value is `true`.
 
-- ### allowedRoleIdsToUpdate
+- ### allowedRolesToUpdate
 
   `string[]`, optional
 
-  Specifies the role IDs that are allowed to update records in the table. If not specified, all users can update records unless `allowUpdate` is set to `false`.
+  Specifies the role names that are allowed to update records in the table. If not specified, all users can update records unless `allowUpdate` is set to `false`.
 
 - ### validateRecordBeforeUpdate
 
@@ -262,11 +262,11 @@ If you only need to change the way columns and fields are rendered, you can use 
 
   Allows users to delete records from the table. If not specified, the default value is `true`.
 
-- ### allowedRoleIdsToDelete
+- ### allowedRolesToDelete
 
   `string[]`, optional
 
-  Specifies the role IDs that are allowed to delete records from the table. If not specified, all users can delete records unless `allowDelete` is set to `false`.
+  Specifies the role names that are allowed to delete records from the table. If not specified, all users can delete records unless `allowDelete` is set to `false`.
 
 - ### validateRecordBeforeDelete
 

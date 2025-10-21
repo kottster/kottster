@@ -37,6 +37,7 @@ export async function newProject (projectName: string | undefined, options: Opti
     })
     fileCreator.createProject({
       projectName,
+      packageManager: projectSetupData.packageManager,
     })
 
     if (options.skipInstall || projectSetupData.skipPackageInstallation) {

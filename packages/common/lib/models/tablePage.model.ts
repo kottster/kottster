@@ -17,6 +17,8 @@ export interface TablePageGetRecordsInput extends TablePageInputBase {
   };
   filters?: FilterItem[];
   
+  viewKey?: string;
+
   getByForeignRecord?: {
     relationship: OneToManyRelationship;
     recordPrimaryKeyValue: string | number;
@@ -168,6 +170,19 @@ export enum TableFetchStrategy {
   customFetch = 'customFetch',
 }
 
+export enum TablePageConfigViewFilteringStrategy {
+  filter = 'filter',
+  sqlWhereExpression = 'sqlWhereExpression',
+}
+
+export interface TablePageConfigView {
+  key: string;
+  label: string;
+  filteringStrategy: TablePageConfigViewFilteringStrategy;
+  filterItems?: FilterItem[];
+  sqlWhereExpression?: string;
+}
+
 export interface TablePageConfig {
   /** 
    * Set up using no-code 
@@ -191,12 +206,32 @@ export interface TablePageConfig {
   allowUpdate?: boolean;
   allowDelete?: boolean;
 
+  allowedRolesToInsert?: string[];
+  allowedRolesToUpdate?: string[];
+  allowedRolesToDelete?: string[];
+  
+  /**
+   * @deprecated Legacy - to be removed in v4. Use `allowedRolesToInsert` instead
+   */
   allowedRoleIdsToInsert?: string[];
+
+  /**
+   * @deprecated Legacy - to be removed in v4. Use `allowedRolesToUpdate` instead
+   */
   allowedRoleIdsToUpdate?: string[];
+  
+  /**
+   * @deprecated Legacy - to be removed in v4. Use `allowedRolesToDelete` instead
+   */
   allowedRoleIdsToDelete?: string[];
 
   customSqlQuery?: string;
   customSqlCountQuery?: string;
+
+  /** 
+   * Views for pre-defined filters or SQL WHERE clauses
+   */
+  views?: TablePageConfigView[];
 
   /** 
    * Set up using manual configuration

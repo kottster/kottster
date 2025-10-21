@@ -12,8 +12,14 @@ interface BasePage {
   key: string;
   title?: string;
   icon?: string;
-  allowedRoleIds?: string[];
   hideInSidebar?: boolean;
+
+  allowedRoles?: string[];
+
+  /**
+   * @deprecated Legacy - to be removed in v4. Use `allowedRoles` instead.
+   */
+  allowedRoleIds?: string[];
 }
 
 interface TablePage extends BasePage {
@@ -34,15 +40,15 @@ interface CustomPage extends BasePage {
 
 export type Page = TablePage | DashboardPage | CustomPage;
 
-interface PublicTablePage extends Pick<TablePage, 'key' | 'title' | 'icon' | 'type' | 'allowedRoleIds' | 'version' | 'hideInSidebar'> {
+interface PublicTablePage extends Pick<TablePage, 'key' | 'title' | 'icon' | 'type' | 'allowedRoles' | 'allowedRoleIds' | 'version' | 'hideInSidebar'> {
   config: TablePage['config'];
 }
 
-interface PublicDashboardPage extends Pick<DashboardPage, 'key' | 'title' | 'icon' | 'type' | 'allowedRoleIds' | 'version' | 'hideInSidebar'> {
+interface PublicDashboardPage extends Pick<DashboardPage, 'key' | 'title' | 'icon' | 'type' | 'allowedRoles' | 'allowedRoleIds' | 'version' | 'hideInSidebar'> {
   config: DashboardPage['config'];
 }
 
-interface PublicCustomPage extends Pick<CustomPage, 'key' | 'title' | 'icon' | 'type' | 'allowedRoleIds' | 'version' | 'hideInSidebar'> {}
+interface PublicCustomPage extends Pick<CustomPage, 'key' | 'title' | 'icon' | 'type' | 'allowedRoles' | 'allowedRoleIds' | 'version' | 'hideInSidebar'> {}
 
 export type PublicPage = PublicTablePage | PublicDashboardPage | PublicCustomPage;
 

@@ -296,6 +296,29 @@ export abstract class DataSourceAdapter {
     let query = this.client(table).from({ [tableAlias]: table });
     let countQuery = options.includeCount ? this.client(table).from({ [tableAlias]: table }) : null;
 
+    // Filter by view
+    if (input.viewKey) {
+      const view = tablePageConfig.views?.find(v => v.key === input.viewKey);
+      if (view) {
+        if (view.filteringStrategy === 'filter') {
+          if (!view.filterItems || view.filterItems.length === 0) {
+            throw new Error('Filter items not provided for the selected view');
+          }
+          this.applyFilters(query, view.filterItems, tableSchema.name, databaseSchema);
+          if (countQuery) {
+            this.applyFilters(countQuery, view.filterItems, tableSchema.name, databaseSchema);
+          }
+        }
+        if (view.filteringStrategy === 'sqlWhereExpression') {
+          if (!view.sqlWhereExpression) {
+            throw new Error('SQL expression WHERE clause not provided for the selected view');
+          }
+          query.whereRaw(`(${view.sqlWhereExpression})`);
+          countQuery?.whereRaw(`(${view.sqlWhereExpression})`);
+        }
+      }
+    }
+
     // Foreign record filter
     if (input.getByForeignRecord) {
       const { relationship, recordPrimaryKeyValue } = input.getByForeignRecord;

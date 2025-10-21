@@ -1,4 +1,4 @@
-import { IdentityProviderUser, InternalApiBody, InternalApiResult, Page, Stage } from "@kottster/common";
+import { IdentityProviderUserWithRoles, InternalApiBody, InternalApiResult, Page, Stage } from "@kottster/common";
 import { Action } from "../models/action.model";
 import { FileReader } from "../services/fileReader.service";
 
@@ -8,7 +8,7 @@ import { FileReader } from "../services/fileReader.service";
 export class GetApp extends Action {
   private cachedPages: Page[] | null = null;
 
-  public async execute(_: InternalApiBody<'getApp'>, user?: IdentityProviderUser): Promise<InternalApiResult<'getApp'>> {
+  public async execute(_: InternalApiBody<'getApp'>, user?: IdentityProviderUserWithRoles): Promise<InternalApiResult<'getApp'>> {
     
     const roles = user ? await this.app.identityProvider.getRoles() : [];
     const userPermissions = user ? await this.app.identityProvider.getUserPermissions(user.id) : [];
@@ -38,8 +38,7 @@ export class GetApp extends Action {
         }),
         enterpriseHub: appSchema.enterpriseHub,
       },
-
-      user,
+      user: user ? this.app.identityProvider.prepareUserForClient(user) : undefined,
       roles,
       userPermissions,
     };

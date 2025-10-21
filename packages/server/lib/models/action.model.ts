@@ -1,4 +1,4 @@
-import { IdentityProviderUser, IdentityProviderUserPermission, Stage } from "@kottster/common";
+import { IdentityProviderUserPermission, IdentityProviderUserWithRoles, Stage } from "@kottster/common";
 import { KottsterApp } from "../core/app";
 import { Request } from "express";
 
@@ -11,7 +11,7 @@ export abstract class Action {
 
   protected requiredPermissions: (keyof typeof IdentityProviderUserPermission)[] = [];
 
-  public async executeWithCheckings(data: unknown, user?: IdentityProviderUser, req?: Request): Promise<unknown> {
+  public async executeWithCheckings(data: unknown, user?: IdentityProviderUserWithRoles, req?: Request): Promise<unknown> {
     // Ensure that user has the required permissions
     if (this.requiredPermissions.length > 0) {
       if (!user) {
@@ -30,7 +30,7 @@ export abstract class Action {
     return this.execute(data, user, req);
   };
 
-  protected abstract execute(data: unknown, user?: IdentityProviderUser, req?: Request): Promise<unknown>;
+  protected abstract execute(data: unknown, user?: IdentityProviderUserWithRoles, req?: Request): Promise<unknown>;
 }
 
 /**

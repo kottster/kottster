@@ -1,6 +1,6 @@
 import { ExtendAppContextFunction } from '../models/appContext.model';
 import { PROJECT_DIR } from '../constants/projectDir';
-import { AppSchema, checkTsUsage, DataSource, Stage, RpcActionBody, TablePageGetRecordsInput, TablePageDeleteRecordInput, TablePageUpdateRecordInput, TablePageCreateRecordInput, isSchemaEmpty, schemaPlaceholder, TablePageGetRecordInput, Page, TablePageConfig, TablePageCustomDataFetcherInput, TablePageGetRecordsResult, DashboardPageConfig, DashboardPageGetStatDataInput, DashboardPageGetCardDataInput, DashboardPageGetStatDataResult, DashboardPageGetCardDataResult, checkUserForRoles, IdentityProviderUser, InternalApiSchema, PartialTablePageConfig, transformStringToTablePageNestedTableKey, PartialDashboardPageConfig, DashboardPageConfigStat, DashboardPageConfigCard, TablePageInitiateRecordsExportInput, TablePageInitiateRecordsExportResult, Procedure, ProcedureContext, normalizeAppBasePath } from '@kottster/common';
+import { AppSchema, checkTsUsage, DataSource, Stage, RpcActionBody, TablePageGetRecordsInput, TablePageDeleteRecordInput, TablePageUpdateRecordInput, TablePageCreateRecordInput, isSchemaEmpty, schemaPlaceholder, TablePageGetRecordInput, Page, TablePageConfig, TablePageCustomDataFetcherInput, TablePageGetRecordsResult, DashboardPageConfig, DashboardPageGetStatDataInput, DashboardPageGetCardDataInput, DashboardPageGetStatDataResult, DashboardPageGetCardDataResult, checkUserForRoles, InternalApiSchema, PartialTablePageConfig, transformStringToTablePageNestedTableKey, PartialDashboardPageConfig, DashboardPageConfigStat, DashboardPageConfigCard, TablePageInitiateRecordsExportInput, TablePageInitiateRecordsExportResult, Procedure, ProcedureContext, normalizeAppBasePath, IdentityProviderUserWithRoles } from '@kottster/common';
 import { DataSourceRegistry } from './dataSourceRegistry';
 import { ActionService } from '../services/action.service';
 import { DataSourceAdapter } from '../models/dataSourceAdapter.model';
@@ -15,7 +15,7 @@ import dayjs from 'dayjs';
 
 type RequestHandler = (req: Request, res: Response, next: NextFunction) => void;
 
-type PostAuthMiddleware = (user: IdentityProviderUser, request: Request) => void | Promise<void>;
+type PostAuthMiddleware = (user: IdentityProviderUserWithRoles, request: Request) => void | Promise<void>;
 
 export interface KottsterAppOptions {
   schema: AppSchema | Record<string, never>;
@@ -72,7 +72,7 @@ export interface KottsterAppOptions {
 
 interface EnsureValidTokenResponse {
   isTokenValid: boolean;
-  user: IdentityProviderUser | null;
+  user: IdentityProviderUserWithRoles | null;
   invalidTokenErrorMessage?: string;
 }
 
@@ -179,7 +179,7 @@ export class KottsterApp {
     this.extendContext = fn;
   }
 
-  public async executeAction(action: string, data: any, user?: IdentityProviderUser, req?: Request): Promise<any> {
+  public async executeAction(action: string, data: any, user?: IdentityProviderUserWithRoles, req?: Request): Promise<any> {
     return await ActionService.getAction(this, action).executeWithCheckings(data, user, req);
   }
 
@@ -434,7 +434,7 @@ export class KottsterApp {
         let result: any;
 
         try {
-          if (page.allowedRoleIds?.length && !checkUserForRoles(user, page.allowedRoleIds) && this.stage === Stage.production) {
+          if (this.stage === Stage.production && !checkUserForRoles(user.id, user.roles, page.allowedRoles, page.allowedRoleIds)) {
             throw new Error('You do not have access to this page');
           }
 
@@ -603,7 +603,7 @@ export class KottsterApp {
           const dataSourceAdapter = dataSource?.adapter as DataSourceAdapter | undefined;
           const databaseSchema = dataSourceAdapter ? await dataSourceAdapter.getDatabaseSchema() : undefined;
 
-          if (page.allowedRoleIds?.length && !checkUserForRoles(user, page.allowedRoleIds) && this.stage === Stage.production) {
+          if (this.stage === Stage.production && !checkUserForRoles(user.id, user.roles, page.allowedRoles, page.allowedRoleIds)) {
             throw new Error('You do not have access to this page');
           }
 
@@ -639,19 +639,19 @@ export class KottsterApp {
             } else if (body.action === 'table_getRecord') {
               result = await dataSourceAdapter.getOneTableRecord(tablePageConfig, body.input as TablePageGetRecordInput, databaseSchema);
             } else if (body.action === 'table_createRecord') {
-              if (tablePageConfig.allowedRoleIdsToInsert?.length && this.stage === Stage.production && !checkUserForRoles(user, tablePageConfig.allowedRoleIdsToInsert)) {
+              if (this.stage === Stage.production && !checkUserForRoles(user.id, user.roles, tablePageConfig.allowedRolesToInsert, tablePageConfig.allowedRoleIdsToInsert)) {
                 throw new Error('You do not have permission to create records in this table');
               }
 
               result = await dataSourceAdapter.insertTableRecord(tablePageConfig, body.input as TablePageCreateRecordInput, databaseSchema);
             } else if (body.action === 'table_updateRecord') {
-              if (tablePageConfig.allowedRoleIdsToUpdate?.length && this.stage === Stage.production && !checkUserForRoles(user, tablePageConfig.allowedRoleIdsToUpdate)) {
+              if (this.stage === Stage.production && !checkUserForRoles(user.id, user.roles, tablePageConfig.allowedRolesToUpdate, tablePageConfig.allowedRoleIdsToUpdate)) {
                 throw new Error('You do not have permission to update records in this table');
               }
 
               result = await dataSourceAdapter.updateTableRecords(tablePageConfig, body.input as TablePageUpdateRecordInput, databaseSchema);
             } else if (body.action === 'table_deleteRecord') {
-              if (tablePageConfig.allowedRoleIdsToDelete?.length && this.stage === Stage.production && !checkUserForRoles(user, tablePageConfig.allowedRoleIdsToDelete)) {
+              if (this.stage === Stage.production && !checkUserForRoles(user.id, user.roles, tablePageConfig.allowedRolesToDelete, tablePageConfig.allowedRoleIdsToDelete)) {
                 throw new Error('You do not have permission to delete records in this table');
               }
 
@@ -718,15 +718,20 @@ export class KottsterApp {
       }
 
       const user = await this.identityProvider.verifyTokenAndGetUser(token);
+      const userRoles = await this.identityProvider.getUserRoles(user.id);
+      const extendedUser: IdentityProviderUserWithRoles = {
+        ...user,
+        roles: userRoles,
+      };
 
       // If a post-auth middleware is provided, call it
       if (this.postAuthMiddleware) {
-        await this.postAuthMiddleware(user, request);
+        await this.postAuthMiddleware(extendedUser, request);
       }
 
       return {
         isTokenValid: true,
-        user,
+        user: extendedUser,
       };
     } catch (error) {
       return {

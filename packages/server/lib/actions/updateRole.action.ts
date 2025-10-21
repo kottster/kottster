@@ -10,6 +10,8 @@ export class UpdateRole extends Action {
   public async execute({ roleId, role }: InternalApiBody<'updateRole'>): Promise<InternalApiResult<'updateRole'>> {
     const updatedRole = await this.app.identityProvider.updateRole(roleId, role);
 
+    // TODO: When name is changed, update all references in the app configuration
+
     return {
       role: this.app.identityProvider.prepareRoleForClient(updatedRole),
     }

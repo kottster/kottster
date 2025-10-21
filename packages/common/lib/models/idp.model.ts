@@ -22,14 +22,22 @@ export interface IdentityProviderUser {
   updatedAt?: Date | string;
 }
 
+export interface IdentityProviderUserWithRoles extends IdentityProviderUser {
+  roles: IdentityProviderRole[];
+}
+
 export interface ClientIdentityProviderUser extends Omit<
   IdentityProviderUser, 
   'passwordHash' | 'passwordResetToken' | 'twoFactorSecret' | 'jwtTokenSecret'
 > {}
 
+export interface ClientIdentityProviderUserWithRoles extends ClientIdentityProviderUser {
+  roles: IdentityProviderRole[];
+}
+
 export interface IdentityProviderRole {
   id: number | string;
-  name?: string;
+  name: string;
   permissions?: (keyof typeof IdentityProviderUserPermission)[];
   createdAt?: Date | string;
   updatedAt?: Date | string;

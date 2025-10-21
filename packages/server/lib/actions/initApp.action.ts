@@ -1,14 +1,18 @@
-import { generateRandomString, InternalApiBody, InternalApiResult } from "@kottster/common";
+import { generateRandomString, InternalApiBody, InternalApiResult, isSchemaEmpty } from "@kottster/common";
 import { DevAction } from "../models/action.model";
 import { FileWriter } from "../services/fileWriter.service";
 import { randomUUID } from "crypto";
 import { KottsterApi } from "../services/kottsterApi.service";
 
 /**
- * Get the data source info
+ * Initialize the Kottster app
  */
 export class InitApp extends DevAction {
   public async execute({ name, rootUsername, rootPassword }: InternalApiBody<'initApp'>): Promise<InternalApiResult<'initApp'>> {
+    if (!isSchemaEmpty(this.app.schema)) {
+      throw new Error('The app has already been initialized.');
+    }
+
     const fileWrtier = new FileWriter({ usingTsc: this.app.usingTsc });
     const id = randomUUID();
 

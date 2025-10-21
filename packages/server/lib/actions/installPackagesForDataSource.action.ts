@@ -10,6 +10,10 @@ export class InstallPackagesForDataSource extends DevAction {
   public async execute(data: InternalApiBody<'installPackagesForDataSource'>): Promise<InternalApiResult<'installPackagesForDataSource'>> {
     return new Promise((resolve, reject) => {
       const { type } = data;
+      if (!Object.values(DataSourceType).includes(type)) {
+        reject(new Error(`Unsupported data source type: ${type}`));
+        return;
+      }
 
       const command = this.getCommand(type);
       exec(command, { cwd: PROJECT_DIR }, (error) => {

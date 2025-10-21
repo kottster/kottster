@@ -1,4 +1,4 @@
-import { IdentityProviderUser, IdentityProviderRole, IdentityProviderUserPermission, ROOT_USER_ID, ClientIdentityProviderUser, IdentityProviderLoginAttempt, generateRandomString, Stage } from "@kottster/common";
+import { IdentityProviderUser, IdentityProviderRole, IdentityProviderUserPermission, ROOT_USER_ID, ClientIdentityProviderUser, IdentityProviderLoginAttempt, generateRandomString, Stage, IdentityProviderUserWithRoles, ClientIdentityProviderUserWithRoles } from "@kottster/common";
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { SignJWT, jwtVerify } from 'jose';
@@ -79,12 +79,22 @@ export class IdentityProvider {
    * @param user - The user object to prepare
    * @returns The prepared user object
    */
-  public prepareUserForClient(user: IdentityProviderUser): ClientIdentityProviderUser {
-    user.passwordHash = '';
-    user.twoFactorSecret = undefined;
-    user.jwtTokenCheck = undefined;
+  public prepareUserForClient<T extends IdentityProviderUser | IdentityProviderUserWithRoles>(
+    user: T
+  ): T extends IdentityProviderUserWithRoles 
+    ? ClientIdentityProviderUserWithRoles 
+    : ClientIdentityProviderUser {
+    const sanitized = { ...user };
+    
+    sanitized.passwordHash = '';
+    sanitized.twoFactorSecret = undefined;
+    sanitized.jwtTokenCheck = undefined;
 
-    return user as ClientIdentityProviderUser; 
+    if ('roles' in sanitized && Array.isArray(sanitized.roles)) {
+      sanitized.roles = sanitized.roles.map(role => this.app.identityProvider.prepareRoleForClient(role));
+    }
+
+    return sanitized as any;
   }
 
   /**
@@ -740,6 +750,10 @@ export class IdentityProvider {
 
   // Role CRUD methods
   async createRole(role: Omit<IdentityProviderRole, 'id'>): Promise<IdentityProviderRole> {
+    if (role.name && await this.getRoleBy('name', role.name)) {
+      throw new Error(`Name "${role.name}" is already taken`);
+    }
+    
     const roleData: any = {
       name: role.name,
       permissions: role.permissions ? JSON.stringify(role.permissions) : null,

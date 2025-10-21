@@ -5,7 +5,7 @@ import { DataSourceType, PublicDataSource } from "./dataSource.model";
 import { Page, PageFileStructure } from "./page.model";
 import { TablePageConfig } from "./tablePage.model";
 import { Template } from "./template.model";
-import { ClientIdentityProviderRole, ClientIdentityProviderUser, IdentityProviderUserPermission, User } from "./idp.model";
+import { ClientIdentityProviderRole, ClientIdentityProviderUser, ClientIdentityProviderUserWithRoles, IdentityProviderUserPermission, User } from "./idp.model";
 
 export interface InternalApiSchema {
   getUsers: {
@@ -75,7 +75,7 @@ export interface InternalApiSchema {
       schema: ClientAppSchema; 
 
       // Pass only if user is authenticated
-      user?: ClientIdentityProviderUser;
+      user?: ClientIdentityProviderUserWithRoles;
       roles?: ClientIdentityProviderRole[];
       userPermissions?: (keyof typeof IdentityProviderUserPermission | string)[];
     };

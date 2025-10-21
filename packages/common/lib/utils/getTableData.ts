@@ -192,16 +192,23 @@ export function getTableData(params: {
       hiddenRelationships,
   
       allowInsert,
-      allowedRoleIdsToInsert: tablePageConfig?.allowedRoleIdsToInsert,
+      allowedRolesToInsert: tablePageConfig.allowedRolesToInsert,
       allowUpdate,
-      allowedRoleIdsToUpdate: tablePageConfig?.allowedRoleIdsToUpdate,
+      allowedRolesToUpdate: tablePageConfig.allowedRolesToUpdate,
       allowDelete,
-      allowedRoleIdsToDelete: tablePageConfig?.allowedRoleIdsToDelete,
+      allowedRolesToDelete: tablePageConfig.allowedRolesToDelete,
 
       pageSize: tablePageConfig?.pageSize ?? defaultTablePageSize,
 
       defaultSortColumn: tablePageConfig?.defaultSortColumn ?? primaryKeyColumn,
       defaultSortDirection: tablePageConfig?.defaultSortDirection ?? 'desc',
+
+      views: tablePageConfig?.views || [],
+
+      // Deprecated values replaced by allowedRoles fields
+      allowedRoleIdsToInsert: tablePageConfig?.allowedRoleIdsToInsert,
+      allowedRoleIdsToUpdate: tablePageConfig?.allowedRoleIdsToUpdate,
+      allowedRoleIdsToDelete: tablePageConfig?.allowedRoleIdsToDelete,
     },
   };
 }

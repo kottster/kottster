@@ -3,6 +3,7 @@ import fs from 'fs'
 import { dataSourcesTypeData, DataSourceType } from '@kottster/common'
 import { FileTemplateManager } from './fileTemplateManager.service'
 import { VERSION } from '../version'
+import { PackageManager } from '../models/packageManager'
 
 interface FileCreatorOptions {
   projectDir?: string
@@ -11,14 +12,18 @@ interface FileCreatorOptions {
 
 interface CreateProjectOptions {
   projectName: string;
+  packageManager: PackageManager;
 }
 
 interface PackageJsonOptions {
-  name: string
-  type?: 'module'
-  version?: string
-  dependencies?: Record<string, string>
-  devDependencies?: Record<string, string>
+  name: string;
+  type?: 'module';
+  version?: string;
+  dependencies?: Record<string, string>;
+  devDependencies?: Record<string, string>;
+  pnpm?: {
+    onlyBuiltDependencies?: string[];
+  }
 }
 
 type EnvOptions = {
@@ -70,8 +75,11 @@ export class FileCreator {
     this.createPackageJson({ 
       name: options.projectName,
       dependencies: {},
-      devDependencies: this.usingTsc ? this.getTypescriptDependencies() : {}
-    })
+      devDependencies: this.usingTsc ? this.getTypescriptDependencies() : {},
+      pnpm: options.packageManager === 'pnpm' ? {
+        onlyBuiltDependencies: ['better-sqlite3'],
+      } : undefined,
+    });
     this.createGitIgnore()
     
     // Create files
@@ -137,7 +145,7 @@ export class FileCreator {
    * Create a package.json file
    * @param options The package.json content
    */
-  private createPackageJson (options: PackageJsonOptions) {
+  private createPackageJson(options: PackageJsonOptions) {
     const packageJsonPath = path.join(this.projectDir, 'package.json')
 
     const {
@@ -187,6 +195,7 @@ export class FileCreator {
       engines: {
         node: '>=20',
       },
+      pnpm: options.pnpm || undefined,
     }
     const packageJsonContent = JSON.stringify(packageJson, null, 2)
 

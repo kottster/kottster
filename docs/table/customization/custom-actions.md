@@ -2,7 +2,7 @@
 description: "Add custom actions to Kottster table pages to enhance workflows. Learn how to create client-side actions, auto-calling server procedures, and manually calling server procedures."
 ---
 
-# Add actions
+# Custom actions
 
 ![Example of custom actions in Kottster](./example-custom-actions.png)
 
@@ -24,6 +24,7 @@ export default () => (
     customActions={[
       {
         label: 'View Profile',
+        color: 'blue',
         onClick: (record) => {
           // Simple client-side logic
           window.open(`https://example.com/profile/${record.id}`, '_blank');
@@ -130,5 +131,3 @@ export default () => {
 - **Client-side actions**: Navigation, showing/hiding UI elements, client-side data filtering
 - **Auto-calling procedures**: Simple server operations like sending emails, generating reports, or updating status
 - **Manual procedure calls**: When you need confirmation dialogs, data validation, or complex workflows before or after the server call
-
-Learn more about actions and their parameters in the [API reference](../configuration/api.md).

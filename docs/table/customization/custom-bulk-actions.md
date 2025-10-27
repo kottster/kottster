@@ -2,7 +2,7 @@
 description: "Add custom bulk actions to Kottster table pages to enhance workflows. Learn how to create client-side actions, auto-calling server procedures, and manually calling server procedures."
 ---
 
-# Add bulk actions
+# Custom bulk actions
 
 ![Example of custom bulk actions in Kottster](./example-custom-bulk-actions.png)
 
@@ -143,5 +143,3 @@ export default () => {
 - **Client-side bulk actions**: Bulk export, navigation with multiple IDs, client-side data operations
 - **Auto-calling procedures**: Simple bulk server operations like sending emails, generating reports, or updating status for multiple records
 - **Manual procedure calls**: When you need confirmation dialogs, data validation, or complex workflows before or after bulk server operations
-
-Learn more about bulk actions and their parameters in the [API reference](../configuration/api.md).

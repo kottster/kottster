@@ -158,7 +158,7 @@ If you only need to change the way columns and fields are rendered, you can use 
 
   ```typescript [Example]
   validateRecordBeforeInsert: (values) => {
-    if (!record.email.includes('@')) {
+    if (!values.email.includes('@')) {
       throw new Error('Invalid email');
     }
 
@@ -278,7 +278,7 @@ If you only need to change the way columns and fields are rendered, you can use 
 
   ```typescript [Example]
   validateRecordBeforeDelete: (primaryKey) => {
-    if (primaryKey === 'admin') {
+    if (primaryKey === 1) {
       throw new Error('Admin user cannot be deleted');
     }
 
@@ -373,8 +373,6 @@ If you only need to change the way columns and fields are rendered, you can use 
     `number`, optional
 
     Specifies the position of the calculated column in the table. If not specified, the calculated columns will be displayed at the end of the table.
-
-  Learn more: [Adding calculated columns](../customization/add-custom-columns.md#calculated-columns)
 
 - ### nested
 

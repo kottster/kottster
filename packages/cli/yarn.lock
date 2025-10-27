@@ -899,11 +899,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@kottster/common@/Users/arthur/Projects/kottster/kottster/packages/common":
-  version "3.3.2"
-
-"@kottster/common@file:../common":
-  version "3.3.2"
+"@kottster/common@^3.4.1":
+  version "3.4.1"
+  resolved "https://registry.yarnpkg.com/@kottster/common/-/common-3.4.1.tgz#969b0df09f4d8fd82687b7b90c8745aa817d855f"
+  integrity sha512-UEn3uyKlXHWFuxNpLpaz3TStVdJFQj4sWiCsGXr3xT4OX3/o469LaP3ruJtOnn9C8Rckilpn1FJK6ICGmqchTw==
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"

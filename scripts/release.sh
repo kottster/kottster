@@ -19,9 +19,18 @@ if [ -z "$NOTES" ]; then
   exit 1
 fi
 
-git tag -a "v$VERSION" -m "v$VERSION"
-git push origin "v$VERSION"
+# Check if tag already exists
+if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+  echo "⚠️ Tag v$VERSION already exists, skipping tag creation."
+else
+  git tag -a "v$VERSION" -m "v$VERSION"
+  git push origin "v$VERSION"
+fi
 
-gh release create "v$VERSION" --title "v$VERSION" --notes "$NOTES"
-
-echo "✅ GitHub release v$VERSION published."
+# Check if release already exists
+if gh release view "v$VERSION" >/dev/null 2>&1; then
+  echo "⚠️ GitHub release v$VERSION already exists, skipping creation."
+else
+  gh release create "v$VERSION" --title "v$VERSION" --notes "$NOTES"
+  echo "✅ GitHub release v$VERSION published."
+fi

@@ -22,7 +22,7 @@ export function getAllPossibleRelationships(tablePageConfig: TablePageConfig, da
       return;
     }
 
-    const relationshipKey = col.name;
+    const relationshipKey = `${col.foreignKey.table}__p__${col.name}`;
     const relationship: Relationship = {
       key: relationshipKey,
       relation: 'oneToOne',
@@ -45,8 +45,8 @@ export function getAllPossibleRelationships(tablePageConfig: TablePageConfig, da
     if (!targetTableKeyColumn || !targetTableForeignColumn) {
       return;
     }
-    
-    const relationshipKey = `${foreignTable.name}_by_${targetTableForeignColumn.name}`;
+
+    const relationshipKey = `${foreignTable.name}__c__${targetTableForeignColumn.name}`;
     const relationship: Relationship = {
       key: relationshipKey,
       relation: 'oneToMany',

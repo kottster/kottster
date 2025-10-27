@@ -1,25 +1,20 @@
 import { defaultTablePageSize } from "../constants/table";
 import { RelationalDatabaseSchema, RelationalDatabaseSchemaTable } from "../models/databaseSchema.model";
-import { OneToOneRelationship, Relationship } from "../models/relationship.model";
 import { TablePageConfig, TablePageConfigColumn } from "../models/tablePage.model";
 import { findNameLikeColumns } from "./findNameLikeColumns";
-import { getAllPossibleRelationships } from "./getAllPossibleLinked";
+import { getAllPossibleRelationships } from "./getAllPossibleRelationships";
 import { getLabelFromForeignKeyColumnName } from "./getLabelFromForeignKeyColumnName";
-import { sortColumnsByPriority } from "./sortColumnsByPriority";
-import { sortRelationshipsByOrder } from "./sortRelationshipsByOrder";
 import { transformToReadable } from "./transformToReadable";
 
 interface ReturnTypeFinalData extends TablePageConfig {
-  // Columns
   selectableColumns: string[];
   searchableColumns: string[];
   sortableColumns: string[];
   filterableColumns: string[];
   hiddenColumns: string[];
-
-  // Relationships
-  hiddenRelationships: string[];
+  hiddenLinkedRecordsColumns: string[];
 }
+
 interface ReturnType {
   tableSchema?: RelationalDatabaseSchemaTable; 
   tablePageProcessedConfig: ReturnTypeFinalData;
@@ -62,23 +57,6 @@ export function getDefaultColumnData(
   };
 }
 
-/**
- * Get the default relationship data for a given relationship key and relation type.
- * This function generates a default label based on the relation type and target table.
- */
-export function getDefaultRelationshipData(
-  relationshipKey: string,
-  relation: Relationship['relation'], 
-  targetTable: Relationship['targetTable'], 
-  foreignKeyColumn: OneToOneRelationship['foreignKeyColumn']
-): Relationship {
-  return {
-    key: relationshipKey,
-    label: relation === 'oneToOne' ? getLabelFromForeignKeyColumnName(foreignKeyColumn || '') : transformToReadable(targetTable || ''),
-    hiddenInTable: false,
-  };
-}
-
 export function getTableData(params: {
   tablePageConfig?: TablePageConfig;
   databaseSchema?: RelationalDatabaseSchema;
@@ -92,7 +70,7 @@ export function getTableData(params: {
       sortableColumns: [],
       filterableColumns: [],
       hiddenColumns: [],
-      hiddenRelationships: [],
+      hiddenLinkedRecordsColumns: [],
     },
   };
 
@@ -134,13 +112,14 @@ export function getTableData(params: {
       prefix: column?.prefix ?? defaultColumnData.prefix,
       suffix: column?.suffix ?? defaultColumnData.suffix,
       position: column?.position ?? defaultColumnData.position,
+      formFieldPosition: column?.formFieldPosition ?? defaultColumnData.formFieldPosition,
       relationshipPreviewColumns: column?.relationshipPreviewColumns ?? defaultColumnData.relationshipPreviewColumns,
       fieldInput: column?.fieldInput ?? defaultColumnData.fieldInput,
       fieldRequirement: column?.fieldRequirement ?? defaultColumnData.fieldRequirement,
       formFieldSpan: column?.formFieldSpan ?? defaultColumnData.formFieldSpan,
     } as TablePageConfigColumn;
   }) : tablePageConfig.columns;
-  const sortedColumns = tableSchema ? sortColumnsByPriority(tableSchema.columns, columns) : tablePageConfig.columns;
+
   const selectableColumns = columns?.map(c => c.column) ?? [];
   const searchableColumns = columns?.filter(c => c.searchable).map(c => c.column) ?? [];
   const sortableColumns = columns?.filter(c => c.sortable).map(c => c.column) ?? [];
@@ -148,26 +127,25 @@ export function getTableData(params: {
   const hiddenColumns = columns?.filter(c => c.hiddenInTable).map(c => c.column) ?? [];
 
   // Relationships
-  const autoDetectedRelationships = (databaseSchema && getAllPossibleRelationships(tablePageConfig, databaseSchema)) ?? [];
-  const relationships = autoDetectedRelationships.map(r => {
-    const relationship = tablePageConfig?.relationships?.find(i2 => i2.key === r.key);
-    const defaultRelationshipData = getDefaultRelationshipData(
-      r.key,
-      r.relation,
-      r.targetTable,
-      (r as OneToOneRelationship).foreignKeyColumn,
-    );
+  const relationships = (databaseSchema && getAllPossibleRelationships(tablePageConfig, databaseSchema)) ?? [];
+
+  // Linked-records columns
+  const linkedRecordsColumns = relationships ? relationships.filter(r => r.relation === 'oneToMany').map(r => {
+    const linkedRecordsColumn = tablePageConfig?.linkedRecordsColumns?.find(lrc => lrc.relationshipKey === r.key);
+    const defaultLinkedRecordsColumnData = {
+      relationshipKey: r.key,
+      label: r.relation === 'oneToOne' ? getLabelFromForeignKeyColumnName(r.foreignKeyColumn || '') : transformToReadable(r.targetTable || ''),
+      hiddenInTable: false,
+    };
 
     return {
-      ...r,
-      key: r.key,
-      hiddenInTable: relationship?.hiddenInTable ?? defaultRelationshipData.hiddenInTable,
-      label: relationship?.label ?? defaultRelationshipData.label,
-      position: relationship?.position ?? defaultRelationshipData.position,
-    } as Relationship;
-  });
-  const sortedRelationships = sortRelationshipsByOrder(relationships);
-  const hiddenRelationships = relationships?.filter(i => i.hiddenInTable).map(i => i.key) ?? [];
+      relationshipKey: r.key,
+      label: linkedRecordsColumn?.label ?? defaultLinkedRecordsColumnData.label,
+      hiddenInTable: linkedRecordsColumn?.hiddenInTable ?? defaultLinkedRecordsColumnData.hiddenInTable,
+      position: linkedRecordsColumn?.position ?? undefined,
+    };
+  }) : tablePageConfig.linkedRecordsColumns;
+  const hiddenLinkedRecordsColumns = linkedRecordsColumns?.filter(lrc => lrc.hiddenInTable).map(lrc => lrc.relationshipKey) ?? [];
 
   return {
     tableSchema,
@@ -178,18 +156,20 @@ export function getTableData(params: {
       table: tablePageConfig.table,
       primaryKeyColumn,
       
-      columns: sortedColumns,
+      columns,
       
-      calculatedColumns: tablePageConfig.calculatedColumns,
-
       selectableColumns,
       searchableColumns,
       sortableColumns,
       filterableColumns,
       hiddenColumns,
       
-      relationships: sortedRelationships,
-      hiddenRelationships,
+      calculatedColumns: tablePageConfig.calculatedColumns,
+
+      linkedRecordsColumns,
+      hiddenLinkedRecordsColumns,
+      
+      relationships,
   
       allowInsert,
       allowedRolesToInsert: tablePageConfig.allowedRolesToInsert,

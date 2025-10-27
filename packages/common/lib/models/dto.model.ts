@@ -1,4 +1,4 @@
-import { AppSchema, ClientAppSchema } from "./appSchema.model";
+import { ClientAppSchema, MainJsonSchema, SidebarJsonSchema } from "./appSchema.model";
 import { DashboardPageConfig, DashboardPageConfigCard, DashboardPageConfigStat } from "./dashboardPage.model";
 import { RelationalDatabaseSchema } from "./databaseSchema.model";
 import { DataSourceType, PublicDataSource } from "./dataSource.model";
@@ -9,14 +9,14 @@ import { ClientIdentityProviderRole, ClientIdentityProviderUser, ClientIdentityP
 
 export interface InternalApiSchema {
   getUsers: {
-    body: unknown;
+    input: unknown;
     result: {
       users: ClientIdentityProviderUser[];
     };
   };
 
   createUser: {
-    body: {
+    input: {
       user: Pick<ClientIdentityProviderUser, 'firstName' | 'email' | 'avatarUrl' | 'lastName' | 'username' | 'roleIds' | 'temporaryPassword'>;
       password: string;
     };
@@ -26,7 +26,7 @@ export interface InternalApiSchema {
   };
 
   updateUser: {
-    body: {
+    input: {
       userId: ClientIdentityProviderUser['id'];
       user: Partial<ClientIdentityProviderUser>;
       newPassword?: string;
@@ -37,14 +37,14 @@ export interface InternalApiSchema {
   };
 
   deleteUser: {
-    body: {
+    input: {
       userId: ClientIdentityProviderUser['id'];
     };
     result: void;
   };
 
   createRole: {
-    body: {
+    input: {
       role: Pick<ClientIdentityProviderRole, 'name' | 'permissions'>;
     };
     result: {
@@ -53,7 +53,7 @@ export interface InternalApiSchema {
   };
 
   updateRole: {
-    body: {
+    input: {
       roleId: ClientIdentityProviderRole['id'];
       role: Partial<ClientIdentityProviderRole>;
     };
@@ -63,14 +63,14 @@ export interface InternalApiSchema {
   };
 
   deleteRole: {
-    body: {
+    input: {
       roleId: ClientIdentityProviderRole['id'];
     };
     result: void;
   };
 
   getApp: {
-    body: unknown;
+    input: unknown;
     result: {
       schema: ClientAppSchema; 
 
@@ -82,7 +82,7 @@ export interface InternalApiSchema {
   };
 
   generateSql: {
-    body: {
+    input: {
       request: string;
       dataSourceName: string;
       params: (
@@ -105,7 +105,7 @@ export interface InternalApiSchema {
   };
 
   login: {
-    body: {
+    input: {
       usernameOrEmail: string;
       password: string;
       newPassword?: string;
@@ -117,7 +117,7 @@ export interface InternalApiSchema {
   };
 
   changePassword: {
-    body: {
+    input: {
       password: string;
       newPassword: string;
     };
@@ -125,28 +125,28 @@ export interface InternalApiSchema {
   };
 
   logOutAllSessions: {
-    body: {
+    input: {
       password: string;
     };
     result: void;
   };
 
   getDataSources: {
-    body: {
+    input: {
       withSchema?: boolean;
     };
     result: PublicDataSource[];
   };
 
   getDataSourceSchema: {
-    body: {
+    input: {
       name: string;
     };
     result: RelationalDatabaseSchema;
   };
 
   initApp: {
-    body: {
+    input: {
       name: string;
       rootUsername: string;
       rootPassword: string;
@@ -157,7 +157,7 @@ export interface InternalApiSchema {
   };
 
   createPage: {
-    body: {
+    input: {
       key: string;
       file?: PageFileStructure;
     };
@@ -165,7 +165,7 @@ export interface InternalApiSchema {
   };
 
   updatePage: {
-    body: {
+    input: {
       key: string;
       page: Page;
     };
@@ -173,21 +173,22 @@ export interface InternalApiSchema {
   };
 
   deletePage: {
-    body: {
+    input: {
       key: string;
     };
     result: void;
   };
 
   updateAppSchema: {
-    body: {
-      menuPageOrder?: AppSchema['menuPageOrder'];
+    input: {
+      main?: MainJsonSchema;
+      sidebar?: SidebarJsonSchema;
     };
     result: void;
   };
 
   addDataSource: {
-    body: {
+    input: {
       type: DataSourceType;
       replaceDataSource?: string;
       connectionDetails: {
@@ -200,28 +201,30 @@ export interface InternalApiSchema {
   };
 
   removeDataSource: {
-    body: {
+    input: {
       name: string;
     };
     result: void;
   };
 
   installPackagesForDataSource: {
-    body: {
+    input: {
       type: DataSourceType;
     };
     result: void;
   };
 
   getProjectSettings: {
-    body: unknown;
+    input: unknown;
     result: {
       usingTsc: boolean;
+      pagesWithDefinedIndexJsxFile: string[];
+      pagesWithDefinedApiServerJsFile: string[];
     };
   };
 
   getKottsterContext: {
-    body: unknown;
+    input: unknown;
     result: {
       imposedLimits: {
         sqlGeneration?: number;
@@ -234,10 +237,10 @@ export interface InternalApiSchema {
   };
 }
 
-export type InternalApiBody<T extends keyof InternalApiSchema> = InternalApiSchema[T]['body'];
+export type InternalApiInput<T extends keyof InternalApiSchema> = InternalApiSchema[T]['input'];
 export type InternalApiResult<T extends keyof InternalApiSchema> = InternalApiSchema[T]['result'];
 
-enum InternalApiBodyGenerateSqlPurpose {
+enum InternalApiInputGenerateSqlPurpose {
   tableCustomSqlQuery = 'tableCustomSqlQuery',
   tableCustomSqlCountQuery = 'tableCustomSqlCountQuery',
   tableCalculatedColumnSqlQuery = 'tableCalculatedColumnSqlQuery',
@@ -246,21 +249,29 @@ enum InternalApiBodyGenerateSqlPurpose {
   dashboardCardSqlQuery = 'dashboardCardSqlQuery',
 }
 
-export type InternalApiGenerateSqlPurposeKeys = keyof typeof InternalApiBodyGenerateSqlPurpose;
+export type InternalApiGenerateSqlPurposeKeys = keyof typeof InternalApiInputGenerateSqlPurpose;
+
+export type InternalApiResponse<T> = {
+  status: 'success';
+  result: T;
+} | {
+  status: 'error';
+  error: any;
+};
 
 /**
  * @deprecated Use InternalApiSchema instead
  */
 export interface KottsterApiSchema {
   createApp: {
-    body: unknown;
+    input: unknown;
     result: {
       apiToken: string;
     };
   };
 
   sendCliUsageData: {
-    body: {
+    input: {
       command: string;
       stage: string;
       dateTime: string;
@@ -279,7 +290,7 @@ export interface KottsterApiSchema {
   };
   
   getKottsterContext: {
-    body: unknown;
+    input: unknown;
     result: {
       imposedLimits: {
         sqlGeneration?: number;
@@ -292,7 +303,7 @@ export interface KottsterApiSchema {
   };
 
   generateSql: {
-    body: {
+    input: {
       anonymousId?: string;
       request: string;
       dataSource: PublicDataSource;
@@ -321,7 +332,7 @@ export interface KottsterApiSchema {
    * @deprecated Legacy - to be removed later
    */
   getAppData: {
-    body: null;
+    input: null;
     result: {
       schema: ClientAppSchema; 
       roles: ClientIdentityProviderRole[];
@@ -340,7 +351,7 @@ export interface KottsterApiSchema {
    * @deprecated Legacy - to be removed later
    */
   getCurrentUser: {
-    body: null;
+    input: null;
     result: User;
   };
 
@@ -348,7 +359,7 @@ export interface KottsterApiSchema {
    * @deprecated Legacy - to be removed later
    */
   generatePage: {
-    body: {
+    input: {
       usingTsc: boolean;
       page: Page;
       params: (
@@ -366,7 +377,7 @@ export interface KottsterApiSchema {
    * @deprecated Legacy - to be removed later
    */
   getStorageValue: {
-    body: null;
+    input: null;
     result: string;
   }
 
@@ -374,7 +385,7 @@ export interface KottsterApiSchema {
    * @deprecated Legacy - to be removed later
    */
   getTemplates: {
-    body: null;
+    input: null;
     result: Template[];
   },
 
@@ -382,7 +393,7 @@ export interface KottsterApiSchema {
    * @deprecated Legacy - to be removed later
    */
   getSuggestions: {
-    body: {
+    input: {
       userId: string | number;
       numberOfNavItems?: number;
       numberOfDataSources?: number;
@@ -404,6 +415,6 @@ export interface KottsterApiSchema {
   };
 }
 
-export type KottsterApiBody<T extends keyof KottsterApiSchema> = KottsterApiSchema[T]['body'];
+export type KottsterApiInput<T extends keyof KottsterApiSchema> = KottsterApiSchema[T]['input'];
 
 export type KottsterApiResult<T extends keyof KottsterApiSchema> = KottsterApiSchema[T]['result'];

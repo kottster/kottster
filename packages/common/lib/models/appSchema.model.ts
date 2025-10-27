@@ -1,13 +1,10 @@
 import { DataSourceType } from "./dataSource.model";
 import { PublicPage } from "./page.model";
 
-export interface PublicAppSchemaDataSourceConfig {
-  name: string;
-  type: keyof typeof DataSourceType;
-}
-
-// App schema that is stored in the configuration file
-export interface AppSchema {
+/**
+ * JSON-stored schema for the main configuration
+ */
+export interface MainJsonSchema {
   id: string;
 
   /**
@@ -21,11 +18,6 @@ export interface AppSchema {
     icon: string;
   };
 
-  /**
-   * The order of pages in the menu.
-   */
-  menuPageOrder?: string[];
-
   /** 
    * Kottster Enterprise Hub configuration
    * @description Configuration for connecting to the Kottster Enterprise Hub.
@@ -35,9 +27,35 @@ export interface AppSchema {
   };
 }
 
-// App schema that is passed to the client.
-export interface ClientAppSchema extends Pick<AppSchema, 'id' | 'meta' | 'menuPageOrder' | 'enterpriseHub' | 'basePath'> {
-  dataSources: PublicAppSchemaDataSourceConfig[];
+/**
+ * JSON-stored schema for the sidebar configuration
+ */
+export interface SidebarJsonSchema {
+  /**
+   * The order of pages in the menu.
+   */
+  menuPageOrder?: string[];
+}
+
+/**
+ * Unified app schema that includes all configurations
+ */
+export interface AppSchema {
+  main: MainJsonSchema;
+  sidebar: SidebarJsonSchema;
+}
+
+/**
+ * Client-side app schema
+ */
+export interface ClientAppSchema {
+  main: Pick<AppSchema['main'], 'id' | 'meta' | 'enterpriseHub' | 'basePath'>;
+  sidebar: AppSchema['sidebar'];
+
+  dataSources: {
+    name: string;
+    type: keyof typeof DataSourceType;
+  }[];
 
   /**
    * Defined pages in the project.
@@ -47,11 +65,14 @@ export interface ClientAppSchema extends Pick<AppSchema, 'id' | 'meta' | 'menuPa
 
 // When the schema is empty, app will use this placeholder
 export const schemaPlaceholder: AppSchema | ClientAppSchema = {
-  id: '', 
-  meta: {
-    name: 'Kottster App',
-    icon: 'https://web.kottster.app/icon.png',
+  main: {
+    id: '', 
+    meta: {
+      name: 'Kottster App',
+      icon: 'https://web.kottster.app/icon.png',
+    },
   },
   pages: [],
   dataSources: [],
+  sidebar: {},
 };

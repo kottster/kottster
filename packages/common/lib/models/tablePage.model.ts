@@ -1,64 +1,7 @@
 import { FilterItem } from "./filter.model";
 import { FieldInput } from "./fieldInput.model";
-import { OneToManyRelationship, Relationship } from "./relationship.model";
-
-export interface TablePageInputBase {}
-
-export interface TablePageGetRecordsInput extends TablePageInputBase {
-  // Specify table page config only if this is not a root table
-  nestedTableKey?: TablePageNestedTableKey;
-
-  page: number;
-  pageSize: number;
-  search?: string;
-  sorting?: {
-    column: string;
-    direction: 'asc' | 'desc';
-  };
-  filters?: FilterItem[];
-  
-  viewKey?: string;
-
-  getByForeignRecord?: {
-    relationship: OneToManyRelationship;
-    recordPrimaryKeyValue: string | number;
-  };
-}
-
-export interface TablePageInitiateRecordsExportInput extends TablePageGetRecordsInput {
-  format: 'csv' | 'json' | 'xlsx';
-}
-
-export interface TablePageCustomDataFetcherInput extends TablePageInputBase {
-  page: number;
-  pageSize: number;
-  search?: string;
-}
-
-export interface TablePageGetRecordInput extends TablePageInputBase {
-  nestedTableKey?: TablePageNestedTableKey;
-
-  /** For selecting particular records */
-  primaryKeyValues?: any[];
-
-  forPreview?: boolean;
-}
-
-export interface TablePageCreateRecordInput extends TablePageInputBase {
-  nestedTableKey?: TablePageNestedTableKey;
-  values: Record<string, any>;
-}
-
-export interface TablePageUpdateRecordInput extends TablePageInputBase {
-  nestedTableKey?: TablePageNestedTableKey;
-  primaryKeyValue: any;
-  values: Record<string, any>;
-}
-
-export interface TablePageDeleteRecordInput extends TablePageInputBase {
-  nestedTableKey?: TablePageNestedTableKey;
-  primaryKeyValues: any[];
-}
+import { Relationship } from "./relationship.model";
+import { TablePageCustomDataFetcherInput, TablePageGetRecordsResult } from "./tableDto.model";
 
 export enum TablePageFieldRequirement {
   none = 'none',
@@ -100,14 +43,7 @@ export interface TablePageConfigColumn {
    */
   hiddenInForm?: boolean;
 
-  /**
-   * Form input type and its properties
-   */
-  fieldInput?: FieldInput;
-
-  /** 
-   * Validation rule for the column
-   */
+  /** Validation rule for the column */
   fieldRequirement?: string | keyof typeof TablePageFieldRequirement;
 
   /** Grid field span for the field in the form (12, 8, 6, 4) */
@@ -116,8 +52,14 @@ export interface TablePageConfigColumn {
   /** If the column is a foreign key, this specifies the column in the related table to be displayed as the label */
   relationshipPreviewColumns?: string[];
   
-  /** Client-side index of the column in the table */
+  /** Position of the column in the table */
   position?: number;
+
+  /** Position of the field in the form */
+  formFieldPosition?: number;
+
+  /** Field input configuration for the form field */
+  fieldInput?: FieldInput;
 
   /** 
    * Client-side custom render function for the column 
@@ -164,6 +106,13 @@ export interface TablePageConfigCalculatedColumn {
   alias: string;
 }
 
+export interface TablePageConfigLinkedRecordsColumn {
+  relationshipKey: string;
+  label?: string;
+  position?: number;
+  hiddenInTable?: boolean;
+}
+
 export enum TableFetchStrategy {
   databaseTable = 'databaseTable',
   rawSqlQuery = 'rawSqlQuery',
@@ -201,6 +150,7 @@ export interface TablePageConfig {
   
   columns?: TablePageConfigColumn[];
   calculatedColumns?: TablePageConfigCalculatedColumn[];
+  linkedRecordsColumns?: TablePageConfigLinkedRecordsColumn[];
 
   allowInsert?: boolean;
   allowUpdate?: boolean;
@@ -319,11 +269,6 @@ export interface TablePageConfig {
   defaultSortDirection?: 'asc' | 'desc';
 
   /*
-   * Optional object to specify relationships
-   */
-  relationships?: Relationship[];
-
-  /*
    * Knex query modifier (type Knex.Where)
    */
   knexQueryModifier?: any;
@@ -334,6 +279,12 @@ export interface TablePageConfig {
   nested?: {
     [key: string]: TablePageConfig;
   };
+
+  /*
+   * Optional object that keeps track of relationships the table has.
+   * All relationships are detected automatically but can be overridden/extended here
+   */
+  relationships?: Relationship[];
 }
 
 export interface PartialTablePageConfig extends Partial<Omit<TablePageConfig, 'nested'>> {
@@ -348,23 +299,6 @@ export type TablePageRecordRelated = Record<string, {
   records?: TablePageRecord[];
   total?: number;
 }>;
-
-export interface TablePageGetRecordsResult {
-  records?: TablePageRecord[];
-  total?: number;
-}
-
-export interface TablePageGetRecordResult {
-  record: TablePageRecord;
-}
-
-export interface TablePageInitiateRecordsExportResult {
-  operationId: string;
-}
-
-export interface TablePageCreateRecordResult {}
-
-export interface TablePageUpdateRecordResult {}
 
 export interface TablePageNestedTableKeyItem {
   table: string;

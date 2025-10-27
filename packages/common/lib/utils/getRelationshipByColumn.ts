@@ -4,10 +4,13 @@ import { getRelationshipKeyByColumn } from "./getRelationshipKeyByColumn";
 
 /**
  * Find the relationship by column name
- * @param linked The linked object
- * @param column The relationship
+ * @param relationships The relationships array
+ * @param column The column name
  */
-export function getRelationshipByColumn(relationships: TablePageConfig['relationships'] = [], column: string): OneToOneRelationship | undefined {
+export function getRelationshipByColumn(
+  relationships: TablePageConfig['relationships'] = [], 
+  column: string
+): OneToOneRelationship | undefined {
   const relationshipKey = getRelationshipKeyByColumn(relationships, column);
   const relationship = relationships.find(i => i.key === relationshipKey);
   

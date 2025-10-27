@@ -1,6 +1,4 @@
-import { ContentHint } from "./contentHint.model";
 import { FieldInput } from "./fieldInput.model";
-import { JsType } from "./js.model";
 
 export interface RelationalDatabaseSchemaColumn {
   name: string;
@@ -40,4 +38,21 @@ export interface RelationalDatabaseSchemaTable {
 export interface RelationalDatabaseSchema {
   name: string;
   tables: RelationalDatabaseSchemaTable[];
+}
+
+export enum ContentHint {
+  string = 'string',
+  number = 'number',
+  boolean = 'boolean',
+  date = 'date',
+}
+
+export enum JsType {
+  number = 'number',
+  string = 'string',
+  boolean = 'boolean',
+  array = 'array',
+  object = 'object',
+  date = 'date',
+  buffer = 'buffer',
 }

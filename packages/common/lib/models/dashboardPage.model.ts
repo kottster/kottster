@@ -1,16 +1,4 @@
-export interface DashboardPageInputBase {}
-
-export interface DashboardPageGetStatDataInput extends DashboardPageInputBase {
-  statKey: string;
-  periodStartDate?: string;
-  periodEndDate?: string;
-}
-
-export interface DashboardPageGetCardDataInput extends DashboardPageInputBase {
-  cardKey: string;
-  periodStartDate?: string;
-  periodEndDate?: string;
-}
+import { DashboardPageGetCardDataInput, DashboardPageGetCardDataResult, DashboardPageGetStatDataInput, DashboardPageGetStatDataResult } from "./dashboardDto.model";
 
 export enum DashboardPageConfigStatType {
   single = 'single',
@@ -137,13 +125,4 @@ export interface DashboardPageConfig {
 export interface PartialDashboardPageConfig extends Partial<Omit<DashboardPageConfig, 'stats' | 'cards'>> {
   stats?: Partial<DashboardPageConfigStat>[];
   cards?: Partial<DashboardPageConfigCard>[];
-}
-
-export interface DashboardPageGetStatDataResult {
-  value?: number | string;
-  total?: number | string;
-}
-
-export interface DashboardPageGetCardDataResult {
-  items: Record<string, any>[];
 }

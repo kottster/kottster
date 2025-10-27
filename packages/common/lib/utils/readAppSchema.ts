@@ -1,4 +1,4 @@
-import { AppSchema } from '../models/appSchema.model';
+import { AppSchema, MainJsonSchema, SidebarJsonSchema } from '../models/appSchema.model';
 import path from 'path';
 import fs from 'fs';
 
@@ -7,17 +7,37 @@ import fs from 'fs';
  * @returns The parsed AppSchema object
  * @throws If the file does not exist or is not valid JSON
  */
-export function readAppSchema(): AppSchema {
-  const schemaPath = path.join(process.cwd(), 'kottster-app.json');
-  if (!fs.existsSync(schemaPath)) {
-    throw new Error('kottster-app.json not found. Please make sure you are in the project root directory.');
-  }
+export function readAppSchema(projectDir: string, isDevelopment: boolean): AppSchema {
+  let schema: AppSchema;
 
-  const rawSchema = fs.readFileSync(schemaPath, 'utf-8');
-  try {
-    const schema = JSON.parse(rawSchema);
+  // In production, read from the compiled dist/server/app-schema.json
+  if (!isDevelopment) {
+    const unitedSchemaFilePath = path.join(projectDir, 'dist', 'server', 'app-schema.json');
+    if (!fs.existsSync(unitedSchemaFilePath)) {
+      throw new Error(`File not found: ${unitedSchemaFilePath}`);
+    }
+    const content = fs.readFileSync(unitedSchemaFilePath, 'utf8');
+    schema = JSON.parse(content) as AppSchema;
     return schema;
-  } catch (error) {
-    throw new Error('Failed to parse kottster-app.json. Please make sure it is a valid JSON file.');
+  } else {
+    const mainSchemaFilePath = path.join(projectDir, 'kottster-app.json');
+    const sidebarSchemaFilePath = path.join(projectDir, 'app', 'schemas', 'sidebar.json');
+      
+    // Load kottster-app.json
+    if (!fs.existsSync(mainSchemaFilePath)) {
+      throw new Error(`File not found: ${mainSchemaFilePath}`);
+    }
+    const content = fs.readFileSync(mainSchemaFilePath, 'utf8');
+    const main = JSON.parse(content) as MainJsonSchema;
+    schema = { main, sidebar: {} };
+  
+    // Load app/schemas/sidebar.json
+    if (fs.existsSync(sidebarSchemaFilePath)) {
+      const sidebarContent = fs.readFileSync(sidebarSchemaFilePath, 'utf8');
+      const sidebar = JSON.parse(sidebarContent) as SidebarJsonSchema;
+      schema.sidebar = sidebar;
+    }
+  
+    return schema;
   }
 }

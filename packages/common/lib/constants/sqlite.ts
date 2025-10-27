@@ -1,5 +1,4 @@
-import { ContentHint } from "../models/contentHint.model";
-import { JsType } from "../models/js.model";
+import { ContentHint, JsType } from "../models/databaseSchema.model";
 
 export enum SqliteBaseType {
   int = "int",

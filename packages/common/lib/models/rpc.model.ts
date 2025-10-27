@@ -1,36 +1,62 @@
-import { DashboardPageGetCardDataInput, DashboardPageGetStatDataInput } from "./dashboardPage.model";
-import { TablePageDeleteRecordInput, TablePageCreateRecordInput, TablePageGetRecordsInput, TablePageGetRecordInput, TablePageUpdateRecordInput, TablePageInitiateRecordsExportInput } from "./tablePage.model";
+import { DashboardPageGetCardDataInput, DashboardPageGetCardDataResult, DashboardPageGetStatDataInput, DashboardPageGetStatDataResult } from "./dashboardDto.model";
+import { TablePageDeleteRecordInput, TablePageCreateRecordInput, TablePageGetRecordsInput, TablePageGetRecordInput, TablePageUpdateRecordInput, TablePageInitiateRecordsExportInput, TablePageGetRecordsResult, TablePageInitiateRecordsExportResult, TablePageGetRecordResult, TablePageCreateRecordResult, TablePageUpdateRecordResult } from "./tableDto.model";
 
-interface CustomRpcInput {
-  procedure: string;
-  procedureInput: any;
-};
-
-export type RpcActionType = 'custom' | 'table_getRecords' | 'table_initiateRecordsExport' | 'table_getRecord' | 'table_createRecord' | 'table_updateRecord' | 'table_deleteRecord' | 'dashboard_getCardData' | 'dashboard_getStatData';
-
-export interface RpcActionBody<T extends RpcActionType> {
-  [key: string]: any;
-  action: T;
-  input:
-      T extends 'table_getRecords' ? TablePageGetRecordsInput
-    : T extends 'table_initiateRecordsExport' ? TablePageInitiateRecordsExportInput
-    : T extends 'table_getRecord' ? TablePageGetRecordInput
-    : T extends 'table_createRecord' ? TablePageCreateRecordInput
-    : T extends 'table_updateRecord' ? TablePageUpdateRecordInput
-    : T extends 'table_deleteRecord' ? TablePageDeleteRecordInput
-    : T extends 'dashboard_getStatData' ? DashboardPageGetStatDataInput
-    : T extends 'dashboard_getCardData' ? DashboardPageGetCardDataInput
-    : T extends 'custom' ? CustomRpcInput
-    : never;
+export interface RpcSchema {
+  // Table RPC
+  table_getRecords: {
+    input: TablePageGetRecordsInput;
+    result: TablePageGetRecordsResult;
+  };
+  table_initiateRecordsExport: {
+    input: TablePageInitiateRecordsExportInput;
+    result: TablePageInitiateRecordsExportResult;
+  };
+  table_getRecord: {
+    input: TablePageGetRecordInput;
+    result: TablePageGetRecordResult;
+  };
+  table_createRecord: {
+    input: TablePageCreateRecordInput;
+    result: TablePageCreateRecordResult;
+  };
+  table_updateRecord: {
+    input: TablePageUpdateRecordInput;
+    result: TablePageUpdateRecordResult;
+  };
+  table_deleteRecord: {
+    input: TablePageDeleteRecordInput;
+    result: null;
+  };
+  
+  // Dashboard RPC
+  dashboard_getStatData: {
+    input: DashboardPageGetStatDataInput;
+    result: DashboardPageGetStatDataResult;
+  };
+  dashboard_getCardData: {
+    input: DashboardPageGetCardDataInput;
+    result: DashboardPageGetCardDataResult;
+  };
+  
+  // Custom RPC
+  custom: {
+    input: {
+      procedure: string;
+      procedureInput: any;
+    };
+    result: unknown;
+  };
 }
 
-export type ApiResponse = {
-  status: 'success';
-  result: any;
-} | {
-  status: 'error';
-  error: any;
-};
+export type RpcInput<T extends keyof RpcSchema> = RpcSchema[T]['input'];
+export type RpcResult<T extends keyof RpcSchema> = RpcSchema[T]['result'];
+
+export type RpcRequestBody = {
+  [K in keyof RpcSchema]: {
+    action: K;
+    input: RpcInput<K>;
+  }
+}[keyof RpcSchema];
 
 export type RpcResponse = {
   status: 'success';

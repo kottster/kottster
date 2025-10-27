@@ -1,7 +1,7 @@
 import { build } from 'vite';
 import path from 'path';
 import fs from 'fs/promises';
-import { checkTsUsage } from '@kottster/common';
+import { checkTsUsage, readAppSchema } from '@kottster/common';
 
 export async function buildServer(): Promise<void> {
   const usingTsc = checkTsUsage();
@@ -149,6 +149,11 @@ export async function buildServer(): Promise<void> {
       await fs.mkdir(path.dirname(destPath), { recursive: true });
       await fs.copyFile(file, destPath);
     }
+
+    // Save dist/server/app-schema.json
+    const appSchema = readAppSchema(projectDir, true);
+    const schemasOutputPath = path.join(projectDir, 'dist/server/app-schema.json');
+    await fs.writeFile(schemasOutputPath, JSON.stringify(appSchema, null, 2));
 
     console.log('Build completed successfully!');
   } catch (error) {

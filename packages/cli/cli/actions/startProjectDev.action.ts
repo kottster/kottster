@@ -5,6 +5,7 @@ import chalk from 'chalk';
 import fs from 'fs';
 import portfinder from 'portfinder';
 import { VERSION } from '../version';
+import { PostUpgradeMigrationManager } from '../services/postUpgradeMigrationManager.service';
 
 interface Options {
   debug?: boolean;
@@ -15,8 +16,12 @@ interface Options {
  */
 export async function startProjectDev(options: Options): Promise<void> {
   const projectDir = process.cwd();
-  const appSchema = readAppSchema();
+  const appSchema = readAppSchema(projectDir, true);
   const usingTsc = checkTsUsage();
+
+  // Run post-upgrade migrations
+  const postUpgradeMigrationManager = new PostUpgradeMigrationManager(projectDir);
+  await postUpgradeMigrationManager.runMigrations();
 
   // Look for a free port for the API server
   let devApiServerPort: number;
@@ -44,7 +49,7 @@ export async function startProjectDev(options: Options): Promise<void> {
   let serverProcess: ChildProcess | null = null;
   let viteProcess: ChildProcess | null = null;
 
-  const normalizedBasePath = normalizeAppBasePath(appSchema.basePath);
+  const normalizedBasePath = normalizeAppBasePath(appSchema.main.basePath);
 
   function startServer() {
     const serverEnv = { 
@@ -109,7 +114,7 @@ export async function startProjectDev(options: Options): Promise<void> {
         '--include', './app/_server/**/*.js',
         '--include', './app/pages/**/api.server.ts',
         '--include', './app/pages/**/api.server.js',
-        '--include', './app/**/*.json',
+        '--include', './app/_server/data-sources/**/dataSource.json',
         usingTsc ? './app/_server/server.ts' : './app/_server/server.js'
       ],
       {

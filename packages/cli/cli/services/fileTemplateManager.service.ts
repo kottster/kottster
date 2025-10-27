@@ -52,6 +52,7 @@ type TemplateVars = {
   };
   'app/index.html': undefined;
   'app/main.jsx': undefined;
+  'app/schemas/sidebar.json': undefined;
 };
 
 /**
@@ -349,6 +350,12 @@ export class FileTemplateManager {
           <KottsterApp pageEntries={pageEntries} />
         </React.StrictMode>
       );
+    `),
+
+    'app/schemas/sidebar.json': () => stripIndent(`
+      {
+        "menuPageOrder": []
+      }
     `),
   };
 

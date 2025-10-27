@@ -68,6 +68,7 @@ export class FileCreator {
     this.createDir()
     this.createDir('app')
     this.createDir('app/pages')
+    this.createDir('app/schemas')
     this.createDir('app/_server')
     this.createDir('app/_server/data-sources')
 
@@ -88,6 +89,7 @@ export class FileCreator {
     this.createFileFromTemplate('docker-compose.yml', path.join(this.projectDir, 'docker-compose.yml'));
     this.createFileFromTemplate('app/index.html', path.join(this.projectDir, `app/index.html`));
     this.createFileFromTemplate('app/main.jsx', path.join(this.projectDir, `app/main.${this.jsxExt}`));
+    this.createFileFromTemplate('app/schemas/sidebar.json', path.join(this.projectDir, `app/schemas/sidebar.json`));
     this.createFileFromTemplate('app/_server/app.js', path.join(this.projectDir, `app/_server/app.${this.jsExt}`));
     this.createFileFromTemplate('app/_server/server.js', path.join(this.projectDir, `app/_server/server.${this.jsExt}`));
     if (this.usingTsc) {

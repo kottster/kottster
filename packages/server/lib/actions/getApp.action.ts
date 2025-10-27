@@ -1,4 +1,4 @@
-import { IdentityProviderUserWithRoles, InternalApiBody, InternalApiResult, Page, Stage } from "@kottster/common";
+import { IdentityProviderUserWithRoles, InternalApiInput, InternalApiResult, Page, Stage } from "@kottster/common";
 import { Action } from "../models/action.model";
 import { FileReader } from "../services/fileReader.service";
 
@@ -8,7 +8,7 @@ import { FileReader } from "../services/fileReader.service";
 export class GetApp extends Action {
   private cachedPages: Page[] | null = null;
 
-  public async execute(_: InternalApiBody<'getApp'>, user?: IdentityProviderUserWithRoles): Promise<InternalApiResult<'getApp'>> {
+  public async execute(_: InternalApiInput<'getApp'>, user?: IdentityProviderUserWithRoles): Promise<InternalApiResult<'getApp'>> {
     
     const roles = user ? await this.app.identityProvider.getRoles() : [];
     const userPermissions = user ? await this.app.identityProvider.getUserPermissions(user.id) : [];
@@ -24,11 +24,12 @@ export class GetApp extends Action {
     }
     
     // In production, use the in-memory schema; in development, read from file
-    const appSchema = this.app.stage === Stage.production ? this.app.schema : fileReader.readSchemaJsonFile();
+    const appSchema = this.app.stage === Stage.production ? this.app.schema : fileReader.readAppSchema();
 
     return {
       schema: {
-        ...appSchema,
+        main: appSchema.main,
+        sidebar: appSchema.sidebar,
         pages,
         dataSources: this.app.dataSources.map((dataSource) => {
           return {
@@ -36,7 +37,6 @@ export class GetApp extends Action {
             type: dataSource.type,
           };
         }),
-        enterpriseHub: appSchema.enterpriseHub,
       },
       user: user ? this.app.identityProvider.prepareUserForClient(user) : undefined,
       roles,

@@ -1,4 +1,4 @@
-import { generateRandomString, IdentityProviderUserPermission, InternalApiBody, InternalApiResult } from "@kottster/common";
+import { generateRandomString, IdentityProviderUserPermission, InternalApiInput, InternalApiResult } from "@kottster/common";
 import { Action } from "../models/action.model";
 /**
  * Create a user
@@ -6,7 +6,7 @@ import { Action } from "../models/action.model";
 export class CreateUser extends Action {
   protected requiredPermissions = [IdentityProviderUserPermission.manage_users];
 
-  public async execute({ user, password }: InternalApiBody<'createUser'>): Promise<InternalApiResult<'createUser'>> {
+  public async execute({ user, password }: InternalApiInput<'createUser'>): Promise<InternalApiResult<'createUser'>> {
     const newUser = await this.app.identityProvider.createUser({
       ...user,
       jwtTokenCheck: generateRandomString(24),

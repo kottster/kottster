@@ -1,4 +1,4 @@
-import { generateRandomString, InternalApiBody, InternalApiResult, isSchemaEmpty } from "@kottster/common";
+import { generateRandomString, InternalApiInput, InternalApiResult, isAppSchemaEmpty } from "@kottster/common";
 import { DevAction } from "../models/action.model";
 import { FileWriter } from "../services/fileWriter.service";
 import { randomUUID } from "crypto";
@@ -8,8 +8,8 @@ import { KottsterApi } from "../services/kottsterApi.service";
  * Initialize the Kottster app
  */
 export class InitApp extends DevAction {
-  public async execute({ name, rootUsername, rootPassword }: InternalApiBody<'initApp'>): Promise<InternalApiResult<'initApp'>> {
-    if (!isSchemaEmpty(this.app.schema)) {
+  public async execute({ name, rootUsername, rootPassword }: InternalApiInput<'initApp'>): Promise<InternalApiResult<'initApp'>> {
+    if (!isAppSchemaEmpty(this.app.schema)) {
       throw new Error('The app has already been initialized.');
     }
 
@@ -35,13 +35,14 @@ export class InitApp extends DevAction {
       rootUsername, 
       rootPassword
     );
-    fileWrtier.writeSchemaJsonFile({
+    fileWrtier.writeMainSchemaJsonFile({
       id,
       meta: {
         name,
         icon: 'https://web.kottster.app/icon.png',
       },
     });
+    fileWrtier.writeSidebarSchemaJsonFile({});
 
     // We have to build a jwt secret here because identity provider is not yet initialized when this action runs
     const jwtSecret = `${id}${secretKey}${jwtSecretSalt}`;

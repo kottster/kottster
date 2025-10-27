@@ -1,10 +1,10 @@
-import { AppSchema, IdentityProviderUser, KottsterApiBody, KottsterApiResult, Stage } from "@kottster/common";
+import { AppSchema, IdentityProviderUser, KottsterApiInput, KottsterApiResult, Stage } from "@kottster/common";
 import { KottsterApp } from "../core/app";
 import { VERSION } from "../version";
 import crypto from 'crypto';
 
 export class KottsterApi {
-  enterpriseHub: AppSchema['enterpriseHub'];
+  enterpriseHub: AppSchema['main']['enterpriseHub'];
 
   get JWT_TOKEN() {
     return '';
@@ -18,7 +18,7 @@ export class KottsterApi {
     throw new Error('Kottster API returned 401 Unauthorized. Please check your Kottster API token in the config.');
   }
 
-  async generateSql(app: KottsterApp, body: Omit<KottsterApiBody<'generateSql'>, 'anonymousId'>): Promise<KottsterApiResult<'generateSql'> | null> {
+  async generateSql(app: KottsterApp, body: Omit<KottsterApiInput<'generateSql'>, 'anonymousId'>): Promise<KottsterApiResult<'generateSql'> | null> {
     const apiToken = app.getKottsterApiToken();
     if (!apiToken) {
       throw new Error('Kottster API token is not set in the app config.');

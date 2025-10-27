@@ -1,7 +1,7 @@
 import fs from "fs";
 import { PROJECT_DIR } from "../constants/projectDir";
 import path from "path";
-import { PageFileStructure, File, AppSchema, Page, DataSource } from "@kottster/common";
+import { PageFileStructure, File, AppSchema, Page, DataSource, readAppSchema } from "@kottster/common";
 
 /**
  * Service for reading files
@@ -12,14 +12,8 @@ export class FileReader {
   /**
    * Read the schema from the kottster-app.json file
    */
-  public readSchemaJsonFile(): AppSchema {
-    const filePath = `${PROJECT_DIR}/kottster-app.json`;
-    if (!fs.existsSync(filePath)) {
-      throw new Error(`File not found: ${filePath}`);
-    }
-
-    const content = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(content);
+  public readAppSchema(): AppSchema {
+    return readAppSchema(PROJECT_DIR, this.isDevelopment ?? false);
   }
 
   /**
@@ -119,6 +113,10 @@ export class FileReader {
 
       try {
         const pageJsonContent = JSON.parse(pageJsonFile.fileContent) as Omit<Page, 'id'>;
+        if (pageJsonContent.version === '1.0') {
+          console.warn(`Page ${pageFileStructure?.pageKey} has version 1.0 which is not supported anymore. Skipping...`);
+          continue;
+        }
         
         result.push({
           ...pageJsonContent,
@@ -215,5 +213,40 @@ export class FileReader {
     return fs.readdirSync(directory).filter((file) => {
       return fs.statSync(path.join(directory, file)).isDirectory();
     });
+  }
+
+  /**
+   * Check all pages for having index.jsx/tsx and api.server.js/ts files
+   */
+  // TODO: remove?
+  public checkFilesForPages(): {
+    pagesWithDefinedIndexJsxFile: string[];
+    pagesWithDefinedApiServerJsFile: string[];
+  } {
+    const pageDirectories = this.getPagesDirectories();
+    const pagesWithDefinedIndexJsxFile: string[] = [];
+    const pagesWithDefinedApiServerJsFile: string[] = [];
+
+    for (const pageKey of pageDirectories) {
+      const pageFileStructure = this.getPageFileStructure(pageKey);
+      if (!pageFileStructure) {
+        continue;
+      }
+
+      const hasIndexJsxFile = pageFileStructure.files?.some((f) => f.fileName === `index.${this.isDevelopment ? 'tsx' : 'jsx'}`);
+      if (hasIndexJsxFile) {
+        pagesWithDefinedIndexJsxFile.push(pageKey);
+      }
+
+      const hasApiServerJsFile = pageFileStructure.files?.some((f) => f.fileName === `api.server.${this.isDevelopment ? 'ts' : 'js'}`);
+      if (hasApiServerJsFile) {
+        pagesWithDefinedApiServerJsFile.push(pageKey);
+      }
+    }
+
+    return {
+      pagesWithDefinedIndexJsxFile,
+      pagesWithDefinedApiServerJsFile,
+    };
   }
 }

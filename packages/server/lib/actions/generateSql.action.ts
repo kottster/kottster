@@ -1,4 +1,4 @@
-import { InternalApiBody, InternalApiResult } from "@kottster/common";
+import { InternalApiInput, InternalApiResult } from "@kottster/common";
 import { DevAction } from "../models/action.model";
 import { KottsterApi } from "../services/kottsterApi.service";
 import { DataSourceAdapter } from "../models/dataSourceAdapter.model";
@@ -7,7 +7,7 @@ import { DataSourceAdapter } from "../models/dataSourceAdapter.model";
  * Generate SQL query
  */
 export class GenerateSql extends DevAction {
-  public async execute(data: InternalApiBody<'generateSql'>): Promise<InternalApiResult<'generateSql'>> {
+  public async execute(data: InternalApiInput<'generateSql'>): Promise<InternalApiResult<'generateSql'>> {
     const kottsterApi = new KottsterApi();
     
     const kottsterApiToken = this.app.getKottsterApiToken();

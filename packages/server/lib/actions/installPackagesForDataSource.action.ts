@@ -1,5 +1,5 @@
 import { DevAction } from "../models/action.model";
-import { DataSourceType, InternalApiBody, InternalApiResult } from "@kottster/common";
+import { DataSourceType, InternalApiInput, InternalApiResult } from "@kottster/common";
 import { exec } from "child_process";
 import { PROJECT_DIR } from "../constants/projectDir";
 
@@ -7,7 +7,7 @@ import { PROJECT_DIR } from "../constants/projectDir";
  * Install the required packages for the data source
  */
 export class InstallPackagesForDataSource extends DevAction {
-  public async execute(data: InternalApiBody<'installPackagesForDataSource'>): Promise<InternalApiResult<'installPackagesForDataSource'>> {
+  public async execute(data: InternalApiInput<'installPackagesForDataSource'>): Promise<InternalApiResult<'installPackagesForDataSource'>> {
     return new Promise((resolve, reject) => {
       const { type } = data;
       if (!Object.values(DataSourceType).includes(type)) {

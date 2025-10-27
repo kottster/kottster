@@ -1,5 +1,5 @@
 import { Knex } from "knex";
-import { DataSourceAdapterType, FieldInput, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TablePageDeleteRecordInput, TablePageCreateRecordInput, TablePageGetRecordsInput, TablePageUpdateRecordInput, TablePageCreateRecordResult, TablePageGetRecordsResult, TablePageRecord, TablePageUpdateRecordResult, TablePageRecordRelated, defaultTablePageSize, TablePageGetRecordInput, TablePageGetRecordResult, DataSourceTablesConfig, getTableData, TablePageConfig, FilterItem, OneToOneRelationship, OneToManyRelationship, Stage, DataSource, DashboardPageGetStatDataInput, DashboardPageGetStatDataResult, DashboardPageConfigStat, DashboardPageConfigCard, DashboardPageGetCardDataResult, DashboardPageGetCardDataInput, getNestedTablePageConfigByTablePageNestedTableKey } from "@kottster/common";
+import { DataSourceAdapterType, FieldInput, JsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, RelationalDatabaseSchemaTable, TablePageDeleteRecordInput, TablePageCreateRecordInput, TablePageGetRecordsInput, TablePageUpdateRecordInput, TablePageCreateRecordResult, TablePageGetRecordsResult, TablePageRecord, TablePageUpdateRecordResult, TablePageRecordRelated, defaultTablePageSize, TablePageGetRecordInput, TablePageGetRecordResult, DataSourceTablesConfig, getTableData, TablePageConfig, FilterItem, OneToOneRelationship, OneToManyRelationship, Stage, DataSource, DashboardPageGetStatDataInput, DashboardPageGetStatDataResult, DashboardPageConfigStat, DashboardPageConfigCard, DashboardPageGetCardDataResult, DashboardPageGetCardDataInput, getNestedTablePageConfigByTablePageNestedTableKey, findNameLikeColumns, getNestedTablePageConfigByTablePageNestedTableKeyAndVerify } from "@kottster/common";
 import { KottsterApp } from "../core/app";
 import { CachingService } from "../services/caching.service";
 import { Readable } from "stream";
@@ -11,7 +11,7 @@ import { Readable } from "stream";
 export abstract class DataSourceAdapter {
   abstract type: DataSourceAdapterType;
   protected databaseSchemas: string[] = [];
-  private app: KottsterApp;
+  private app?: KottsterApp;
   private tablesConfig: DataSourceTablesConfig;
   private cachedFullDatabaseSchemaSchema: RelationalDatabaseSchema | null = null;
   private cachingService = new CachingService();
@@ -87,9 +87,64 @@ export abstract class DataSourceAdapter {
     };
   }
 
+  public checkIfAnyTableHasPrimaryKey(schema: RelationalDatabaseSchema): boolean {
+    return schema.tables.some(table => table.columns.some(column => column.primaryKey));
+  }
+
   abstract getDatabaseTableCount(): Promise<number>;
 
   abstract getDatabaseSchemaRaw(): Promise<RelationalDatabaseSchema>;
+
+  private sortColumnsByPriority(columns: RelationalDatabaseSchemaColumn[]): RelationalDatabaseSchemaColumn[] {
+    // Get all name-like columns sorted by likeness (not just the first one)
+    const nameLikeColumnsSorted = findNameLikeColumns(columns, columns.length);
+    
+    // Sort by column priority
+    const sortedColumns = [...columns].sort((a, b) => {
+      const getPriority = (column: RelationalDatabaseSchemaColumn): number => {
+        if (column.primaryKey) {
+          return 1;
+        }
+
+        // Check if it's a name-like column
+        const nameIndex = nameLikeColumnsSorted.indexOf(column.name);
+        if (nameIndex !== -1) {
+          // Use 2.x to maintain name-like columns in priority 2 range
+          // but ordered by their likeness (2.0, 2.1, 2.2, etc.)
+          return 2 + (nameIndex * 0.001);
+        }
+
+        if (column.foreignKey) {
+          return 6;
+        }
+
+        if (column.contentHint === 'string') {
+          return 3;
+        }
+
+        if (column.contentHint === 'number' || column.contentHint === 'boolean') {
+          return 4;
+        }
+
+        if (column.contentHint === 'date') {
+          return 5;
+        }
+
+        return 7;
+      };
+
+      const priorityA = getPriority(a);
+      const priorityB = getPriority(b);
+
+      if (priorityA !== priorityB) {
+        return priorityA - priorityB;
+      }
+
+      return a.name.localeCompare(b.name);
+    });
+    
+    return sortedColumns.filter(c => !!c);
+  }
   
   /**
    * Get the database schema
@@ -99,7 +154,7 @@ export abstract class DataSourceAdapter {
     let databaseSchema: RelationalDatabaseSchema;
     const slug = `datasource_${this.name}_schema`;
     
-    if (this.app.stage === Stage.development) {
+    if (this.app?.stage === Stage.development) {
       this.cachedFullDatabaseSchemaSchema = this.cachingService.readValueFromCache(slug) as RelationalDatabaseSchema | null;
     }
   
@@ -108,11 +163,19 @@ export abstract class DataSourceAdapter {
     } else {
       databaseSchema = await this.getDatabaseSchemaRaw();
 
+      // Sort table by name
+      databaseSchema.tables.sort((a, b) => a.name.localeCompare(b.name));
+
+      // Sort columns by priority within each table
+      databaseSchema.tables.forEach(table => {
+        table.columns = this.sortColumnsByPriority(table.columns);
+      });
+
       // Ensure that the cached schema still hasn't been set while we were fetching the schema
       if (!this.cachedFullDatabaseSchemaSchema) {
         // Save the full database schema in the cache
         this.cachedFullDatabaseSchemaSchema = this.removeExcludedTablesAndColumns(databaseSchema);
-        if (this.app.stage === Stage.development) {
+        if (this.app?.stage === Stage.development) {
           this.cachingService.saveValueToCache(slug, this.cachedFullDatabaseSchemaSchema);
         }
   
@@ -271,7 +334,7 @@ export abstract class DataSourceAdapter {
   ) {
     const tablePageConfig = !input.nestedTableKey 
       ? rootTablePageConfig 
-      : getNestedTablePageConfigByTablePageNestedTableKey(rootTablePageConfig, input.nestedTableKey);
+      : getNestedTablePageConfigByTablePageNestedTableKeyAndVerify(rootTablePageConfig, input.nestedTableKey, databaseSchema);
 
     const { 
       tableSchema, 
@@ -477,7 +540,7 @@ export abstract class DataSourceAdapter {
     input: TablePageGetRecordsInput,
     databaseSchema: RelationalDatabaseSchema
   ): Promise<Readable> {
-    if (this.app.readOnlyMode) {
+    if (this.app?.readOnlyMode) {
       throw new Error('The record streaming is disabled in read-only mode');
     }
     
@@ -588,8 +651,8 @@ export abstract class DataSourceAdapter {
    * @returns The enriched records
    */
   private async enrichRecordsWithRelatedData(records: TablePageRecord[], tablePageProcessedConfig: TablePageConfig, forForm?: boolean): Promise<TablePageRecord[]> {
-    // Collect all relationships that are visible in the table
-    const visibleRelationships = tablePageProcessedConfig.relationships?.filter(r => forForm ? true : !r.hiddenInTable) ?? [];
+    // Collect all relationships
+    const visibleRelationships = tablePageProcessedConfig.relationships?.filter(r => forForm ? true : !tablePageProcessedConfig?.linkedRecordsColumns?.some(lrc => lrc.relationshipKey === r.key && lrc.hiddenInTable)) || [];
     const oneToOneRelationships = (visibleRelationships.filter(r => r.relation === 'oneToOne') ?? []) as OneToOneRelationship[];
     const oneToManyRelationships = (visibleRelationships.filter(r => r.relation === 'oneToMany') ?? []) as OneToManyRelationship[];
     
@@ -637,7 +700,10 @@ export abstract class DataSourceAdapter {
           });
         }
 
-        linkedTableRecords[relationship.targetTable] = foreignRecords;
+        linkedTableRecords[relationship.targetTable] = [
+          ...(linkedTableRecords[relationship.targetTable] || []),
+          ...foreignRecords,
+        ];
       }));
 
       // Add linked records to the records
@@ -668,7 +734,6 @@ export abstract class DataSourceAdapter {
               record['_related'][relationshipKey].records.push(linkedRecord);
             }
           });
-          
         });
       });
     }
@@ -885,7 +950,7 @@ export abstract class DataSourceAdapter {
     if (this.tablesConfig[table]?.excluded || this.tablesConfig[table]?.preventInsert) {
       throw new Error(`Access to the table "${table}" is restricted`);
     }
-    if (this.app.readOnlyMode) {
+    if (this.app?.readOnlyMode) {
       throw new Error('Insert operation not permitted in read-only mode');
     }
     if (!tablePageProcessedConfig.allowInsert) {
@@ -942,7 +1007,7 @@ export abstract class DataSourceAdapter {
     if (this.tablesConfig[table]?.excluded || this.tablesConfig[table]?.preventUpdate) {
       throw new Error(`Access to the table "${table}" is restricted`);
     }
-    if (this.app.readOnlyMode) {
+    if (this.app?.readOnlyMode) {
       throw new Error('Update operation not permitted in read-only mode');
     }
     if (!tablePageProcessedConfig.allowUpdate) {
@@ -1005,7 +1070,7 @@ export abstract class DataSourceAdapter {
     if (this.tablesConfig[table]?.excluded || this.tablesConfig[table]?.preventDelete) {
       throw new Error(`Access to the table "${table}" is restricted`);
     }
-    if (this.app.readOnlyMode) {
+    if (this.app?.readOnlyMode) {
       throw new Error('Delete operation not permitted in read-only mode');
     }
     if (!tablePageProcessedConfig.allowDelete) {

@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { AppSchema, Page, PageFileStructure, stripIndent } from "@kottster/common";
+import { MainJsonSchema, Page, PageFileStructure, SidebarJsonSchema, stripIndent } from "@kottster/common";
 import { rimrafSync } from 'rimraf';
 import { PROJECT_DIR } from "../constants/projectDir";
 
@@ -23,7 +23,7 @@ export class FileWriter {
    * @param pageKey The page ID
    * @param pageConfig The page config to update
    */
-  public updatePageConfig(pageKey: string, pageConfig: Page): void {
+  public updatePageConfig(pageKey: string, pageConfig: Page) {
     const filePath = `${PROJECT_DIR}/app/pages/${pageKey}/page.json`;
 
     // Create directory if it doesn't exist
@@ -111,9 +111,20 @@ export class FileWriter {
    * Write the schema to the kottster-app.json file
    * @param schema The schema to write
    */
-  public writeSchemaJsonFile(schema: AppSchema): void {
+  public writeMainSchemaJsonFile(schema: MainJsonSchema): void {
     const content = JSON.stringify(schema, null, 2);
     const filePath = `${PROJECT_DIR}/kottster-app.json`;
+
+    this.writeFile(filePath, content);
+  }
+
+  /**
+   * Write the sidebar schema to the app/schemas/sidebar.json file
+   * @param sidebarSchema The sidebar schema to write
+   */
+  public writeSidebarSchemaJsonFile(sidebarSchema: SidebarJsonSchema): void {
+    const content = JSON.stringify(sidebarSchema, null, 2);
+    const filePath = `${PROJECT_DIR}/app/schemas/sidebar.json`;
 
     this.writeFile(filePath, content);
   }

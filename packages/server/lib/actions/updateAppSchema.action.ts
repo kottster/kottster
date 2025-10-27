@@ -1,4 +1,4 @@
-import { InternalApiBody, InternalApiResult, Stage } from "@kottster/common";
+import { InternalApiInput, InternalApiResult, Stage } from "@kottster/common";
 import { DevAction } from "../models/action.model";
 import { FileReader } from "../services/fileReader.service";
 import { FileWriter } from "../services/fileWriter.service";
@@ -7,18 +7,17 @@ import { FileWriter } from "../services/fileWriter.service";
  * Update the app schema with the provided data.
  */
 export class UpdateAppSchema extends DevAction {
-  public async execute(data: InternalApiBody<'updateAppSchema'>): Promise<InternalApiResult<'updateAppSchema'>> {
+  public async execute(data: InternalApiInput<'updateAppSchema'>): Promise<InternalApiResult<'updateAppSchema'>> {
     const fileWriter = new FileWriter({ usingTsc: this.app.usingTsc });
     const fileReader = new FileReader(this.app.stage === Stage.development);
-    const { menuPageOrder } = data;
-    const appSchema = fileReader.readSchemaJsonFile();
+    const { sidebar } = data;
+    const appSchema = fileReader.readAppSchema();
 
-    // Update data in the app schema
-    if (menuPageOrder) {
-      appSchema.menuPageOrder = menuPageOrder;
+    if (sidebar) {
+      fileWriter.writeSidebarSchemaJsonFile({
+        ...appSchema.sidebar,
+        ...sidebar
+      });
     }
-
-    // Update pages in the app schema
-    fileWriter.writeSchemaJsonFile(appSchema);
   }
 }

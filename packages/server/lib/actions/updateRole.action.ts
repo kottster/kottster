@@ -1,4 +1,4 @@
-import { IdentityProviderUserPermission, InternalApiBody, InternalApiResult } from "@kottster/common";
+import { IdentityProviderUserPermission, InternalApiInput, InternalApiResult } from "@kottster/common";
 import { Action } from "../models/action.model";
 
 /**
@@ -7,7 +7,7 @@ import { Action } from "../models/action.model";
 export class UpdateRole extends Action {
   protected requiredPermissions = [IdentityProviderUserPermission.manage_users];
 
-  public async execute({ roleId, role }: InternalApiBody<'updateRole'>): Promise<InternalApiResult<'updateRole'>> {
+  public async execute({ roleId, role }: InternalApiInput<'updateRole'>): Promise<InternalApiResult<'updateRole'>> {
     const updatedRole = await this.app.identityProvider.updateRole(roleId, role);
 
     // TODO: When name is changed, update all references in the app configuration

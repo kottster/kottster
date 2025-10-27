@@ -1,4 +1,4 @@
-import { IdentityProviderUserPermission, InternalApiBody, InternalApiResult } from "@kottster/common";
+import { IdentityProviderUserPermission, InternalApiInput, InternalApiResult } from "@kottster/common";
 import { Action } from "../models/action.model";
 
 /**
@@ -7,7 +7,7 @@ import { Action } from "../models/action.model";
 export class CreateRole extends Action {
   protected requiredPermissions = [IdentityProviderUserPermission.manage_users];
 
-  public async execute({ role }: InternalApiBody<'createRole'>): Promise<InternalApiResult<'createRole'>> {
+  public async execute({ role }: InternalApiInput<'createRole'>): Promise<InternalApiResult<'createRole'>> {
     const newRole = await this.app.identityProvider.createRole(role);
     
     return {

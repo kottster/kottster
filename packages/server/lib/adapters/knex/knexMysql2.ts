@@ -1,7 +1,6 @@
-import { DataSourceAdapterType, FilterItem, FilterItemOperator, FieldInput, isIsoString, JsType, MysqlBaseType, mysqlBaseTypesByContentHint, mysqlBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, removeTrailingZeros } from "@kottster/common";
+import { DataSourceAdapterType, FilterItem, FilterItemOperator, FieldInput, isIsoString, JsType, MysqlBaseType, mysqlBaseTypesByContentHint, mysqlBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, removeTrailingZeros, ContentHint } from "@kottster/common";
 import { DataSourceAdapter } from "../../models/dataSourceAdapter.model";
 import { Knex } from "knex";
-import { ContentHint } from "@kottster/common/dist/models/contentHint.model";
 
 export class KnexMysql2 extends DataSourceAdapter {
   type = DataSourceAdapterType.knex_mysql2;

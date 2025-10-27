@@ -1,7 +1,6 @@
-import { DataSourceAdapterType, FilterItem, FilterItemOperator, FieldInput, isIsoString, JsType, mssqlBaseTypesByContentHint, mssqlBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, removeTrailingZeros, MssqlBaseType } from "@kottster/common";
+import { DataSourceAdapterType, FilterItem, FilterItemOperator, FieldInput, isIsoString, JsType, mssqlBaseTypesByContentHint, mssqlBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, removeTrailingZeros, MssqlBaseType, ContentHint } from "@kottster/common";
 import { DataSourceAdapter } from "../../models/dataSourceAdapter.model";
 import { Knex } from "knex";
-import { ContentHint } from "@kottster/common/dist/models/contentHint.model";
 
 export class KnexTedious extends DataSourceAdapter {
   type = DataSourceAdapterType.knex_tedious;

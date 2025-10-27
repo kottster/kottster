@@ -1,6 +1,6 @@
 import { ExtendAppContextFunction } from '../models/appContext.model';
 import { PROJECT_DIR } from '../constants/projectDir';
-import { AppSchema, checkTsUsage, DataSource, Stage, RpcActionBody, TablePageGetRecordsInput, TablePageDeleteRecordInput, TablePageUpdateRecordInput, TablePageCreateRecordInput, isSchemaEmpty, schemaPlaceholder, TablePageGetRecordInput, Page, TablePageConfig, TablePageCustomDataFetcherInput, TablePageGetRecordsResult, DashboardPageConfig, DashboardPageGetStatDataInput, DashboardPageGetCardDataInput, DashboardPageGetStatDataResult, DashboardPageGetCardDataResult, checkUserForRoles, InternalApiSchema, PartialTablePageConfig, transformStringToTablePageNestedTableKey, PartialDashboardPageConfig, DashboardPageConfigStat, DashboardPageConfigCard, TablePageInitiateRecordsExportInput, TablePageInitiateRecordsExportResult, Procedure, ProcedureContext, normalizeAppBasePath, IdentityProviderUserWithRoles } from '@kottster/common';
+import { AppSchema, checkTsUsage, DataSource, Stage, Page, TablePageConfig, DashboardPageConfig, DashboardPageGetStatDataResult, DashboardPageGetCardDataResult, checkUserForRoles, InternalApiSchema, PartialTablePageConfig, transformStringToTablePageNestedTableKey, PartialDashboardPageConfig, DashboardPageConfigStat, DashboardPageConfigCard, TablePageInitiateRecordsExportResult, Procedure, ProcedureContext, normalizeAppBasePath, IdentityProviderUserWithRoles, RpcRequestBody, MainJsonSchema, readAppSchema } from '@kottster/common';
 import { DataSourceRegistry } from './dataSourceRegistry';
 import { ActionService } from '../services/action.service';
 import { DataSourceAdapter } from '../models/dataSourceAdapter.model';
@@ -18,8 +18,6 @@ type RequestHandler = (req: Request, res: Response, next: NextFunction) => void;
 type PostAuthMiddleware = (user: IdentityProviderUserWithRoles, request: Request) => void | Promise<void>;
 
 export interface KottsterAppOptions {
-  schema: AppSchema | Record<string, never>;
-
   /**
    * The secret key used to sign JWT tokens
    */
@@ -68,6 +66,11 @@ export interface KottsterAppOptions {
 
   /** Custom token validation function */
   __ensureValidToken?: (request: Request) => Promise<EnsureValidTokenResponse>;
+
+  /**
+   * @deprecated Do not pass schema here anymore. The schema is now read from the kottster-app.json file automatically.
+   */
+  schema?: MainJsonSchema | Record<string, never>;
 }
 
 interface EnsureValidTokenResponse {
@@ -121,17 +124,19 @@ export class KottsterApp {
   }
 
   constructor(options: KottsterAppOptions) {
-    this.appId = options.schema.id ?? '';
+    const appSchema = readAppSchema(PROJECT_DIR, this.stage === Stage.development);
+
+    this.appId = appSchema.main.id ?? '';
     this.secretKey = options.secretKey ?? '';
     this.kottsterApiToken = options.kottsterApiToken;
     this.usingTsc = checkTsUsage(PROJECT_DIR);
-    this.schema = (!isSchemaEmpty(options.schema) ? options.schema : schemaPlaceholder) as AppSchema;
+    this.schema = appSchema;
     this.customEnsureValidToken = options.__ensureValidToken;
     this.postAuthMiddleware = options.postAuthMiddleware;
     this.readOnlyMode = options.__readOnlyMode ?? false;
     
     // Set base path
-    const basePath = options.schema.basePath;
+    const basePath = appSchema.main.basePath;
     if (basePath) {
       this.basePath = normalizeAppBasePath(basePath);
     }
@@ -338,8 +343,13 @@ export class KottsterApp {
         return;
       }
 
-      const body = await req.body as RpcActionBody<'custom'>;
-      const { procedure, procedureInput } = body.input;
+      const { action, input } = await req.body as RpcRequestBody;
+      if (action !== 'custom') {
+        res.status(400).json({ error: 'Invalid action for custom controller' });
+        return;
+      }
+
+      const { procedure, procedureInput } = input;
       const ctx: ProcedureContext = {
         user: {
           id: user.id,
@@ -430,16 +440,15 @@ export class KottsterApp {
       };
 
       try {
-        const body = await req.body as RpcActionBody<'dashboard_getCardData' | 'dashboard_getStatData'>;
-        let result: any;
+        const { action, input } = await req.body as RpcRequestBody;
+        let result: unknown;
 
         try {
           if (this.stage === Stage.production && !checkUserForRoles(user.id, user.roles, page.allowedRoles, page.allowedRoleIds)) {
             throw new Error('You do not have access to this page');
           }
 
-          if (body.action === 'dashboard_getStatData') {
-            const input = body.input as DashboardPageGetStatDataInput;
+          if (action === 'dashboard_getStatData') {
             const stat = dashboardPageConfig.stats?.find(s => s.key === input.statKey);
             if (!stat) {
               res.status(404).json({ error: `Specified stat "${input.statKey}" not found` });
@@ -475,8 +484,7 @@ export class KottsterApp {
               }
             }
           }
-          else if (body.action === 'dashboard_getCardData') {
-            const input = body.input as DashboardPageGetCardDataInput;
+          else if (action === 'dashboard_getCardData') {
             const card = dashboardPageConfig.cards?.find(c => c.key === input.cardKey);
             if (!card) {
               res.status(404).json({ error: `Specified card "${input.cardKey}" not found` });
@@ -588,11 +596,8 @@ export class KottsterApp {
           throw new Error(`Data source "${tablePageConfig.dataSource}" not found`);
         }
 
-        const body = await req.body as RpcActionBody<'table_getRecords' | 'table_initiateRecordsExport' | 'table_getRecord' | 'table_createRecord' | 'table_updateRecord' | 'table_deleteRecord' | 'custom'>;
-        const action = body.action;
-        
-        // TODO: add typeing for result
-        let result: any;
+        const { action, input } = await req.body as RpcRequestBody;
+        let result: unknown;
 
         // If the request is a custom one, handle it by the custom controller
         if (action === 'custom') {
@@ -608,10 +613,10 @@ export class KottsterApp {
           }
 
           // If the table select action is used and fetch strategy is 'customFetch', we need to execute the custom query right away
-          if (body.action === 'table_getRecords' && tablePageConfig.fetchStrategy === 'customFetch') {
-            result = tablePageConfig.customDataFetcher ? await tablePageConfig.customDataFetcher(body.input as TablePageCustomDataFetcherInput) : {
+          if (action === 'table_getRecords' && tablePageConfig.fetchStrategy === 'customFetch') {
+            result = tablePageConfig.customDataFetcher ? await tablePageConfig.customDataFetcher(input) : {
               records: [],
-            } as TablePageGetRecordsResult;
+            };
           } else {
             if (!dataSource) {
               throw new Error(`Data source "${tablePageConfig.dataSource}" not found`);
@@ -623,39 +628,39 @@ export class KottsterApp {
               throw new Error(`Database schema for "${tablePageConfig.dataSource}" not found`);
             }
 
-            if (body.action === 'table_getRecords') {
-              result = await dataSourceAdapter?.getTableRecords(tablePageConfig, body.input as TablePageGetRecordsInput, databaseSchema);
-            } else if (body.action === 'table_initiateRecordsExport') {
+            if (action === 'table_getRecords') {
+              result = await dataSourceAdapter?.getTableRecords(tablePageConfig, input, databaseSchema);
+            } else if (action === 'table_initiateRecordsExport') {
               const operationId = this.exporter.createOperation({
                 parameters: [
-                  tablePageConfig, body.input as TablePageGetRecordsInput, databaseSchema,
+                  tablePageConfig, input, databaseSchema,
                 ],
                 dataSourceName: dataSource.name,
-                format: (body.input as TablePageInitiateRecordsExportInput).format,
+                format: input.format,
               });
               result = {
                 operationId
               } as TablePageInitiateRecordsExportResult;
-            } else if (body.action === 'table_getRecord') {
-              result = await dataSourceAdapter.getOneTableRecord(tablePageConfig, body.input as TablePageGetRecordInput, databaseSchema);
-            } else if (body.action === 'table_createRecord') {
+            } else if (action === 'table_getRecord') {
+              result = await dataSourceAdapter.getOneTableRecord(tablePageConfig, input, databaseSchema);
+            } else if (action === 'table_createRecord') {
               if (this.stage === Stage.production && !checkUserForRoles(user.id, user.roles, tablePageConfig.allowedRolesToInsert, tablePageConfig.allowedRoleIdsToInsert)) {
                 throw new Error('You do not have permission to create records in this table');
               }
 
-              result = await dataSourceAdapter.insertTableRecord(tablePageConfig, body.input as TablePageCreateRecordInput, databaseSchema);
-            } else if (body.action === 'table_updateRecord') {
+              result = await dataSourceAdapter.insertTableRecord(tablePageConfig, input, databaseSchema);
+            } else if (action === 'table_updateRecord') {
               if (this.stage === Stage.production && !checkUserForRoles(user.id, user.roles, tablePageConfig.allowedRolesToUpdate, tablePageConfig.allowedRoleIdsToUpdate)) {
                 throw new Error('You do not have permission to update records in this table');
               }
 
-              result = await dataSourceAdapter.updateTableRecords(tablePageConfig, body.input as TablePageUpdateRecordInput, databaseSchema);
-            } else if (body.action === 'table_deleteRecord') {
+              result = await dataSourceAdapter.updateTableRecords(tablePageConfig, input, databaseSchema);
+            } else if (action === 'table_deleteRecord') {
               if (this.stage === Stage.production && !checkUserForRoles(user.id, user.roles, tablePageConfig.allowedRolesToDelete, tablePageConfig.allowedRoleIdsToDelete)) {
                 throw new Error('You do not have permission to delete records in this table');
               }
 
-              result = await dataSourceAdapter.deleteTableRecords(tablePageConfig, body.input as TablePageDeleteRecordInput, databaseSchema);
+              result = await dataSourceAdapter.deleteTableRecords(tablePageConfig, input, databaseSchema);
             };
           };
         } catch (error) {
@@ -685,16 +690,6 @@ export class KottsterApp {
 
     return func as RequestHandler & { procedures: T };
   };
-
-  public createRequestWithPageDataMiddleware(pageConfig: Page): RequestHandler {
-    const handler: RequestHandler = (req, res, next) => {
-      (req as Request & { page?: Page }).page = pageConfig;
-
-      next();
-    };
-
-    return handler;
-  }
 
   private async ensureValidToken(request: Request): Promise<EnsureValidTokenResponse> {
     try {

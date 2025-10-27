@@ -1,4 +1,4 @@
-import { IdentityProviderUser, IdentityProviderUserWithRoles, InternalApiBody, InternalApiResult } from "@kottster/common";
+import { IdentityProviderUser, IdentityProviderUserWithRoles, InternalApiInput, InternalApiResult } from "@kottster/common";
 import { Action } from "../models/action.model";
 import { Request } from "express";
 
@@ -6,7 +6,7 @@ import { Request } from "express";
  * Login into an account
  */
 export class Login extends Action {
-  public async execute({ usernameOrEmail, password, newPassword }: InternalApiBody<'login'>, _: IdentityProviderUserWithRoles, req?: Request): Promise<InternalApiResult<'login'>> {
+  public async execute({ usernameOrEmail, password, newPassword }: InternalApiInput<'login'>, _: IdentityProviderUserWithRoles, req?: Request): Promise<InternalApiResult<'login'>> {
     const rootUser = this.app.identityProvider.getRootUserByUsername(usernameOrEmail);
     const ipAddress = this.getClientIp(req);
 

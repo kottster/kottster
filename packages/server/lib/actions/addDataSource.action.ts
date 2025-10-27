@@ -1,4 +1,4 @@
-import { DataSourceType, stripIndent, dataSourcesTypeData, InternalApiBody, InternalApiResult } from "@kottster/common";
+import { DataSourceType, stripIndent, dataSourcesTypeData, InternalApiInput, InternalApiResult } from "@kottster/common";
 import { exec } from "child_process";
 import spawn from 'cross-spawn';
 import { PROJECT_DIR } from "../constants/projectDir";
@@ -17,7 +17,7 @@ export class AddDataSource extends DevAction {
   private readonly dbErrorEndMarker = '__DB_ERROR_END__';
   private readonly dbErrorRegex = new RegExp(`${this.dbErrorStartMarker}(.*?)${this.dbErrorEndMarker}`, 's');
 
-  public async execute(data: InternalApiBody<'addDataSource'>): Promise<InternalApiResult<'addDataSource'>> {
+  public async execute(data: InternalApiInput<'addDataSource'>): Promise<InternalApiResult<'addDataSource'>> {
     return new Promise((resolve, reject) => {
       const { type, connectionDetails, name } = data;
       const executableCode = this.getExecutableCode(type, connectionDetails);
@@ -49,6 +49,7 @@ export class AddDataSource extends DevAction {
         const dbDataMatch = stdOutput.match(this.dbDataRegex);
         let data = {
           tableCount: 0,
+          tablesHavePrimaryKeys: false,
         };
         if (dbDataMatch && dbDataMatch[1]) {
           try {
@@ -91,6 +92,12 @@ export class AddDataSource extends DevAction {
           return;
         }
 
+        // If tables do not have primary keys, reject with an error
+        if (!data.tablesHavePrimaryKeys) {
+          reject(new Error(`Seems like we can't detect primary keys in any of your database tables. The probable reason is that the database user you are using does not have enough permissions to access this information. Please make sure the user has sufficient privileges.`));
+          return;
+        }
+
         const postfix = randomstring.generate({
           length: 6,
           charset: '1234567890abcdefghijklmnopqrstuvwxyz'
@@ -115,7 +122,7 @@ export class AddDataSource extends DevAction {
     });
   }
 
-  private getExecutableCode(type: DataSourceType, connectionDetails: InternalApiBody<'addDataSource'>['connectionDetails']) {
+  private getExecutableCode(type: DataSourceType, connectionDetails: InternalApiInput<'addDataSource'>['connectionDetails']) {
     const dataSourceData = dataSourcesTypeData[type];
 
     const adapterClassName = this.getAdapterClassName(type);
@@ -141,8 +148,9 @@ export class AddDataSource extends DevAction {
 
       try {
         const client = dataSource.adapter.getClient();
-        const databaseTableCount = await dataSource.adapter.getDatabaseTableCount();
-        process.stdout.write('${this.dbDataStartMarker}' + JSON.stringify({ tableCount: databaseTableCount }) + '${this.dbDataEndMarker}');
+        const databaseSchema = await dataSource.adapter.getDatabaseSchema();
+        const tablesHavePrimaryKeys = await dataSource.adapter.checkIfAnyTableHasPrimaryKey(databaseSchema);
+        process.stdout.write('${this.dbDataStartMarker}' + JSON.stringify({ tableCount: databaseSchema.tables.length, tablesHavePrimaryKeys }) + '${this.dbDataEndMarker}');
       } catch (err) {
         process.stdout.write('${this.dbErrorStartMarker}' + JSON.stringify((err && err.message) ? err.message : err) + '${this.dbErrorEndMarker}');
       } finally {
@@ -151,7 +159,7 @@ export class AddDataSource extends DevAction {
     `);
   }
 
-  private getCommand(type: DataSourceType, name: string, connectionDetails: InternalApiBody<'addDataSource'>['connectionDetails']) {
+  private getCommand(type: DataSourceType, name: string, connectionDetails: InternalApiInput<'addDataSource'>['connectionDetails']) {
     const dataOption = JSON.stringify(connectionDetails).replace(/"/g, '\\"');
 
     return `npm run dev:add-data-source ${type} -- --skipInstall --name "${name}" --data '${dataOption}'`;

@@ -1,6 +1,6 @@
 import { KottsterApp } from "../core/app";
-import { DataSource, Stage } from "@kottster/common";
-import express from 'express';
+import { DataSource, Page, Stage } from "@kottster/common";
+import express, { RequestHandler } from 'express';
 import path from 'path';
 import fs from 'fs';
 import { PROJECT_DIR } from "../constants/projectDir";
@@ -12,6 +12,8 @@ import { FileReader } from "../services/fileReader.service";
 import { createDataSource } from "../factories/createDataSource";
 import { WebSocketServer } from 'ws';
 import { VERSION } from "../version";
+import { Request } from 'express';
+
 
 interface KottsterServerOptions {
   app: KottsterApp;
@@ -139,41 +141,66 @@ export class KottsterServer {
     const isDevelopment = this.app.stage === Stage.development;
     const loadedPageConfigs = this.app.loadPageConfigs();
 
+    // Register routes for pages with API handlers
     if (loadedPageConfigs) {
       for (const pageConfig of loadedPageConfigs) {
         try {
           const pagesDir = isDevelopment ? `${PROJECT_DIR}/app/pages` : `${PROJECT_DIR}/dist/server/pages`;
           const usingTsc = this.app.usingTsc;
           const apiPath = path.join(pagesDir, pageConfig.key, isDevelopment ? `api.server.${usingTsc ? 'ts' : 'js'}` : 'api.cjs');
-  
+
           // If the page is custom or has a defined api.server.js file, load it
-          if (pageConfig.type === 'custom' || fs.existsSync(apiPath)) {
+          if (fs.existsSync(apiPath)) {
             try {
               const routeModule = await import(apiPath);
               if (routeModule.default && typeof routeModule.default === 'function') {
                 const routePath = `${this.app.basePath}api/${pageConfig.key}`;
-                this.expressApp.post(routePath, this.app.createRequestWithPageDataMiddleware(pageConfig), routeModule.default);
+                this.expressApp.post(routePath, this.createRequestWithPageDataMiddleware(pageConfig), routeModule.default);
               }
             } catch (error) {
               console.error(`Failed to load route "${pageConfig.key}":`, error);
-            }
-          } else {
-            if (pageConfig.type === 'table') {
-              if (!pageConfig.config.dataSource) {
-                console.warn(`Page "${pageConfig.key}" does not have a data source specified. Skipping route setup.`);
-                continue;
-              }
-              this.expressApp.post(`${this.app.basePath}api/${pageConfig.key}`, this.app.createRequestWithPageDataMiddleware(pageConfig), this.app.defineTableController({}));
-            }
-            if (pageConfig.type === 'dashboard') {
-              this.expressApp.post(`${this.app.basePath}api/${pageConfig.key}`, this.app.createRequestWithPageDataMiddleware(pageConfig), this.app.defineDashboardController(pageConfig.config));
             }
           }
         } catch (error) {
           console.error(`Error setting up route for page "${pageConfig.key}":`, error);
         }
       };
+
+      // Setup dynamic routes for basic pages without custom API handlers
+      this.expressApp.post(`${this.app.basePath}api/:pageKey`, async (req, res, next) => {
+        const pageKey = req.params.pageKey;
+        const loadedPageConfigs = this.app.loadPageConfigs();
+        const pageConfig = loadedPageConfigs.find(p => p.key === pageKey);
+
+        if (!pageConfig) {
+          res.status(404).send({ error: 'Page not found' });
+          return;
+        }
+
+        // Attach page config to request object
+        (req as Request & { page?: Page }).page = pageConfig;
+
+        switch (pageConfig.type) {
+          case 'table':
+            return this.app.defineTableController({})(req, res, next);
+          case 'dashboard':
+            return this.app.defineDashboardController({})(req, res, next);
+          default:
+            res.status(400).send({ error: 'Unsupported page type for API route' });
+            return;
+        };
+      });
     }
+  }
+
+  private createRequestWithPageDataMiddleware(pageConfig: Page): RequestHandler {
+    const handler: RequestHandler = (req, res, next) => {
+      (req as Request & { page?: Page }).page = pageConfig;
+
+      next();
+    };
+
+    return handler;
   }
 
   private setupStaticFiles() {

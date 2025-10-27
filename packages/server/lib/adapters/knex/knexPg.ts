@@ -1,8 +1,7 @@
-import { DataSourceAdapterType, FilterItem, FilterItemOperator, FieldInput, JsType, PostgresBaseType, postgresBaseTypesByContentHint, postgresBaseTypeToArrayReturn, postgresBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn } from "@kottster/common";
+import { DataSourceAdapterType, FilterItem, FilterItemOperator, FieldInput, JsType, PostgresBaseType, postgresBaseTypesByContentHint, postgresBaseTypeToArrayReturn, postgresBaseTypeToJsType, RelationalDatabaseSchema, RelationalDatabaseSchemaColumn, ContentHint } from "@kottster/common";
 import { DataSourceAdapter } from "../../models/dataSourceAdapter.model";
 import { Knex } from "knex";
 import { parse as parsePostgresArray } from 'postgres-array';
-import { ContentHint } from "@kottster/common/dist/models/contentHint.model";
 import { DebugLogger } from "../../services/debugLogger.service";
 
 export class KnexPg extends DataSourceAdapter {

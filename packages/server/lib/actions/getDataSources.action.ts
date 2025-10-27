@@ -1,4 +1,4 @@
-import { InternalApiBody, InternalApiResult, PublicDataSource } from "@kottster/common";
+import { InternalApiInput, InternalApiResult, PublicDataSource } from "@kottster/common";
 import { Action } from "../models/action.model";
 import { DataSourceAdapter } from "../models/dataSourceAdapter.model";
 
@@ -6,7 +6,7 @@ import { DataSourceAdapter } from "../models/dataSourceAdapter.model";
  * Get the data sources
  */
 export class GetDataSources extends Action {
-  public async execute(data: InternalApiBody<'getDataSources'>): Promise<InternalApiResult<'getDataSources'>> {
+  public async execute(data: InternalApiInput<'getDataSources'>): Promise<InternalApiResult<'getDataSources'>> {
     const dataSources = this.app.getDataSources();
     
     const databaseSchemas = data.withSchema ? await Promise.all(dataSources.map(async (ds) => {

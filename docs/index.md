@@ -15,7 +15,7 @@ Make sure you have [Node.js](https://nodejs.org/en) **(v20 or above)** installed
 After running the command, the CLI will create a [folder](./project-structure.md) with your project name and install the required dependencies. 
 If you want to create a project in a current folder, run `npx @kottster/cli new .` instead.
 
-After installatinon is complete, change the directory to the project folder:
+After installation is complete, change the directory to the project folder:
 
 ```bash
 cd <project-name>

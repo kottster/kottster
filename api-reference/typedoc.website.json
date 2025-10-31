@@ -1,0 +1,24 @@
+{
+  "entryPointStrategy": "packages",
+  "entryPoints": [
+    "../kottster/packages/common",
+    "../kottster/packages/server",
+    "../kottster-react"
+  ],
+  "out": "dist",
+  "excludeExternals": false,
+  "excludePrivate": false,
+  "excludeProtected": false,
+  "excludeInternal": false,
+  "visibilityFilters": {
+    "protected": true,
+    "private": true,
+    "inherited": true,
+    "external": true
+  },
+  "excludeTags": [
+    "@hidden"
+  ],
+  "hideGenerator": true,
+  "name": "Kottster Packages API Reference"
+}

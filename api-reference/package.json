@@ -9,7 +9,8 @@
     "typescript": "^5.9.3"
   },
   "scripts": {
-    "build": "typedoc",
+    "build": "typedoc --options typedoc.local.json",
+    "build:website": "typedoc --options typedoc.website.json",
     "serve": "http-server ./dist -p 8080"
   }
 }

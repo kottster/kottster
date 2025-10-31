@@ -198,7 +198,7 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
         { text: 'TablePage component', link: '/ui/table-page-component' },
         { 
           text: 'Customization', 
-          link: '/table/customization/add-custom-columns',
+          link: '/table/customization/custom-columns',
           items: [
             { text: 'Custom columns', link: '/table/customization/custom-columns' },    
             // { text: 'Customize columns', link: '/table/customization/customize-columns' },    

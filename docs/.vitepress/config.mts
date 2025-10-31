@@ -30,7 +30,7 @@ export default defineConfig({
     
     nav: [
       { text: 'Docs', link: '/' },
-      { text: 'API', link: '/api-reference/' },
+      { text: 'API Reference', link: 'https://kottster.app/api-reference/index.html' },
       // TODO: Uncomment when sidebar is fixed
       // { text: 'UI Library', link: '/ui/' },
       { text: 'Website', link: 'https://kottster.app/' },

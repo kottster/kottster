@@ -1,9 +1,9 @@
 {
   "entryPointStrategy": "packages",
   "entryPoints": [
-    "../../kottster/packages/common",
-    "../../kottster/packages/server",
-    "../../kottster-react"
+    "../../../kottster/packages/common",
+    "../../../kottster/packages/server",
+    "../../../kottster-react"
   ],
   "out": "dist",
   "excludeExternals": false,

@@ -1,21 +1,19 @@
-import { ExtendAppContextFunction } from '../models/appContext.model';
+import { ExtendProcedureContextFunction, Procedure, ProcedureContext } from '../models/procedure.model';
 import { PROJECT_DIR } from '../constants/projectDir';
-import { AppSchema, checkTsUsage, DataSource, Stage, Page, TablePageConfig, DashboardPageConfig, DashboardPageGetStatDataResult, DashboardPageGetCardDataResult, checkUserForRoles, InternalApiSchema, PartialTablePageConfig, transformStringToTablePageNestedTableKey, PartialDashboardPageConfig, DashboardPageConfigStat, DashboardPageConfigCard, TablePageInitiateRecordsExportResult, Procedure, ProcedureContext, normalizeAppBasePath, IdentityProviderUserWithRoles, RpcRequestBody, MainJsonSchema, readAppSchema } from '@kottster/common';
+import { AppSchema, checkTsUsage, DataSource, Stage, Page, TablePageConfig, DashboardPageConfig, DashboardPageGetStatDataResult, DashboardPageGetCardDataResult, checkUserForRoles, InternalApiSchema, PartialTablePageConfig, transformStringToTablePageNestedTableKey, PartialDashboardPageConfig, DashboardPageConfigStat, DashboardPageConfigCard, TablePageInitiateRecordsExportResult, normalizeAppBasePath, IdentityProviderUserWithRoles, RpcRequestBody, MainJsonSchema, readAppSchema } from '@kottster/common';
 import { DataSourceRegistry } from './dataSourceRegistry';
 import { ActionService } from '../services/action.service';
 import { DataSourceAdapter } from '../models/dataSourceAdapter.model';
 import { parse as parseCookie } from 'cookie';
 import { Request, Response, NextFunction } from 'express';
 import { createServer } from '../factories/createServer';
-import { IdentityProvider } from './identityProvider';
-import { HttpException, UnauthorizedException } from '../exceptions/httpException';
+import { IdentityProvider, PostAuthMiddleware } from './identityProvider';
+import { HttpError, UnauthorizedError } from '../errors/httpError';
 import { FileReader } from '../services/fileReader.service';
 import { Exporter } from '../services/exporter.service';
 import dayjs from 'dayjs';
 
 type RequestHandler = (req: Request, res: Response, next: NextFunction) => void;
-
-type PostAuthMiddleware = (user: IdentityProviderUserWithRoles, request: Request) => void | Promise<void>;
 
 export interface KottsterAppOptions {
   /**
@@ -24,51 +22,38 @@ export interface KottsterAppOptions {
   secretKey?: string;
 
   /**
-   * The root admin username
+   * The Kottster API token for the appen.
+   * If not provided, some features that require server-side requests to Kottster API will not work (e.g. sql query generation, AI features, etc.)
    */
-  rootUsername?: string;
-
-  /**
-   * The root admin password
-   */
-  rootPassword?: string;
-
-  /**
-   * The root admin custom permissions
-   */
-  rootCustomPermissions?: string[];
-
-  /**
-   * The salt used to sign JWT tokens
-   */
-  jwtSecretSalt?: string;
+  kottsterApiToken?: string;
 
   /**
    * The identity provider configuration
    */
   identityProvider?: IdentityProvider;
 
-  /**
-   * The Kottster API token for the appen.
-   * If not provided, some features that require server-side requests to Kottster API will not work (e.g. sql query generation, AI features, etc.)
-   */
-  kottsterApiToken?: string;
-
   /** 
-   * Custom validation middleware
-   * @description This middleware will be called after the JWT token is validated. You can use it to perform additional checks or modify the request object.
+   * Custom validation middleware.
+   * This middleware will be called after the JWT token is validated. You can use it to perform additional checks or modify the request object.
    * @example https://kottster.app/docs/security/authentication#custom-validation-middleware 
    */
   postAuthMiddleware?: PostAuthMiddleware;
 
-  /** Enable read-only mode */
+  /** 
+   * Enable read-only mode 
+   * @hidden
+   */
   __readOnlyMode?: boolean;
 
-  /** Custom token validation function */
+  /** 
+   * Custom token validation function 
+   * @hidden
+   */
   __ensureValidToken?: (request: Request) => Promise<EnsureValidTokenResponse>;
 
   /**
    * @deprecated Do not pass schema here anymore. The schema is now read from the kottster-app.json file automatically.
+   * @hidden
    */
   schema?: MainJsonSchema | Record<string, never>;
 }
@@ -92,13 +77,9 @@ export class KottsterApp {
   public readonly readOnlyMode: boolean = false;
   public readonly stage: Stage = process.env.KOTTSTER_APP_STAGE === Stage.development ? Stage.development : Stage.production;
   public readonly basePath: string = '/';
-
-  // TODO: store registry instead of data sources
-  public dataSources: DataSource[] = [];
-
+  private dataSources: DataSource[] = [];
   public identityProvider: IdentityProvider;
   public exporter: Exporter;
-
   public schema: AppSchema;
   private customEnsureValidToken?: (request: Request) => Promise<EnsureValidTokenResponse>;
   private postAuthMiddleware?: PostAuthMiddleware;
@@ -113,7 +94,7 @@ export class KottsterApp {
     return this.loadedPageConfigs;
   }
 
-  public extendContext: ExtendAppContextFunction;
+  public extendProcedureContext: ExtendProcedureContextFunction;
 
   public getSecretKey() {
     return `${this.secretKey}`;
@@ -180,8 +161,8 @@ export class KottsterApp {
    * Register a context middleware
    * @param fn The function to extend the context
    */
-  public registerContextMiddleware(fn: ExtendAppContextFunction) {
-    this.extendContext = fn;
+  public registerContextMiddleware(fn: ExtendProcedureContextFunction) {
+    this.extendProcedureContext = fn;
   }
 
   public async executeAction(action: string, data: any, user?: IdentityProviderUserWithRoles, req?: Request): Promise<any> {
@@ -212,7 +193,7 @@ export class KottsterApp {
           return;
         }
       } catch (error) {
-        if (error instanceof HttpException) {
+        if (error instanceof HttpError) {
           res.status(error.statusCode).json({
             status: 'error',
             statusCode: error.statusCode,
@@ -306,7 +287,7 @@ export class KottsterApp {
       }
 
       if (!isTokenValid && action && !(['getApp', 'initApp', 'login'] as (keyof InternalApiSchema)[]).includes(action)) {
-        throw new UnauthorizedException(`Invalid JWT token: ${invalidTokenErrorMessage}`);
+        throw new UnauthorizedError(`Invalid JWT token: ${invalidTokenErrorMessage}`);
       }
 
       return {
@@ -314,8 +295,8 @@ export class KottsterApp {
         result: await this.executeAction(action, actionData, user ?? undefined, request),
       };
     } catch (error) {
-      // If the error is an instance of HttpException, we can rethrow it
-      if (error instanceof HttpException) {
+      // If the error is an instance of HttpError, we can rethrow it
+      if (error instanceof HttpError) {
         throw error;
       }
 
@@ -351,14 +332,7 @@ export class KottsterApp {
 
       const { procedure, procedureInput } = input;
       const ctx: ProcedureContext = {
-        user: {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          roleIds: user.roleIds,
-        },
+        user,
         req,
       };
 
@@ -737,9 +711,6 @@ export class KottsterApp {
     }
   }
 
-  /**
-   * Get the registered data sources
-   */
   public getDataSources() {
     return this.dataSources;
   }

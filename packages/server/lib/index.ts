@@ -12,3 +12,7 @@ export { KnexTedious as KnexTediousAdapter } from './adapters/knex/knexTedious';
 
 // Services
 export { CachingService } from './services/caching.service';
+
+// Errors
+export { ProcedureError } from './errors/procedureError';
+export { ValidationError } from './errors/validationError';

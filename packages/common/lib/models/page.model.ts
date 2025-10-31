@@ -40,15 +40,15 @@ interface CustomPage extends BasePage {
 
 export type Page = TablePage | DashboardPage | CustomPage;
 
-interface PublicTablePage extends Pick<TablePage, 'key' | 'title' | 'icon' | 'type' | 'allowedRoles' | 'allowedRoleIds' | 'version' | 'hideInSidebar'> {
+export interface PublicTablePage extends Pick<TablePage, 'key' | 'title' | 'icon' | 'type' | 'allowedRoles' | 'allowedRoleIds' | 'version' | 'hideInSidebar'> {
   config: TablePage['config'];
 }
 
-interface PublicDashboardPage extends Pick<DashboardPage, 'key' | 'title' | 'icon' | 'type' | 'allowedRoles' | 'allowedRoleIds' | 'version' | 'hideInSidebar'> {
+export interface PublicDashboardPage extends Pick<DashboardPage, 'key' | 'title' | 'icon' | 'type' | 'allowedRoles' | 'allowedRoleIds' | 'version' | 'hideInSidebar'> {
   config: DashboardPage['config'];
 }
 
-interface PublicCustomPage extends Pick<CustomPage, 'key' | 'title' | 'icon' | 'type' | 'allowedRoles' | 'allowedRoleIds' | 'version' | 'hideInSidebar'> {}
+export interface PublicCustomPage extends Pick<CustomPage, 'key' | 'title' | 'icon' | 'type' | 'allowedRoles' | 'allowedRoleIds' | 'version' | 'hideInSidebar'> {}
 
 export type PublicPage = PublicTablePage | PublicDashboardPage | PublicCustomPage;
 

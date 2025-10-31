@@ -5,7 +5,6 @@ export * from './models/page.model';
 export * from './models/stage.model';
 export * from './models/dataSource.model';
 export * from './models/file.model';
-export * from './models/appContext.model';
 export * from './models/databaseSchema.model';
 export * from './models/rpc.model';
 export * from './models/tablePage.model';
@@ -17,6 +16,7 @@ export * from './models/relationship.model';
 export * from './models/filter.model';
 export * from './models/template.model';
 export * from './models/dto.model';
+export * from './models/procedure.model';
 
 // Utils
 export * from './utils/getEnvOrThrow';
@@ -55,9 +55,6 @@ export * from './constants/sqlite';
 export * from './constants/table';
 export * from './constants/mssql';
 export * from './constants/idp';
-
-// Types
-export * from './types/procedure';
 
 // Services
 export * from './services/pageGenerator.service';

@@ -1,0 +1,1 @@
+export { usePage } from '@kottster/react';

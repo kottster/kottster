@@ -13,19 +13,19 @@ Imagine for a table of `users`, you want to add a custom column that will displa
 ::: code-group
 
 ```sql [MySQL]
-SELECT CONCAT(first_name, ' ', last_name) FROM users
+SELECT CONCAT(first_name, ' ', last_name) AS full_name FROM users
 ```
 
 ```sql [PostgreSQL]
-SELECT first_name || ' ' || last_name FROM users
+SELECT (first_name || ' ' || last_name) AS full_name FROM users
 ```
 
 ```sql [SQLite]
-SELECT first_name || ' ' || last_name FROM users
+SELECT (first_name || ' ' || last_name) AS full_name FROM users
 ```
 
 ```sql [Microsoft SQL Server]
-SELECT first_name + ' ' + last_name FROM users
+SELECT (first_name + ' ' + last_name) AS full_name FROM users
 ```
 
 :::

@@ -4,6 +4,7 @@ import bcrypt from 'bcryptjs';
 import { SignJWT, jwtVerify } from 'jose';
 import { KottsterApp } from "./app";
 import knex, { Knex } from "knex";
+import { Request } from "express";
 
 /**
  * Supported hashing algorithms
@@ -28,13 +29,42 @@ export enum IdentityProviderStrategyType {
 }
 
 export interface IdentityProviderOptions {
+  /**
+   * The SQLite database file name.
+   */
   fileName: string;
+
+  /**
+   * The password hashing algorithm to use.
+   * @default 'bcrypt'
+   */
   passwordHashAlgorithm: keyof typeof HashAlgorithm;
-  jwtSecretSalt?: string;
+  
+  /**
+   * The root admin username
+   */
   rootUsername?: string;
+
+  /**
+   * The root admin password
+   */
   rootPassword?: string;
+
+  /**
+   * The root admin custom permissions
+   */
   rootCustomPermissions?: string[];
+
+  /**
+   * The salt used to sign JWT tokens
+   */
+  jwtSecretSalt?: string;
 }
+
+/**
+ * Post-authentication middleware for additional processing after user authorization
+ */
+export type PostAuthMiddleware = (user: IdentityProviderUserWithRoles, request: Request) => void | Promise<void>;
 
 /**
  * The identity provider

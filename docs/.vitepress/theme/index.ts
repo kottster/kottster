@@ -1,10 +1,12 @@
 import DefaultTheme from 'vitepress/theme';
 import mixpanel from 'mixpanel-browser';
 import 'virtual:group-icons.css';
+import { enhanceAppWithTabs } from 'vitepress-plugin-tabs/client'
 
 export default {
   ...DefaultTheme,
   enhanceApp({ app, router }) {
+    enhanceAppWithTabs(app);
     if (typeof window !== 'undefined') {
       console.info('mixpanel.init');
       mixpanel.init("fc5e794d2cfef6c0fd69f67eaae370d8", {

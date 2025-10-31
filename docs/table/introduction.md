@@ -41,7 +41,7 @@ This file defines the table page configuration and is the only required file. Yo
 }
 ```
 
-### Optional customization files
+### Additional files
 
 If you need additional customization beyond what the visual builder provides, you can add these optional files:
 

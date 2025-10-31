@@ -39,7 +39,7 @@ This file defines the dashboard page configuration and is the only required file
 }
 ```
 
-### Optional customization files
+### Additional files
 
 If you need additional customization beyond what the visual builder provides, you can add these optional files:
 

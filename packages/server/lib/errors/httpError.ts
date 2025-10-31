@@ -1,4 +1,4 @@
-export class HttpException extends Error {
+export class HttpError extends Error {
   constructor(
     public statusCode: number,
     public message: string
@@ -9,25 +9,25 @@ export class HttpException extends Error {
   }
 }
 
-export class UnauthorizedException extends HttpException {
+export class UnauthorizedError extends HttpError {
   constructor(message: string = 'Unauthorized') {
     super(401, message);
   }
 }
 
-export class ForbiddenException extends HttpException {
+export class ForbiddenError extends HttpError {
   constructor(message: string = 'Forbidden') {
     super(403, message);
   }
 }
 
-export class NotFoundException extends HttpException {
+export class NotFoundError extends HttpError {
   constructor(message: string = 'Not Found') {
     super(404, message);
   }
 }
 
-export class BadRequestException extends HttpException {
+export class BadRequestError extends HttpError {
   constructor(message: string = 'Bad Request') {
     super(400, message);
   }

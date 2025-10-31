@@ -1,0 +1,16 @@
+{
+  "name": "kottster-api-reference",
+  "version": "1.0.0",
+  "main": "index.js",
+  "dependencies": {
+    "http-server": "^14.1.1",
+    "typedoc": "^0.28.14",
+    "typedoc-plugin-markdown": "^4.9.0",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "build": "typedoc --options typedoc.local.json",
+    "build:website": "typedoc --options typedoc.website.json",
+    "serve": "http-server ./dist -p 8080"
+  }
+}

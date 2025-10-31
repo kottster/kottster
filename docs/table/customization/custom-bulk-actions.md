@@ -16,6 +16,8 @@ Kottster provides default bulk actions for working with multiple records (bulk d
 
 Use client-side bulk actions for simple interactions like showing alerts, opening modals, or navigating to other pages with multiple records.
 
+Add the [`customBulkActions`](../../ui/table-page-component.md#custombulkactions) prop to the [`TablePage`](../../ui/table-page-component.md) component. This prop accepts an array of objects, each representing a custom bulk action.
+
 ```jsx [app/pages/users/index.jsx]
 import { TablePage } from '@kottster/react';
 
@@ -39,6 +41,8 @@ export default () => (
 
 Use this approach when you need server-side processing (like sending bulk emails or updating multiple records) and want the procedure to run automatically when the button is clicked.
 
+In the [`customBulkActions`](../../ui/table-page-component.md#custombulkactions) prop of the [`TablePage`](../../ui/table-page-component.md) component, specify the `procedure` property with the name of the server procedure to call. You can also handle the result using the [`onResult`](https://kottster.app/api-reference/interfaces/_kottster_react.TableBulkAction.html#onresult) callback.
+
 ```jsx [app/pages/users/index.jsx]
 import { TablePage } from '@kottster/react';
 import { notifications } from '@mantine/notifications';
@@ -48,7 +52,7 @@ export default () => (
     customBulkActions={[
       {
         label: 'Send Welcome Emails',
-        procedure: 'sendBulkWelcomeEmails', // This procedure runs automatically
+        procedure: 'sendBulkWelcomeEmails', // What server procedure to call
         onResult: (result) => {
           if (result.success) {
             notifications.show({
@@ -64,7 +68,7 @@ export default () => (
 );
 ```
 
-**Define the server procedure:**
+On the server side, add the procedure name to your [table controller](../configuration/api.md). Define the server procedure **that will be called automatically:**
 
 ```js [app/pages/users/api.server.js]
 import { app } from '../../_server/app';

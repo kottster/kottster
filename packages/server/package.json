@@ -1,6 +1,6 @@
 {
   "name": "@kottster/server",
-  "version": "3.4.1",
+  "version": "3.4.2",
   "description": "Instant admin panel for your project",
   "keywords": [
     "admin",
@@ -22,7 +22,8 @@
     "prepare": "husky",
     "prepare-npm-package": "yarn add @kottster/common@latest && yarn generate-version && rimraf package-lock.json && npm run update-locks && npm run lint --fix && npm run build",
     "update-locks": "yarn install && synp --source-file yarn.lock",
-    "generate-version": "echo \"export const VERSION = '$npm_package_version';\" > lib/version.ts"
+    "generate-version": "echo \"export const VERSION = '$npm_package_version';\" > lib/version.ts",
+    "docs:generate": "typedoc"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
@@ -39,7 +40,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.2.0",
-    "@kottster/common": "^3.4.0",
+    "@kottster/common": "^3.4.2",
     "@trpc/server": "^10.45.2",
     "@types/dotenv": "^8.2.0",
     "@types/express": "^5.0.2",
@@ -58,6 +59,7 @@
     "synp": "^1.9.13",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
+    "typedoc": "^0.28.14",
     "typescript": "^5.4.5",
     "typescript-eslint": "^7.8.0",
     "vite": "^6.3.5"

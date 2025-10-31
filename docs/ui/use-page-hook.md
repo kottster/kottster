@@ -1,12 +1,12 @@
 ---
-description: "Use the usePage hook to get the current page ID and navigation item in Kottster."
+description: "Use the usePage hook to get the current page key and page object in Kottster."
 ---
 
 # usePage hook
 
-The `usePage` hook is a custom React hook that returns the current page ID and navigation item.
+The [`usePage`](https://kottster.app/api-reference/functions/_kottster_react.usePage.html) hook is a React hook that returns the current page ID and the page object.
 
-Example usage:
+**Example usage:**
 
 ```jsx [app/pages/example/index.jsx]
 import { Page, usePage } from '@kottster/react';
@@ -23,7 +23,7 @@ export default () => {
 };
 ```
 
-## Returned Values
+## Returned values
 
 - **pageKey**: `string` - The ID of the current page.
-- **page**: `object` - The current page object, which includes all public properties of the page configuration.
+- **page**: [`object`](https://kottster.app/api-reference/types/_kottster_react.PublicPage.html) - The current page object, which includes all public properties of the page configuration.

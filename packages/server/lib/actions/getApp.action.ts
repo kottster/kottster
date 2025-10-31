@@ -26,12 +26,14 @@ export class GetApp extends Action {
     // In production, use the in-memory schema; in development, read from file
     const appSchema = this.app.stage === Stage.production ? this.app.schema : fileReader.readAppSchema();
 
+    const dataSources = this.app.getDataSources();
+
     return {
       schema: {
         main: appSchema.main,
         sidebar: appSchema.sidebar,
         pages,
-        dataSources: this.app.dataSources.map((dataSource) => {
+        dataSources: dataSources.map((dataSource) => {
           return {
             name: dataSource.name,
             type: dataSource.type,

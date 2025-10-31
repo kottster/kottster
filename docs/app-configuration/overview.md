@@ -32,6 +32,14 @@ The display name of your Kottster app. This appears next to the app icon in the 
 
 The URL of your app's icon image. This icon appears alongside the app name in the Kottster interface. Learn more about icons in the [Branding documentation](../app-configuration/branding.md#logo).
 
+## Using the `app/schemas/sidebar.json`
+
+### menuPageOrder
+
+`string[]`, optional
+
+Defines the order of pages in the app's sidebar menu. List the page IDs in the desired order to customize the navigation experience for users.
+
 ## Using the `app/_server/app.js`
 
 The `app/_server/app.js` file defines server-side configurations, secrets, and custom logic for your Kottster app. All code in this file runs only on the server, keeping sensitive information secure.

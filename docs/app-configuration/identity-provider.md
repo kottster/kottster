@@ -70,14 +70,12 @@ The root user is automatically granted all permissions and roles, even if not ex
 
 ### Custom validation middleware
 
-For apps requiring additional security validation or custom authorization logic, implement the `postAuthMiddleware` option in your app configuration.
-
-The `postAuthMiddleware` function allows you to add custom security checks after standard JWT validation but before requests reach your application logic. This function should perform additional validation and throw an error if validation fails.
+The [`postAuthMiddleware`](https://kottster.app/api-reference/types/_kottster_server.PostAuthMiddleware.html) function allows you to add custom security checks after standard JWT validation but before requests reach your application logic. This function should perform additional validation and throw an error if validation fails.
 
 **The middleware function receives two parameters:**
 
-- `user` — The authenticated user object containing `id`, `username`, and `email` properties
-- `req` — The <a rel='nofollow' target='_blank' href='https://expressjs.com/en/api.html#req'>Express request object</a> with all standard properties and methods
+- [`user`](https://kottster.app/api-reference/interfaces/_kottster_server.IdentityProviderUserWithRoles.html) — The authenticated user object.
+- <a rel='nofollow' target='_blank' href='https://expressjs.com/en/api.html#req'>`request`</a> — The Express request object with all standard properties and methods
 
 The following example demonstrates how to implement custom middleware that validates the user's status using an external API:
 

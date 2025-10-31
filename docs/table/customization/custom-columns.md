@@ -6,9 +6,7 @@ description: "Add custom columns to Kottster table pages to display additional d
 
 ## Add new columns to the table
 
-If you want to just display a new column in the table, you can use the [`customColumns`](../../ui/table-page-component.md#customcolumns) prop. This is useful for displaying additional information without modifying the existing columns or backend logic.
-
-Add the `customColumns` prop to the `TablePage` component. This prop accepts an array of objects, each representing a custom column.
+Add the [`customColumns`](../../ui/table-page-component.md#customcolumns) prop to the [`TablePage`](../../ui/table-page-component.md) component. This prop accepts an array of objects, each representing a custom column.
 
 **Example of a page with a custom column:**
 
@@ -41,9 +39,7 @@ export default () => (
 
 ## Modify render for existing columns
 
-If you want to update the displaying of existing columns, you can use the [`columnOverrides`](../../ui/table-page-component.md#columnoverrides) prop. This is useful for adding custom render functions.
-
-Add the `columnOverrides` prop to the `TablePage` component. This prop accepts an object where each key is the column name and the value is a function that takes the existing column configuration and returns the modified column configuration.
+Add the [`columnOverrides`](../../ui/table-page-component.md#columnoverrides) prop to the [`TablePage`](../../ui/table-page-component.md) component. This prop accepts an object where each key is the column name and the value is a function that takes the existing column configuration and returns the modified column configuration.
 
 **Example of a page with a modified column:**
 
@@ -71,7 +67,3 @@ export default () => (
   />
 );
 ```
-
----
-
-Learn more about **columns and their parameters** in the [API reference](../configuration/api.md#columns-1).

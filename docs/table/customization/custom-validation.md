@@ -6,7 +6,8 @@ description: ""
 
 Kottster allows you to add custom validation logic to your table pages for create, update, and delete operations.
 
-Add validation by passing functions to these configuration parameters:
+**Add validation by passing functions to these configuration parameters:**
+
 - [`validateRecordBeforeInsert`](../configuration/api.md#validaterecordbeforeinsert)
 - [`validateRecordBeforeUpdate`](../configuration/api.md#validaterecordbeforeupdate)
 - [`validateRecordBeforeDelete`](../configuration/api.md#validaterecordbeforedelete)

@@ -4,6 +4,7 @@ import {
   groupIconVitePlugin,
   localIconLoader
 } from 'vitepress-plugin-group-icons';
+import { tabsMarkdownPlugin } from 'vitepress-plugin-tabs'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -29,6 +30,7 @@ export default defineConfig({
     
     nav: [
       { text: 'Docs', link: '/' },
+      { text: 'API', link: '/api-reference/' },
       // TODO: Uncomment when sidebar is fixed
       // { text: 'UI Library', link: '/ui/' },
       { text: 'Website', link: 'https://kottster.app/' },
@@ -37,6 +39,15 @@ export default defineConfig({
 
     // TODO: Remove this when sidebar is fixed
     sidebar: sidebarDocs(),
+    // sidebar: [
+    //   { base: '', items: sidebarDocs() },
+    //   {
+    //     base: '/api/',
+    //     text: 'API',
+    //     items: serverTypedocSidebar,
+    //   },
+    //   // '/ui/': { base: '/ui/', items: sidebarUILibrary() }
+    // ],
 
     // TODO: Uncomment
     // sidebar: [
@@ -114,6 +125,7 @@ export default defineConfig({
   markdown: {
     config(md) {
       md.use(groupIconMdPlugin)
+      md.use(tabsMarkdownPlugin)
     },
   },
 
@@ -222,7 +234,7 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
       collapsed: false,
       items: [
         { text: 'Introduction', link: '/custom-pages/introduction' },
-        { text: 'Server API', link: '/custom-pages/api' },
+        { text: 'Building server API', link: '/custom-pages/api' },
         { text: 'Calling API', link: '/custom-pages/calling-api' },
       ]
     },
@@ -239,6 +251,7 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
             { text: 'TablePage', link: '/ui/table-page-component' },
             { text: 'DashboardPage', link: '/ui/dashboard-page-component' },
             { text: 'Page', link: '/ui/page-component' },
+            { text: 'Modal', link: '/ui/modal-component' },
           ]
         },
         {
@@ -247,6 +260,10 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
           items: [
             { text: 'usePage', link: '/ui/use-page-hook' },
             { text: 'useCallProcedure', link: '/ui/use-call-procedure-hook' },
+            { text: 'useUser', link: '/ui/use-user-hook' },
+            { text: 'useApp', link: '/ui/use-app-hook' },
+            { text: 'useModal', link: '/ui/use-modal-hook' },
+            { text: 'useTable', link: '/ui/use-table-hook' },
           ]
         },
       ]

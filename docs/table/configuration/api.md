@@ -74,38 +74,38 @@ The `defineTableController` function takes two arguments:
     
 *   `config`: A configuration object that defines the behavior of the table and its nested tables.
 
-*   `serverProcedures`: An optional object that allows you to define custom server procedures for the page. See the [Custom server API](#custom-server-procedures) section for more details.
+*   `serverProcedures`: An optional object that allows you to define custom server procedures for the page. See the [Custom server API](#custom-server-api) section for more details.
 
 If you only need to change the way columns and fields are rendered, you can use the [`TablePage`](../../ui/table-page-component.md) component's properties like [`customColumns`](../../ui/table-page-component.md#customcolumns), [`columnTransformer`](../../ui/table-page-component.md#columntransformer), or [`columnOverrides`](../../ui/table-page-component.md#columnoverrides). This approach is useful for modifying the display of columns and fields without changing the backend logic.
 
 ## Parameters
 
-- ### fetchStrategy
+<!-- - ### fetchStrategy
 
   `"databaseTable" | "rawSqlQuery" | "customFetch"`, required
 
   Specifies the strategy for fetching data for the table. The available options are:
   - `"databaseTable"`: Fetches data directly from a database table.
   - `"rawSqlQuery"`: Executes a raw SQL query to fetch data.
-  - `"customFetch"`: Uses a custom data fetcher function (`customDataFetcher`) to retrieve data.
+  - `"customFetch"`: Uses a custom data fetcher function (`customDataFetcher`) to retrieve data. -->
 
-- ### dataSource
-
-  `string`, optional
-
-  Used to specify the data source for the table. This is required if you are using the `databaseTable` or `rawSqlQuery` fetch strategies. The value should match the name of a data source defined in your project.
-
-- ### table
+<!-- - ### dataSource
 
   `string`, optional
 
-  Specifies the name of the database table. This is required if you are using the `databaseTable` fetch strategy.
+  Used to specify the data source for the table. This is required if you are using the `databaseTable` or `rawSqlQuery` fetch strategies. The value should match the name of a data source defined in your project. -->
 
-- ### primaryKeyColumn
+<!-- - ### table
 
   `string`, optional
 
-  Specifies the primary key column in the table. Typically, this is set to `"id"`.
+  Specifies the name of the database table. This is required if you are using the `databaseTable` fetch strategy. -->
+
+<!-- - ### primaryKeyColumn
+
+  `string`, optional
+
+  Specifies the primary key column in the table. Typically, this is set to `"id"`. -->
 
 - ### defaultSortColumn
 
@@ -119,28 +119,27 @@ If you only need to change the way columns and fields are rendered, you can use 
 
   Specifies the default sort direction. If not specified, the default value is `"desc"`.
 
-- ### columns
+<!-- - ### columns
 
   `TablePageConfigColumn[]`, optional
 
   Specifies the configuration for the columns in the table. 
   
-  Learn more: [Columns](#columns-1)
+  Learn more: [Columns](#columns-1) -->
 
 - ### customDataFetcher
 
-  `function`, optional
+  [`function`](https://kottster.app/api-reference/interfaces/_kottster_server.PartialTablePageConfig.html#customdatafetcher), optional
 
-  <!-- Allow to define define custom logic for executing the query. This function is called with the query object and should return a promise that resolves to the query result. -->
   Defines a custom function to retrieve data for the table. This function is required if you are using the `customFetch` fetch strategy.
 
   Learn more: [Custom data fetcher](./custom-data-fetcher.md)
 
-- ### allowInsert
+<!-- - ### allowInsert
 
   `boolean`, optional
 
-  Allows users to insert new records into the table. If not specified, the default value is `true`.
+  Allows users to insert new records into the table. If not specified, the default value is `true`. -->
 
 - ### allowedRolesToInsert
 
@@ -150,7 +149,7 @@ If you only need to change the way columns and fields are rendered, you can use 
 
 - ### validateRecordBeforeInsert
 
-  `function`, optional
+  [`function`](https://kottster.app/api-reference/interfaces/_kottster_server.PartialTablePageConfig.html#validaterecordbeforeinsert), optional
 
   Defines a function to validate the record values before they are inserted into the table. This function is called with the record values and should return a boolean indicating whether the values are valid.
 
@@ -168,7 +167,7 @@ If you only need to change the way columns and fields are rendered, you can use 
 
 - ### transformRecordBeforeInsert
 
-  `function`, optional
+  [`function`](https://kottster.app/api-reference/interfaces/_kottster_server.PartialTablePageConfig.html#transformrecordbeforeinsert), optional
 
   A function to transform the record values before they are inserted into the table. This function is called with the record values and should return the transformed values.
 
@@ -189,7 +188,7 @@ If you only need to change the way columns and fields are rendered, you can use 
 
 - ### afterInsert
 
-  `function`, optional
+  [`function`](https://kottster.app/api-reference/interfaces/_kottster_server.PartialTablePageConfig.html#afterinsert), optional
 
   A function executed after the record is inserted into the table. This function is often used to perform additional actions, such as sending notifications or updating related records.
 
@@ -199,11 +198,11 @@ If you only need to change the way columns and fields are rendered, you can use 
   }
   ```
 
-- ### allowUpdate
+<!-- - ### allowUpdate
 
   `boolean`, optional
 
-  Allows users to update records in the table. If not specified, the default value is `true`.
+  Allows users to update records in the table. If not specified, the default value is `true`. -->
 
 - ### allowedRolesToUpdate
 
@@ -213,7 +212,7 @@ If you only need to change the way columns and fields are rendered, you can use 
 
 - ### validateRecordBeforeUpdate
 
-  `function`, optional
+  [`function`](https://kottster.app/api-reference/interfaces/_kottster_server.PartialTablePageConfig.html#validaterecordbeforeupdate), optional
 
   Defines a function to validate the record values before they are updated in the table. This function is called with the primary key and record values, and should return a boolean indicating whether the values are valid.
 
@@ -231,7 +230,7 @@ If you only need to change the way columns and fields are rendered, you can use 
 
 - ### transformRecordBeforeUpdate
 
-  `function`, optional
+  [`function`](https://kottster.app/api-reference/interfaces/_kottster_server.PartialTablePageConfig.html#transformrecordbeforeupdate), optional
 
   Defines a function to transform the record values before they are updated in the table. This function is called with the primary key and record values, and should return the transformed values.
 
@@ -246,7 +245,7 @@ If you only need to change the way columns and fields are rendered, you can use 
 
 - ### afterUpdate
 
-  `function`, optional
+  [`function`](https://kottster.app/api-reference/interfaces/_kottster_server.PartialTablePageConfig.html#afterupdate), optional
 
   A function executed after the record is updated in the table. This function is often used to perform additional actions, such as sending notifications or updating related records.
 
@@ -256,11 +255,11 @@ If you only need to change the way columns and fields are rendered, you can use 
   }
   ```
 
-- ### allowDelete
+<!-- - ### allowDelete
 
   `boolean`, optional
 
-  Allows users to delete records from the table. If not specified, the default value is `true`.
+  Allows users to delete records from the table. If not specified, the default value is `true`. -->
 
 - ### allowedRolesToDelete
 
@@ -270,7 +269,7 @@ If you only need to change the way columns and fields are rendered, you can use 
 
 - ### validateRecordBeforeDelete
 
-  `function`, optional
+  [`function`](https://kottster.app/api-reference/interfaces/_kottster_server.PartialTablePageConfig.html#validaterecordbeforedelete), optional
 
   Defines a function to validate the record before it is deleted from the table. This function is called with the primary key and should return a boolean indicating whether the record can be deleted.
 
@@ -288,7 +287,7 @@ If you only need to change the way columns and fields are rendered, you can use 
 
 - ### afterDelete
 
-  `function`, optional
+  [`function`](https://kottster.app/api-reference/interfaces/_kottster_server.PartialTablePageConfig.html#afterdelete), optional
 
   A function executed after the record is deleted from the table. This function is often used to perform additional actions, such as sending notifications or deleting related records.
 
@@ -298,25 +297,25 @@ If you only need to change the way columns and fields are rendered, you can use 
   }
   ```
 
-- ### customSqlQuery
+<!-- - ### customSqlQuery
 
   `string`, optional
 
   Specifies a custom SQL query to retrieve the records for the table. This property is required if you are using the `rawSqlQuery` fetch strategy.
   
-  Learn more: [Raw SQL queries](./raw-sql-queries.md)
+  Learn more: [Raw SQL queries](./raw-sql-queries.md) -->
 
-- ### customSqlCountQuery
+<!-- - ### customSqlCountQuery
 
   `string`, optional
 
   Specifies a custom SQL query to count the records for the table. This query should return a single numeric value.
 
-  Learn more: [Raw SQL queries](./raw-sql-queries.md)
+  Learn more: [Raw SQL queries](./raw-sql-queries.md) -->
 
 - ### knexQueryModifier
 
-  `(knex: Knex.QueryBuilder) => Knex.QueryBuilder`, optional
+  [`(knex: Knex.QueryBuilder) => Knex.QueryBuilder`](https://kottster.app/api-reference/interfaces/_kottster_server.PartialTablePageConfig.html#knexquerymodifier), optional
 
   A function that modifies the Knex query before it is executed. This function is often used to add custom where clauses, joins, or other query modifications. 
   Learn more in the [Knex documentation](https://knexjs.org/guide/query-builder.html).
@@ -333,7 +332,7 @@ If you only need to change the way columns and fields are rendered, you can use 
   }
   ```
 
-- ### calculatedColumns
+<!-- - ### calculatedColumns
 
   `TablePageConfigCalculatedColumn[]`, optional
 
@@ -372,7 +371,7 @@ If you only need to change the way columns and fields are rendered, you can use 
 
     `number`, optional
 
-    Specifies the position of the calculated column in the table. If not specified, the calculated columns will be displayed at the end of the table.
+    Specifies the position of the calculated column in the table. If not specified, the calculated columns will be displayed at the end of the table. -->
 
 - ### nested
 
@@ -380,7 +379,7 @@ If you only need to change the way columns and fields are rendered, you can use 
 
   Each nested table configuration has all the properties of a regular table configuration.
 
-- ### relationships
+<!-- - ### relationships
 
   Specifies the configuration for the relationships the table has with other tables.
 
@@ -402,9 +401,9 @@ If you only need to change the way columns and fields are rendered, you can use 
 
     `number`, optional
 
-    Specifies the position of the relation in the table. If not specified, relationships columns will be displayed in the end of the table.
+    Specifies the position of the relation in the table. If not specified, relationships columns will be displayed in the end of the table. -->
 
-## Columns
+<!-- ## Columns
 
 Specifies the configuration for the columns in the table. Each column configuration should have `column` property, which specifies the name of the column in the database table. 
   
@@ -529,15 +528,15 @@ Each column can have the following properties:
     column: 'full_name',
     render: (record) => `${record.firstName} ${record.lastName}`   
   }
-  ```
+  ``` -->
 
-## Field inputs
+<!-- ## Field inputs
 
-By default, form fields are automatically generated based on your database schema and [`defineTableController`](../../table/introduction.md) settings. 
+By default, form fields are automatically generated based on your database schema and [`defineTableController`](../../table/introduction.md) settings.  -->
 
-But you can also define the form input explicitly using the `formInput` property in the [column configuration](#columns).
+<!-- But you can also define the form input explicitly using the `formInput` property in the [column configuration](#columns). -->
 
-```typescript [Example]
+<!-- ```typescript [Example]
 columns: [
   {
     'column': 'description',
@@ -556,9 +555,9 @@ columns: [
     }
   }
 ]
-```
+``` -->
 
-### Field input types
+<!-- ### Field input types
 
 The type property defines the field type and supports additional properties depending on the type. 
 
@@ -668,11 +667,11 @@ Below is a list of supported field input types and their interfaces:
       /** The key of the relationship */
       relationshipKey?: string;
     }
-    ```
+    ``` -->
 
-### Custom field input
+<!-- ### Custom field input -->
 
-If you need to use a custom field input, you can define it using the type `custom` and the `renderComponent` function. This requires you to add `index.jsx` file in your page directory. 
+<!-- If you need to use a custom field input, you can define it using the type `custom` and the `renderComponent` function. This requires you to add `index.jsx` file in your page directory. 
 
 Learn more: [Table Page Component](../../ui/table-page-component.md)
 
@@ -698,33 +697,83 @@ This function receives the following parameters:
     );
   }
 }
-```
+``` -->
 
 ## Custom server API
 
-You can extend your table controller with [custom server procedures](../../custom-pages/api.md) to handle specific business logic that goes beyond standard table operations. These procedures can be called from the frontend using the [`useCallProcedure`](../../custom-pages/calling-api.md) hook.
-
 ### Adding custom server procedures
+
+You can extend your table controller with [custom server procedures](../../custom-pages/api.md) to handle specific business logic that goes beyond standard table operations. 
 
 **Example:**
 
-```tsx [app/pages/users/api.server.js]
+::: code-group
+
+```tsx [JavaScript]
 import { app } from '../../_server/app';
+import postgresDataSource from '../../_server/data-sources/postgres_db';
+
+// Get Knex client to interact with the database
+const knex = postgresDataSource.getClient();
 
 const controller = app.defineTableController({}, {
-  // Custom server procedures
-  sendWelcomeEmail: async (data) => {
-    const { userEmail } = data;
-    
-    // Send email logic here
-    console.log(`[server] Sending welcome email to ${userEmail}`);
-    
-    return { success: true };
+  // Define a server-side procedure to send a welcome email
+  sendWelcomeEmail: async ({ userId }) => {
+    // Get user email from the database
+    const user = await knex('users').where({ id: userId }).first();
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Send email logic here...
+    console.log(`[server] Sending welcome email to ${user.email}`);
+
+    return { 
+      success: true, 
+      sentTo: user.email 
+    };
   },
 });
 
 export default controller;
 ```
+
+```typescript [TypeScript]
+import { app } from '../../_server/app';
+import postgresDataSource from '../../_server/data-sources/postgres_db';
+
+interface SendWelcomeEmailInput {
+  userId: number;
+}
+
+// Get Knex client to interact with the database
+const knex = postgresDataSource.getClient();
+
+const controller = app.defineTableController({}, {
+  // Define a server-side procedure to send a welcome email
+  sendWelcomeEmail: async ({ userId }: SendWelcomeEmailInput) => {
+    // Get user email from the database
+    const user = await knex('users').where({ id: userId }).first();
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Send email logic here...
+    console.log(`[server] Sending welcome email to ${user.email}`);
+
+    return { 
+      success: true, 
+      sentTo: user.email 
+    };
+  },
+});
+
+export type Procedures = typeof controller.procedures;
+
+export default controller;
+```
+
+:::
 
 ### Calling procedures from the frontend
 
@@ -732,18 +781,21 @@ Use the [`useCallProcedure`](../../custom-pages/calling-api.md) hook to call you
 
 **Example:**
 
-```tsx [app/pages/users/index.jsx]
+::: code-group
+
+```tsx [JavaScript]
 import { TablePage, useCallProcedure } from '@kottster/react';
-import { Button } from '@mantine/core';
 
 export default () => {
-  const callProcedure = useCallProcedure();
+  // Get the callProcedure function
+  const callProcedure = useCallProcedure(); // [!code highlight]
   
-  const handleSendWelcomeEmail = async (userEmail) => {
+  const handleSendWelcomeEmail = async (userId) => {
     try {
-      const result = await callProcedure('sendWelcomeEmail', { userEmail });
+      // Call the backend procedure
+      const result = await callProcedure('sendWelcomeEmail', { userId }); // [!code highlight]
       if (result.success) {
-        console.log('Email sent successfully');
+        console.log(`Email sent successfully to ${result.sentTo}`);
       } else {
         console.error('Failed to send email');
       }
@@ -758,7 +810,7 @@ export default () => {
         {
           label: 'Send Welcome Email',
           onClick: (record) => {
-            handleSendWelcomeEmail(record.email);
+            handleSendWelcomeEmail(record.id);
           },
         },
       ]}
@@ -767,5 +819,46 @@ export default () => {
 };
 ```
 
-To learn more about defining custom server procedures, visit the [Custom API](../../custom-pages/api.md) and [Calling API](../../custom-pages/calling-api.md) sections.
+```tsx [TypeScript]
+import { TablePage, useCallProcedure } from '@kottster/react';
+import { type Procedures } from './api.server'; // [!code highlight]
+
+export default () => {
+  // Get the type-safe callProcedure function
+  const callProcedure = useCallProcedure<Procedures>(); // [!code highlight]
+
+  const handleSendWelcomeEmail = async (userId: number) => {
+    try {
+      // Call the bakend procedure
+      const result = await callProcedure('sendWelcomeEmail', { userId }); // [!code highlight]
+      if (result.success) {
+        console.log(`Email sent successfully to ${result.sentTo}`);
+      } else {
+        console.error('Failed to send email');
+      }
+    } catch (error) {
+      console.error('Failed to send email:', error);
+    }
+  };
+
+  return (
+    <TablePage
+      customActions={[
+        {
+          label: 'Send Welcome Email',
+          onClick: (record) => {
+            handleSendWelcomeEmail(record.id);
+          },
+        },
+      ]}
+    />
+  );
+};
+```
+
+:::
+
+You can learn more about custom server procedures in the following sections:
+- [Building server API](../../custom-pages/api.md)
+- [Calling API from client](../../custom-pages/calling-api.md)
 

@@ -12,9 +12,13 @@ The sidebar navigation is the main way users move through your Kottster app. You
 
 The easiest way to customize your sidebar is through the visual interface, where you can add, edit, and manage pages while specifying whether each page should be visible in the sidebar along with its icon.
 
-### Manual configuration
+### Manual configuration using `page.json`
 
 You can also control sidebar visibility directly in each page's `page.json` config file located in `app/pages/<key>/page.json`. Here you can specify the icon and whether the page should be visible in the sidebar.
+
+### Manual configuration using `sidebar.json`
+
+Alternatively, you can customize some aspects of the sidebar in the `app/schemas/sidebar.json` file. This file allows you to define the order of pages in the sidebar and group them into sections.
 
 ## Page configuration
 
@@ -34,7 +38,3 @@ Each page can be configured with sidebar settings in its `page.json` file:
 - `hideInSidebar` - Set to `true` to hide the page from sidebar navigation
 
 By default, any page is visible in the sidebar and gets a default icon.
-
-## Available icons
-
-You can choose from the following built-in icons for your navigation items: `users`, `award`, `box`, `briefcase`, `pieChart`, `barChart2`, `shoppingBag`, `creditCard`, `cloud`, `mapPin`, `bookOpen`, `table`, and `sliders`.

@@ -8,9 +8,7 @@ In Kottster, **all fields are basically table columns**. If you need to add  or 
 
 ## Add new fields to the form
 
-If you want to display a new field in the form, you can use the [`customColumns`](../../ui/table-page-component.md#customcolumns) prop. This is useful for adding additional fields without modifying the existing columns or backend logic.
-
-Add the `customColumns` prop to the `TablePage` component. This prop accepts an array of objects, each representing a custom column.
+Add the [`customColumns`](../../ui/table-page-component.md#customcolumns) prop to the [`TablePage`](../../ui/table-page-component.md) component. This prop accepts an array of objects, each representing a custom column.
 
 **Example of a page with a custom field:**
 
@@ -62,9 +60,7 @@ export default () => (
 
 ## Modify field input for existing columns
 
-If you want to update existing fields (columns), you can use the [`columnOverrides`](../../ui/table-page-component.md#columnoverrides) prop. This is useful for adding custom render for field inputs.
-
-Add the `columnOverrides` prop to the `TablePage` component. This prop accepts an object where each key is the column name and the value is a function that takes the existing column configuration and returns the modified column configuration.
+Add the [`columnOverrides`](../../ui/table-page-component.md#columnoverrides) prop to the [`TablePage`](../../ui/table-page-component.md) component. This prop accepts an object where each key is the column name and the value is a function that takes the existing column configuration and returns the modified column configuration.
 
 **Example of modifying email field:**
 
@@ -102,7 +98,3 @@ export default () => (
   />
 );
 ```
-
----
-
-Learn more about `fieldInput` and its parameters in the [API reference](../configuration/api.md).

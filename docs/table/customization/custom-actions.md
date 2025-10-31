@@ -16,6 +16,8 @@ Kottster provides default actions for working with records (view, edit, delete),
 
 Use client-side actions for simple interactions like showing alerts, opening modals, or navigating to other pages.
 
+Add the [`customActions`](../../ui/table-page-component.md#customactions) prop to the [`TablePage`](../../ui/table-page-component.md) component. This prop accepts an array of objects, each representing a custom action.
+
 ```jsx [app/pages/users/index.jsx]
 import { TablePage } from '@kottster/react';
 
@@ -39,6 +41,8 @@ export default () => (
 
 Use this approach when you need server-side processing (like sending emails or updating data) and want the procedure to run automatically when the button is clicked.
 
+In the [`customActions`](../../ui/table-page-component.md#customactions) prop of the [`TablePage`](../../ui/table-page-component.md) component, specify the `procedure` property with the name of the server procedure to call. You can also handle the result using the [`onResult`](https://kottster.app/api-reference/interfaces/_kottster_react.TableAction.html#onresult) callback.
+
 ```jsx [app/pages/users/index.jsx]
 import { TablePage } from '@kottster/react';
 import { notifications } from '@mantine/notifications';
@@ -48,12 +52,12 @@ export default () => (
     customActions={[
       {
         label: 'Send Welcome Email',
-        procedure: 'sendWelcomeEmail', // This procedure runs automatically
+        procedure: 'sendWelcomeEmail', // What server procedure to call
         onResult: (result) => {
           if (result.success) {
             notifications.show({
               title: 'Success',
-              message: 'Welcome email sent!',
+              message: `Welcome email sent to ${result.sentTo}`,
               color: 'green',
             });
           }
@@ -64,16 +68,30 @@ export default () => (
 );
 ```
 
-**Define the server procedure:**
+On the server side, add the procedure name to your [table controller](../configuration/api.md). Define the server procedure **that will be called automatically:**
 
 ```js [app/pages/users/api.server.js]
 import { app } from '../../_server/app';
+import postgresDataSource from '../../_server/data-sources/postgres_db';
+
+// Get Knex client to interact with the database
+const knex = postgresDataSource.getClient();
 
 const controller = app.defineTableController({}, {
   sendWelcomeEmail: async (record) => {
-    console.debug(`[server] Sending welcome email to ${record.email}`);
-    
-    return { success: true };
+    // Get user email from the database
+    const user = await knex('users').where({ id: record.id }).first();
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Send email logic here...
+    console.log(`[server] Sending welcome email to ${user.email}`);
+
+    return { 
+      success: true, 
+      sentTo: user.email 
+    };
   }
 });
 
@@ -87,30 +105,24 @@ Use this approach when you need custom logic before or after calling the server 
 ```jsx [app/pages/users/index.jsx]
 import { TablePage, useCallProcedure } from '@kottster/react';
 import { notifications } from '@mantine/notifications';
-import { modals } from '@mantine/modals';
 
 export default () => {
   const callProcedure = useCallProcedure();
 
   const handleSendEmail = (record) => {
-    // Show confirmation before calling the server
-    modals.confirm({
-      title: 'Send Email',
-      children: `Send welcome email to ${record.email}?`,
-      labels: { confirm: 'Send', cancel: 'Cancel' },
-      onConfirm: async () => {
-        // Manually call the same server procedure
-        const result = await callProcedure('sendWelcomeEmail', record);
-        
-        if (result.success) {
-          notifications.show({
-            title: 'Success',
-            message: 'Email sent successfully!',
-            color: 'green',
-          });
-        }
-      },
-    });
+    const confirmed = confirm(`Send welcome email to ${record.email}?`);
+    if (confirmed) {
+      // Manually call the same server procedure
+      const result = await callProcedure('sendWelcomeEmail', record);
+      
+      if (result.success) {
+        notifications.show({
+          title: 'Success',
+          message: 'Email sent successfully!',
+          color: 'green',
+        });
+      }
+    }
   };
 
   return (

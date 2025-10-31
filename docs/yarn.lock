@@ -1368,6 +1368,11 @@ vitepress-plugin-group-icons@^1.6.3:
     "@iconify-json/vscode-icons" "^1.2.29"
     "@iconify/utils" "^3.0.0"
 
+vitepress-plugin-tabs@^0.7.3:
+  version "0.7.3"
+  resolved "https://registry.yarnpkg.com/vitepress-plugin-tabs/-/vitepress-plugin-tabs-0.7.3.tgz#954504826a677bdd487a2ac170d3476851ff94ac"
+  integrity sha512-CkUz49UrTLcVOszuiHIA7ZBvfsg9RluRkFjRG1KvCg/NwuOTLZwcBRv7vBB3vMlDp0bWXIFOIwdI7bE93cV3Hw==
+
 vitepress@^1.6.4:
   version "1.6.4"
   resolved "https://registry.yarnpkg.com/vitepress/-/vitepress-1.6.4.tgz#1b6c68fede541a3f401a66263dce0c985e2d8d92"

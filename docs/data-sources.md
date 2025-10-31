@@ -16,7 +16,7 @@ In Kottster, data sources are the primary way to connect to your database. They 
 
 ## Adding a data source
 
-There are three ways to add a data source:
+There are two ways to add a data source:
 
 ### 1. Using the UI
 
@@ -45,7 +45,7 @@ The following table configuration options are available:
 
 Example of a data source configuration:
 
-```json [app/_server/data-sources/mysql-db/dataSource.json]
+```json [app/_server/data-sources/mysql_db/dataSource.json]
 {
   "type": "mysql",
   "tablesConfig": {

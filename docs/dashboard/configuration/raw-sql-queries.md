@@ -6,8 +6,6 @@ description: "Learn how to use custom SQL queries in Kottster dashboard pages to
 
 Dashboard pages in Kottster support custom SQL queries to fetch and aggregate data directly from your database for stats and visualizations.
 
-When creating a dashboard page using the visual builder, raw SQL query (`rawSqlQuery`) is set as the default fetch strategy. You can configure queries through the visual builder or by manually editing the `sqlQuery` parameter in [`defineDashboardController`](./api.md).
-
 ## Stats
 
 Stats display single numeric values. Your SQL query must return exactly one row with one column containing the metric value.
@@ -38,7 +36,7 @@ SELECT COUNT(*) FROM orders
 
 ### Date range filtering
 
-When date range filtering is enabled, use `:period_start_date` and `:period_end_date` parameters to filter results dynamically:
+When date range filtering is enabled, use `:period_start_date` and `:period_end_date` parameters to filter results dynamically. They come with the datetime in `YYYY-MM-DD` format. Example of a filtered query:
 
 ::: code-group
 
@@ -130,7 +128,7 @@ ORDER BY date
 
 ### Date range filtering
 
-When date range filtering is enabled, use `:period_start_date` and `:period_end_date` parameters to filter results dynamically:
+When date range filtering is enabled, use `:period_start_date` and `:period_end_date` parameters to filter results dynamically. They come with the datetime in `YYYY-MM-DD` format. Example of a filtered query:
 
 ::: code-group
 
@@ -242,7 +240,7 @@ ORDER BY order_count DESC
 
 ### Date range filtering
 
-When date range filtering is enabled, use `:period_start_date` and `:period_end_date` parameters to filter results dynamically:
+When date range filtering is enabled, use `:period_start_date` and `:period_end_date` parameters to filter results dynamically. They come with the datetime in `YYYY-MM-DD` format. Example of a filtered query::
 
 ::: code-group
 

@@ -55,3 +55,19 @@ const controller = app.defineDashboardController({
 
 export default controller;
 ```
+
+## Usage
+
+The `defineDashboardController` function takes two arguments:
+
+*   `config`: A configuration object that defines the behavior of the dashboard page, including stats and cards.
+
+## Parameters
+
+- ### customDataFetcher
+
+  [`function`](https://kottster.app/api-reference/interfaces/_kottster_server.DashboardPageConfigSingleStat.html#customdatafetcher), optional
+
+  Defines a custom function to retrieve data for the dashboard stat or card. This function should return the data in the expected format for the stat or card type.
+
+  Learn more: [Custom data fetcher](./custom-data-fetcher.md)

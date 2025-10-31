@@ -7,14 +7,16 @@ Kottster lets you create pages with custom content and business logic. You can u
 Each custom page should have its own directory under `./app/pages/<key>` containing at least one file. The `<key>` becomes the URL path where your page will be accessible (e.g., `/dashboard` for a page in `./app/pages/dashboard/`).
 
 ### Frontend component (`index.jsx`)
+
 This file defines your page's user interface and exports a React component.
 
 ### Backend controller (`api.server.js`)
+
 This file handles server-side logic and API endpoints for your page. Only needed if your page requires backend functionality.
 
 ## Simple page
 
-You can create a basic custom page with just the frontend component. This example creates a simple welcome page that displays a static message.
+You can create a basic custom page by adding an `index.jsx` (or `index.tsx`) file in a page directory. This example creates a simple welcome page that displays a static message.
 
 **Example:**
 
@@ -33,160 +35,182 @@ export default () => {
 
 ## Page with API
 
-When you need to fetch data from a backend API, you can add a custom controller by creating an `api.server.js` file in the same directory as your page component. The controller uses [`defineCustomController`](./api.md) to set up custom API endpoints for your page.
-
-This example creates a page that displays the file path of the current page. It demonstrates how to call backend procedures from the frontend and handle loading states and errors.
-
-### Backend controller
-
-First, create the backend controller that defines the API functions:
+When you need a backend API, you can add a custom controller by creating an `api.server.js` (or `api.server.ts`) file in the same directory as your page component. The controller uses [`defineCustomController`](./api.md) to set up custom API endpoints for your page.
 
 **Example:**
 
-```tsx [app/pages/example/api.server.js]
+::: code-group
+
+```tsx [JavaScript]
 import { app } from '../../_server/app';
+import postgresDataSource from '../../_server/data-sources/postgres_db';
+
+const knex = postgresDataSource.getClient();
 
 const controller = app.defineCustomController({
-  getFilePath: async (data) => {
-    // Return the file path for the current page
-    return `${process.cwd()}/app/pages/${data.id}/index.jsx`;
+  getPost: async ({ postId }) => {
+    const post = await knex('posts').where({ id: postId }).first();
+    if (!post) {
+      throw new Error('Post not found');
+    }
+
+    return post;
   },
 });
 
 export default controller;
 ```
 
-The `getFilePath` function receives data from the frontend (in this case, the page ID) and returns the file system path where the page component is located.
-
-### Frontend component
-
-Then, create the frontend component that calls the backend API:
-
-**Example:**
-
-```tsx [app/pages/example/index.jsx]
-import { useEffect, useState } from 'react';
-import { Page, usePage, useCallProcedure } from '@kottster/react';
-import { Center, Stack, Text, Code, Loader } from '@mantine/core';
-
-export default () => {
-  // Hook to call backend procedures for the current page
-  const callProcedure = useCallProcedure();
-  
-  // Get the current page key
-  const { pageKey } = usePage();
-  
-  const [filePath, setFilePath] = useState();
-  const [loading, setLoading] = useState(true);
-  
-  const fetchFilePath = async () => {
-    try {
-      // Call the backend procedure defined in api.server.js
-      const data = await callProcedure('getFilePath', { id: pageKey });
-      setFilePath(data);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchFilePath(); // Fetch the file path when the component mounts
-  }, [pageKey]);
-
-  return (
-    <Page>
-      <Center h='80vh'>
-        <Stack align='center' gap='md'>
-          {loading ? (
-            <Loader />
-          ) : (
-            <Code block>{filePath}</Code>
-          )}
-        </Stack>
-      </Center>
-    </Page>
-  );
-};
-```
-
-This page component does the following:
-1. **Fetches data on load**: When the page loads, it automatically calls the `getFilePath` backend procedure
-2. **Shows loading state**: Displays a spinner while waiting for the API response
-3. **Displays the result**: Shows the file path in a code block once loaded
-
-The backend procedures defined in your controller are accessible from the frontend using the [`useCallProcedure`](../ui/use-call-procedure-hook.md) hook. This hook provides a clean way to make type-safe calls to your backend procedures.
-
-## Type-safe API calls
-
-You can get full type safety for your API calls by exporting the controller types from your backend file and importing them in your frontend component. This ensures that parameters and return values of your server API are properly typed.
-
-### Backend with types
-
-**Example:**
-
-```tsx [app/pages/example/api.server.ts]
+```tsx [TypeScript]
 import { app } from '../../_server/app';
+import postgresDataSource from '../../_server/data-sources/postgres_db';
+
+interface GetPostInput {
+  postId: number;
+}
+
+export interface Post {
+  id: number;
+  title: string;
+  content: string;
+}
+
+const knex = postgresDataSource.getClient();
 
 const controller = app.defineCustomController({
-  getFilePath: async (data: { id: string }) => {
-    return `${process.cwd()}/app/pages/${data.id}/index.jsx`;
+  getPost: async ({ postId }: GetPostInput): Promise<Post> => {
+    const post = await knex('posts').where({ id: postId }).first();
+    if (!post) {
+      throw new Error('Post not found');
+    }
+
+    return post;
   },
 });
 
-// Export the types for TypeScript support
 export type Procedures = typeof controller.procedures;
 
 export default controller;
 ```
 
-### Frontend with type safety
+:::
+
+The `getPost` procedure fetches a post from the database table posts using [knex](https://knexjs.org/guide/query-builder.html) based on the provided `postId` parameter.
+
+After defining the backend controller, you can call its procedures from your frontend component using the [`useCallProcedure`](../custom-pages/calling-api.md) hook.
 
 **Example:**
 
-```tsx [app/pages/example/index.tsx]
+::: code-group
+
+```tsx [JavaScript]
+import { useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { Page, usePage, useCallProcedure } from '@kottster/react';
-import { Center, Stack, Text, Code, Loader } from '@mantine/core';
-import { type Procedures } from './api.server';
 
 export default () => {
-  // Get fully typed procedure calls
-  const callProcedure = useCallProcedure<Procedures>();
-  const { pageKey } = usePage();
-  const [filePath, setFilePath] = useState<string>();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Get postId from URL query parameters
+  const postId = Number(searchParams.get('postId'));
+
+  // Hook to call backend procedures for the current page
+  const callProcedure = useCallProcedure(); // [!code highlight]
+
+  const [post, setPost] = useState();
   const [loading, setLoading] = useState(true);
-  
-  const fetchFilePath = async () => {
+
+  const fetchPost = async () => {
     try {
-      // TypeScript will now validate the function name and parameters
-      const data = await callProcedure('getFilePath', { id: pageKey });
-      setFilePath(data);
+      // Call the backend procedure defined in api.server.js
+      const data = await callProcedure('getPost', { postId }); // [!code highlight]
+      setPost(data);
+    } catch (error) {
+      console.error('Error fetching post:', error);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchFilePath();
-  }, [pageKey]);
+    fetchPost(); // Fetch the post when the component mounts
+  }, [postId]);
 
   return (
     <Page>
-      <Center h='80vh'>
-        <Stack align='center' gap='md'>
-          {loading ? (
-            <Loader />
-          ) : (
-            <Code block>{filePath}</Code>
-          )}
-        </Stack>
-      </Center>
+      {loading ? (
+        <Loader />
+      ) : (
+        <>
+          <h1>{post?.title}</h1>
+          <p>
+            {post?.content}
+          </p>
+        </>
+      )}
     </Page>
   );
 };
 ```
 
-With this setup, TypeScript will provide autocomplete for function names, validate parameter types, and ensure return type safety for all your backend procedures.
+```tsx [TypeScript]
+import { useSearchParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Page, usePage, useCallProcedure } from '@kottster/react';
+import { Center, Stack, Text, Code, Loader } from '@mantine/core';
+import { type Procedures, type Post } from './api.server'; // [!code highlight]
+
+export default () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Get postId from URL query parameters
+  const postId = Number(searchParams.get('postId'));
+
+  // Hook to call backend procedures for the current page
+  const callProcedure = useCallProcedure<Procedures>(); // [!code highlight]
+
+  const [post, setPost] = useState<Post>();
+  const [loading, setLoading] = useState(true);
+
+  const fetchPost = async () => {
+    try {
+      // Call the backend procedure defined in api.server.js
+      const data = await callProcedure('getPost', { postId }); // [!code highlight]
+      setPost(data);
+    } catch (error) {
+      console.error('Error fetching post:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPost(); // Fetch the post when the component mounts
+  }, [postId]);
+
+  return (
+    <Page>
+      {loading ? (
+        <Loader />
+      ) : (
+        <>
+          <h1>{post?.title}</h1>
+          <p>
+            {post?.content}
+          </p>
+        </>
+      )}
+    </Page>
+  );
+};
+```
+
+:::
+
+This page component does the following:
+1. **Fetches data on load**: When the page loads, it automatically calls the `getPost` procedure with the `postId` from the URL query parameters
+2. **Shows loading state**: Displays a spinner while waiting for the API response
+3. **Displays the result**: Shows the post title and content once loaded
 
 ## Examples
 

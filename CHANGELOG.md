@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.4.3] - 2025-11-05
+
+- Added support for dark mode.
+- Added `useTheme` hook to `@kottster/react` package.
+- Fixed including all TypeScript path mappings during server build (#118)
+
 ## [3.4.2] - 2025-11-01
 
 - Added `useUser`, `useApp`, `useModal`, `useTable` hooks to `@kottster/react` package.

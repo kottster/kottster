@@ -264,6 +264,7 @@ function sidebarDocs(): DefaultTheme.SidebarItem[] {
             { text: 'useApp', link: '/ui/use-app-hook' },
             { text: 'useModal', link: '/ui/use-modal-hook' },
             { text: 'useTable', link: '/ui/use-table-hook' },
+            { text: 'useTheme', link: '/ui/use-theme-hook' },
           ]
         },
       ]

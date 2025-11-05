@@ -45,6 +45,7 @@ export * from './utils/generateRandomString';
 export * from './utils/readAppSchema';
 export * from './utils/getPageKeyFromPathname';
 export * from './utils/normilizeAppBasePath';
+export * from './utils/readTsConfig';
 
 // Constants
 export * from './constants/dataSourceTypes';

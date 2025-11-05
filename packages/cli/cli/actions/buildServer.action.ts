@@ -1,7 +1,7 @@
 import { build } from 'vite';
 import path from 'path';
 import fs from 'fs/promises';
-import { checkTsUsage, readAppSchema } from '@kottster/common';
+import { checkTsUsage, readAppSchema, readTsConfig } from '@kottster/common';
 
 export async function buildServer(): Promise<void> {
   const usingTsc = checkTsUsage();
@@ -107,10 +107,8 @@ export async function buildServer(): Promise<void> {
   };
 
   try {
-    const tsconfigFile = path.join(projectDir, 'tsconfig.json');
-    const tsconfigContent = await fs.readFile(tsconfigFile, 'utf8');
-    const tsconfig = JSON.parse(tsconfigContent) as any;
-    const paths = tsconfig?.compilerOptions?.paths ?? {}
+    const tsConfig = usingTsc ? readTsConfig(projectDir) : undefined;
+    const paths = tsConfig?.compilerOptions?.paths ?? {};
 
     await build({
       configFile: false,

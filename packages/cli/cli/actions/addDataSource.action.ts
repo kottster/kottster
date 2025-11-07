@@ -33,7 +33,7 @@ export async function addDataSource (dataSourceType: DataSourceType, options: Op
     let data: Record<string, unknown> = {}; 
     try {
       // Replace escaped quotes and parse the JSON data
-      data = options.data ? JSON.parse(options.data.replace(/\\"/g, '"')) : {};
+      data = options.data ? JSON.parse(Buffer.from(options.data, 'base64').toString()) : {};
     } catch (error) {
       console.error('Invalid JSON data provided:', error);
     }

@@ -899,10 +899,10 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
-"@kottster/common@^3.4.3":
-  version "3.4.3"
-  resolved "https://registry.yarnpkg.com/@kottster/common/-/common-3.4.3.tgz#951a064631b69f7dfc7e679b649e6126c24037e4"
-  integrity sha512-DyPOYUdJgmJyxGV/+/iXqysEXjFbFMeFWfo+pamh56bOFj+goXkYtivqASiWIYLZh7Cpt0TQ+DEhOZLTc+6JLQ==
+"@kottster/common@^3.4.4":
+  version "3.4.4"
+  resolved "https://registry.yarnpkg.com/@kottster/common/-/common-3.4.4.tgz#e15b662bbd54ff066de375e61da0a3f1d23441c2"
+  integrity sha512-RQmNnUmLXnxYzYB0u099IWEOyBIjy4BaZVLviqV31qCSAixo/J5idAhRspJhGLC4iumj1eBEP5nSw4+XYL0cFg==
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"

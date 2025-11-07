@@ -222,7 +222,7 @@ export class FileCreator {
    */
   private createGitIgnore (): void {
     const gitIgnorePath = path.join(this.projectDir, '.gitignore')
-    const gitIgnoreContent = ['node_modules', 'nbuild', 'npm-debug.log', '.DS_Store', '.cache'].join('\n')
+    const gitIgnoreContent = ['node_modules', 'nbuild', 'npm-debug.log', '.DS_Store', '.cache', 'tmp'].join('\n')
 
     this.writeFile(gitIgnorePath, gitIgnoreContent)
   }

@@ -4,6 +4,8 @@ import spawn from 'cross-spawn';
 import { PROJECT_DIR } from "../constants/projectDir";
 import { DevAction } from "../models/action.model";
 import randomstring from 'randomstring';
+import path from "path";
+import fs from "fs";
 
 /**
  * Verify and add data source to the project
@@ -22,12 +24,22 @@ export class AddDataSource extends DevAction {
       const { type, connectionDetails, name } = data;
       const executableCode = this.getExecutableCode(type, connectionDetails);
 
-      const child = spawn('node', [
-        '--no-warnings',
-        '--input-type=module',
-        '-e',
-        executableCode
-      ], {
+      // Create local tmp folder inside project
+      const tmpDir = path.join(PROJECT_DIR, 'tmp');
+      try {
+        if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
+      } catch (err) {
+        return reject(new Error(`Failed to create tmp folder: ${err}`));
+      }
+
+      const tempFilePath = path.join(tmpDir, `data-source-connection-check-${Date.now()}.mjs`);
+      try {
+        fs.writeFileSync(tempFilePath, executableCode, 'utf8');
+      } catch (err) {
+        return reject(new Error(`Failed to write temp file: ${err}`));
+      }
+
+      const child = spawn('node', ['--no-warnings', tempFilePath], {
         stdio: 'pipe'
       });
 
@@ -45,6 +57,11 @@ export class AddDataSource extends DevAction {
       
       // Handle process close
       child.on('close', (code) => {
+        // Clean up temp file
+        try {
+          fs.unlinkSync(tempFilePath);
+        } catch {}
+
         // Parse the received data
         const dbDataMatch = stdOutput.match(this.dbDataRegex);
         let data = {

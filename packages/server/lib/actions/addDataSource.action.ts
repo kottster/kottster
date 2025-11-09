@@ -24,14 +24,13 @@ export class AddDataSource extends DevAction {
       const { type, connectionDetails, name } = data;
       const executableCode = this.getExecutableCode(type, connectionDetails);
 
-      // Create local tmp folder inside project
+      // Create local tmp file inside project
       const tmpDir = path.join(PROJECT_DIR, 'tmp');
       try {
         if (!fs.existsSync(tmpDir)) fs.mkdirSync(tmpDir, { recursive: true });
       } catch (err) {
         return reject(new Error(`Failed to create tmp folder: ${err}`));
       }
-
       const tempFilePath = path.join(tmpDir, `data-source-connection-check-${Date.now()}.mjs`);
       try {
         fs.writeFileSync(tempFilePath, executableCode, 'utf8');
@@ -39,6 +38,7 @@ export class AddDataSource extends DevAction {
         return reject(new Error(`Failed to write temp file: ${err}`));
       }
 
+      // Run the temp file in a child process
       const child = spawn('node', ['--no-warnings', tempFilePath], {
         stdio: 'pipe'
       });
@@ -60,6 +60,7 @@ export class AddDataSource extends DevAction {
         // Clean up temp file
         try {
           fs.unlinkSync(tempFilePath);
+          // eslint-disable-next-line no-empty
         } catch {}
 
         // Parse the received data

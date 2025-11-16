@@ -1,6 +1,10 @@
 /**
  * Normalize the application base path.
  * @param basePath The base path to normalize
+ * @example normalizeAppBasePath('admin') // returns '/admin/'
+ * @example normalizeAppBasePath('/admin') // returns '/admin/'
+ * @example normalizeAppBasePath('admin/') // returns '/admin/'
+ * @example normalizeAppBasePath('/admin/') // returns '/admin/'
  * @returns The normalized base path
  */
 export function normalizeAppBasePath(basePath: string | undefined): string {

@@ -1,5 +1,5 @@
 import { KottsterApp } from "../core/app";
-import { DataSource, Page, Stage } from "@kottster/common";
+import { DataSource, isAppSchemaEmpty, Page, Stage } from "@kottster/common";
 import express, { RequestHandler } from 'express';
 import path from 'path';
 import fs from 'fs';
@@ -12,8 +12,7 @@ import { FileReader } from "../services/fileReader.service";
 import { createDataSource } from "../factories/createDataSource";
 import { WebSocketServer } from 'ws';
 import { VERSION } from "../version";
-import { Request } from 'express';
-
+import { Request, type Express } from 'express';
 
 interface KottsterServerOptions {
   app: KottsterApp;
@@ -21,8 +20,8 @@ interface KottsterServerOptions {
 
 export class KottsterServer {
   private app: KottsterApp;
+  private expressApp: Express;
   private port: number;
-  private expressApp: express.Application;
   private server: Server;
   private wss: WebSocketServer;
 
@@ -39,11 +38,21 @@ export class KottsterServer {
     this.app = app;
     this.port = serverPort ? +serverPort : 3000;
     this.expressApp = express();
+
+    // Configure trust proxy if specified
+    const trustProxy = process.env.EXPRESS_TRUST_PROXY;
+    if (trustProxy === 'true' || trustProxy === '1') {
+      this.expressApp.set('trust proxy', true);
+    } else if (trustProxy) {
+      this.expressApp.set('trust proxy', trustProxy);
+    }
   }
 
   private setupMiddleware() {
-    this.expressApp.use(express.json());
-    this.expressApp.use(express.urlencoded({ extended: true }));
+    const bodyParserLimit = process.env.EXPRESS_BODY_PARSER_LIMIT || '25mb';
+    this.expressApp.use(express.json({ limit: bodyParserLimit }));
+    this.expressApp.use(express.urlencoded({ extended: true, limit: bodyParserLimit }));
+
     this.expressApp.use((req, res, next) => {
       Object.entries(commonHeaders).forEach(([key, value]) => {
         res.setHeader(key, value);
@@ -62,6 +71,12 @@ export class KottsterServer {
   private setupServiceRoutes() {
     this.expressApp.use(`${this.app.basePath}internal-api`, this.app.getInternalApiRoute());
     this.expressApp.use(`${this.app.basePath}download/:operationId`, this.app.getDownloadRoute());
+
+    if (this.app.stage === Stage.development) {
+      this.expressApp.get(this.app.basePath, (req, res) => {
+        res.send('Kottster API Server for development mode is running on this endpoint.');
+      });
+    }
   }
 
   private setupWebSocketHealthCheck() {
@@ -86,6 +101,12 @@ export class KottsterServer {
         clearInterval(pingInterval);
       });
     });
+  }
+
+  private checkIfAppSchemaIsEmpty() {
+    if (this.app.stage === Stage.production && isAppSchemaEmpty(this.app.schema)) {
+      throw new Error('The Kottster app is not initialized. You need to run the app in development mode to generate the initial files.');
+    }
   }
 
   private async setupDynamicDataSources() {
@@ -242,7 +263,11 @@ export class KottsterServer {
   }
 
   public async start() {
+    this.checkIfAppSchemaIsEmpty();
     this.checkDistDirectoryExists();
+    if (this.app.configureExpressApp) {
+      this.app.configureExpressApp(this.expressApp);
+    }
     this.setupMiddleware();
     this.setupServiceRoutes();
     await this.setupDynamicDataSources();

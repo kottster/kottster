@@ -12,6 +12,7 @@ import { HttpError, UnauthorizedError } from '../errors/httpError';
 import { FileReader } from '../services/fileReader.service';
 import { Exporter } from '../services/exporter.service';
 import dayjs from 'dayjs';
+import type { Express } from 'express';
 
 type RequestHandler = (req: Request, res: Response, next: NextFunction) => void;
 
@@ -56,6 +57,19 @@ export interface KottsterAppOptions {
    * @hidden
    */
   schema?: MainJsonSchema | Record<string, never>;
+
+  /**
+   * Allows developers to customize the Express app instance.
+   *
+   * Useful for:
+   *   • adding custom middleware
+   *   • modifying server settings
+   *   • enabling CORS, proxies, cookies
+   *   • registering additional routes
+   *
+   * @param app The Express application instance
+   */
+  configureExpressApp?: (app: Express) => void;
 }
 
 interface EnsureValidTokenResponse {
@@ -81,8 +95,11 @@ export class KottsterApp {
   public identityProvider: IdentityProvider;
   public exporter: Exporter;
   public schema: AppSchema;
+  
   private customEnsureValidToken?: (request: Request) => Promise<EnsureValidTokenResponse>;
   private postAuthMiddleware?: PostAuthMiddleware;
+  
+  public configureExpressApp?: (app: Express) => void;
 
   public loadedPageConfigs: Page[] = [];
 
@@ -115,6 +132,7 @@ export class KottsterApp {
     this.customEnsureValidToken = options.__ensureValidToken;
     this.postAuthMiddleware = options.postAuthMiddleware;
     this.readOnlyMode = options.__readOnlyMode ?? false;
+    this.configureExpressApp = options.configureExpressApp;
     
     // Set base path
     const basePath = appSchema.main.basePath;

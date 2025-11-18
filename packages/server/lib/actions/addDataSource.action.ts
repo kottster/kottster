@@ -24,6 +24,11 @@ export class AddDataSource extends DevAction {
       const { type, connectionDetails, name } = data;
       const executableCode = this.getExecutableCode(type, connectionDetails);
 
+      if (!Object.values(DataSourceType).includes(type)) {
+        reject(new Error(`Unsupported data source type: ${type}`));
+        return;
+      }
+
       // Create local tmp file inside project
       const tmpDir = path.join(PROJECT_DIR, 'tmp');
       try {

@@ -92,9 +92,37 @@ Move sensitive configuration like `jwtSecretSalt` to environment variables for b
 
 An API token for external requests to the Kottster app. This enables additional features like checking for updates and generating SQL queries using AI.
 
+### configureExpressApp
+
+[`function`](https://kottster.app/api-reference/interfaces/_kottster_server.KottsterAppOptions.html#configureexpressapp), optional
+
+A function that receives the Express app instance for custom configuration. Use this to add middleware, routes, or modify Express configuration.
+
+Example:
+
+```javascript
+import { createApp, createIdentityProvider } from '@kottster/server';
+import schema from '../../kottster-app.json';
+
+export const app = createApp({
+  schema,
+  secretKey: '<YOUR_SECRET_KEY>',
+
+  // ...
+
+  configureExpressApp: (expressApp) => { // [!code highlight]
+    // Log each incoming request --- // [!code highlight]
+    expressApp.use((req, res, next) => { // [!code highlight]
+      console.log(`Request received: ${req.method} ${req.url}`); // [!code highlight]
+      next(); // [!code highlight]
+    }); // [!code highlight]
+  }, // [!code highlight]
+});
+```
+
 ### postAuthMiddleware
 
-`function`, optional
+[`function`](https://kottster.app/api-reference/types/_kottster_server.PostAuthMiddleware.html), optional
 
 A custom middleware function that runs after user authentication. Use this for additional security checks or logging.
 
@@ -111,3 +139,5 @@ Provide them in a `.env` file in your project root, or set them directly in your
 | `PORT` | Port number for the Kottster app in production (default: `3000`) |
 | `DEV_API_SERVER_URL` | URL for the development API server (default: `http://localhost:5481`) |
 | `DEBUG_MODE` | Enables debug mode for verbose logging (default: `false`) |
+| `EXPRESS_TRUST_PROXY` | Configures Express to trust proxy headers (default: `false`) |
+| `EXPRESS_BODY_PARSER_LIMIT` | Sets the maximum body size for incoming requests (default: `25mb`) |

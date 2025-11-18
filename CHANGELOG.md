@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.4.6] - 2025-11-18
+
+- Add proxy for API dev server through Vite dev server. **Now Kottster app doesn't require to have two ports exposed in development mode.**
+- Added method to configure express app.
+- Added enviroment variables to configure express trust proxy and body parser limit.
+- Fixed compatibility issue with Windows.
+
 ## [3.4.3] - 2025-11-05
 
 - Added support for dark mode.

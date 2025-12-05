@@ -1,4 +1,4 @@
-import { stripIndent } from "@kottster/common";
+import { stripIndent, transformObjectToInnerString } from "@kottster/common";
 
 type TemplateVars = {
   'vite.config.js': undefined;
@@ -8,47 +8,19 @@ type TemplateVars = {
   'app/_server/app.js': undefined;
   'app/_server/server.js': undefined;
   'app/_server/data-sources/postgres/index.js': {
-    connection?: string | {
-      host: string;
-      port: number;
-      user: string;
-      password: string;
-      database: string;
-    };
-    searchPath?: string;
+    connectionDetails?: Record<string, unknown>; 
   };
   'app/_server/data-sources/mysql/index.js': {
-    connection?: string | {
-      host: string;
-      port: number;
-      user: string;
-      password: string;
-      database: string;
-    };
+    connectionDetails?: Record<string, unknown>;
   };
   'app/_server/data-sources/mariadb/index.js': {
-    connection?: string | {
-      host: string;
-      port: number;
-      user: string;
-      password: string;
-      database: string;
-    };
+    connectionDetails?: Record<string, unknown>;
   };
   'app/_server/data-sources/sqlite/index.js': {
-    connection?: {
-      filename: string;
-    };
+    connectionDetails?: Record<string, unknown>;
   };
   'app/_server/data-sources/mssql/index.js': {
-    connection?: string | {
-      host: string;
-      port: number;
-      user: string;
-      password: string;
-      database: string;
-    };
-    searchPath?: string;
+    connectionDetails?: Record<string, unknown>;
   };
   'app/index.html': undefined;
   'app/main.jsx': undefined;
@@ -222,19 +194,18 @@ export class FileTemplateManager {
       import { KnexPgAdapter } from '@kottster/server';
       import knex from 'knex';
       
-      /**${!vars.connection ? ` \n         * Replace the following with your connection options. ` : ''}
+      /**${!vars.connectionDetails ? ` \n         * Replace the following with your connection options. ` : ''}
        * Learn more at https://knexjs.org/guide/#configuration-options
        */
       const client = knex({
-        client: 'pg',
-        connection: ${typeof vars.connection !== 'object' ? `'${vars.connection || 'postgresql://myuser:mypassword@localhost:5432/mydatabase'}',` : `{
-          host: '${vars.connection.host || 'localhost'}',
-          port: ${vars.connection.port ? Number(vars.connection.port) : '5432'},
-          user: '${vars.connection.user || 'myuser'}',
-          password: '${vars.connection.password || 'mypassword'}',
-          database: '${vars.connection.database || 'mydatabase'}',
-        },`}
-        searchPath: ['${vars.searchPath || 'public'}'],
+        client: 'pg', \n${vars.connectionDetails ? transformObjectToInnerString(vars.connectionDetails, '        ') : `        connection: {
+          host: 'localhost',
+          port: 5432,
+          user: 'myuser',
+          password: 'mypassword',
+          database: 'mydatabase',
+        },
+        searchPath: ['public'],`}
       });
 
       export default new KnexPgAdapter(client);
@@ -244,17 +215,16 @@ export class FileTemplateManager {
       import { KnexMysql2Adapter } from '@kottster/server';
       import knex from 'knex';
       
-      /**${!vars.connection ? ` \n         * Replace the following with your connection options. ` : ''}
+      /**${!vars.connectionDetails ? ` \n         * Replace the following with your connection options. ` : ''}
        * Learn more at https://knexjs.org/guide/#configuration-options
        */
       const client = knex({
-        client: 'mysql2',
-        connection: ${typeof vars.connection === 'string' ? `'${vars.connection}',` : `{
-          host: '${vars.connection?.host || 'localhost'}',
-          port: ${vars.connection?.port ? Number(vars.connection.port) : '3306'},
-          user: '${vars.connection?.user || 'myuser'}',
-          password: '${vars.connection?.password || 'mypassword'}',
-          database: '${vars.connection?.database || 'mydatabase'}',
+        client: 'mysql2', \n${vars.connectionDetails ? transformObjectToInnerString(vars.connectionDetails, '        ') : `        connection: {
+          host: 'localhost',
+          port: 3306,
+          user: 'myuser',
+          password: 'mypassword',
+          database: 'mydatabase',
         },`}
       });
 
@@ -265,17 +235,16 @@ export class FileTemplateManager {
       import { KnexMysql2Adapter } from '@kottster/server';
       import knex from 'knex';
       
-      /**${!vars.connection ? ` \n         * Replace the following with your connection options. ` : ''}
+      /**${!vars.connectionDetails ? ` \n         * Replace the following with your connection options. ` : ''}
        * Learn more at https://knexjs.org/guide/#configuration-options
        */
       const client = knex({
-        client: 'mysql2',
-        connection: ${typeof vars.connection === 'string' ? `'${vars.connection}',` : `{
-          host: '${vars.connection?.host || 'localhost'}',
-          port: ${vars.connection?.port ? Number(vars.connection.port) : '3307'},
-          user: '${vars.connection?.user || 'myuser'}',
-          password: '${vars.connection?.password || 'mypassword'}',
-          database: '${vars.connection?.database || 'mydatabase'}',
+        client: 'mysql2', \n${vars.connectionDetails ? transformObjectToInnerString(vars.connectionDetails, '        ') : `        connection: {
+          host: 'localhost',
+          port: 3307,
+          user: 'myuser',
+          password: 'mypassword',
+          database: 'mydatabase',
         },`}
       });
 
@@ -286,19 +255,18 @@ export class FileTemplateManager {
       import { KnexTediousAdapter } from '@kottster/server';
       import knex from 'knex';
       
-      /**
+      /**${!vars.connectionDetails ? ` \n         * Replace the following with your connection options. ` : ''}
        * Learn more at https://knexjs.org/guide/#configuration-options
        */
       const client = knex({
-        client: 'mssql',
-        connection: ${typeof vars.connection !== 'object' ? `'${vars.connection || 'mysql://myuser:mypassword@localhost:3306/mydatabase'}',` : `{
-          host: '${vars.connection.host || 'localhost'}',
-          port: ${vars.connection.port ? Number(vars.connection.port) : '5432'},
-          user: '${vars.connection.user || 'myuser'}',
-          password: '${vars.connection.password || 'mypassword'}',
-          database: '${vars.connection.database || 'mydatabase'}',
-        },`}
-        searchPath: ['${vars.searchPath || 'dbo'}'],
+        client: 'mssql', \n${vars.connectionDetails ? transformObjectToInnerString(vars.connectionDetails, '        ') : `        connection: {
+          host: 'localhost',
+          port: 5432,
+          user: 'myuser',
+          password: 'mypassword',
+          database: 'mydatabase',
+        },
+        searchPath: ['dbo'],`}
       });
 
       export default new KnexTediousAdapter(client);
@@ -308,14 +276,13 @@ export class FileTemplateManager {
       import { KnexBetterSqlite3Adapter } from '@kottster/server';
       import knex from 'knex';
       
-      /**${!vars.connection ? ` \n         * Replace the following with your connection options. ` : ''}
+      /**${!vars.connectionDetails ? ` \n         * Replace the following with your connection options. ` : ''}
        * Learn more at https://knexjs.org/guide/#configuration-options
        */
       const client = knex({
-        client: 'better-sqlite3',
-        connection: {
-          filename: '${vars.connection?.filename || '/path/to/database.sqlite'}',
-        }
+        client: 'better-sqlite3', \n${vars.connectionDetails ? transformObjectToInnerString(vars.connectionDetails, '        ') : `        connection: {
+          filename: '/path/to/database.sqlite',
+        },`}
       });
 
       export default new KnexBetterSqlite3Adapter(client);

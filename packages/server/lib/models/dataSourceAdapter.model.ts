@@ -959,21 +959,24 @@ export abstract class DataSourceAdapter {
 
     // Pre-process the input values
     let values: Record<string, any> = {};
+    const customColumnValues: Record<string, any> = {};
     for (const key in input.values) {
       const columnSchema = tableSchema?.columns.find(column => column.name === key);
       if (columnSchema) {
         values[key] = await this.prepareRecordValueBeforeUpsert(input.values[key], columnSchema);
+      } else {
+        customColumnValues[key] = input.values[key];
       }
     }
 
     // Check if the record can be inserted
-    if (tablePageConfig.validateRecordBeforeInsert && !await tablePageConfig.validateRecordBeforeInsert(values)) {
+    if (tablePageConfig.validateRecordBeforeInsert && !await tablePageConfig.validateRecordBeforeInsert({ ...values, ...customColumnValues })) {
       throw new Error('Record cannot be inserted');
     }
 
     if (tablePageConfig.transformRecordBeforeInsert) {
       // Transform the values before inserting
-      values = await tablePageConfig.transformRecordBeforeInsert(values);
+      values = await tablePageConfig.transformRecordBeforeInsert({ ...values, ...customColumnValues });
     }
 
     const primaryKey = await this.executeUpsertAndGetId(
@@ -982,7 +985,7 @@ export abstract class DataSourceAdapter {
     );
 
     if (primaryKey && tablePageConfig.afterInsert) {
-      await tablePageConfig.afterInsert(primaryKey, values);
+      await tablePageConfig.afterInsert(primaryKey, { ...values, ...customColumnValues });
     }
 
     return {};
@@ -1016,21 +1019,24 @@ export abstract class DataSourceAdapter {
 
     // Pre-process the input values
     let values: Record<string, any> = {};
+    const customColumnValues: Record<string, any> = {};
     for (const key in input.values) {
       const columnSchema = tableSchema?.columns.find(column => column.name === key);
       if (columnSchema) {
         values[key] = await this.prepareRecordValueBeforeUpsert(input.values[key], columnSchema);
+      } else {
+        customColumnValues[key] = input.values[key];
       }
     }
 
     // Check if the record can be updated
-    if (tablePageConfig.validateRecordBeforeUpdate && !await tablePageConfig.validateRecordBeforeUpdate(input.primaryKeyValue, values)) {
+    if (tablePageConfig.validateRecordBeforeUpdate && !await tablePageConfig.validateRecordBeforeUpdate(input.primaryKeyValue, { ...values, ...customColumnValues })) {
       throw new Error('Record cannot be updated');
     }
 
     if (tablePageConfig.transformRecordBeforeUpdate) {
       // Transform the values before updating
-      values = await tablePageConfig.transformRecordBeforeUpdate(input.primaryKeyValue, values);
+      values = await tablePageConfig.transformRecordBeforeUpdate(input.primaryKeyValue, { ...values, ...customColumnValues });
     }
 
     await this.client(table)
@@ -1038,21 +1044,21 @@ export abstract class DataSourceAdapter {
       .update(values);
 
     if (tablePageConfig.afterUpdate) {
-      await tablePageConfig.afterUpdate(input.primaryKeyValue, values);
+      await tablePageConfig.afterUpdate(input.primaryKeyValue, { ...values, ...customColumnValues });
     }
 
     return {};
   }
 
   private async executeUpsertAndGetId(query: Knex.QueryBuilder, primaryKeyColumn: string): Promise<any> {
-  // For MySQL, we use a different approach to get the inserted ID
-  if (this.type === DataSourceAdapterType.knex_mysql2) {
-    const result = await query;
-    return result[0];
-  } else {
-    return await query.returning(primaryKeyColumn);
+    // For MySQL, we use a different approach to get the inserted ID
+    if (this.type === DataSourceAdapterType.knex_mysql2) {
+      const result = await query;
+      return result[0];
+    } else {
+      return await query.returning(primaryKeyColumn);
+    }
   }
-}
 
   /**
    * Delete the table records (Table RPC)

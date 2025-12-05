@@ -160,8 +160,7 @@ export class AddDataSource extends DevAction {
         init: () => {
           const client = knex({
             client: '${dataSourceData.knexClientStr}',
-            connection: ${JSON.stringify(connectionDetails.connection)},
-            ${connectionDetails.searchPath ? `searchPath: ${JSON.stringify(connectionDetails.searchPath)},` : ''}
+            ...(${JSON.stringify(connectionDetails)}),
           });
 
           return new ${adapterClassName}(client);
@@ -183,7 +182,7 @@ export class AddDataSource extends DevAction {
   }
 
   private getCommand(type: DataSourceType, name: string, connectionDetails: InternalApiInput<'addDataSource'>['connectionDetails']) {
-    const dataOption = Buffer.from(JSON.stringify(connectionDetails)).toString('base64');
+    const dataOption = Buffer.from(JSON.stringify({ connectionDetails })).toString('base64');
 
     return `npm run dev:add-data-source ${type} -- --skipInstall --name "${name}" --data "${dataOption}"`;
   }

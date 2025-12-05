@@ -22,6 +22,7 @@ export interface DataSourceTypeInfo {
   name: string;
   icon: string;
   isActive: boolean;
+  bgColor?: string;
 }
 
 enum DataSourceStatus {

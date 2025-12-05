@@ -46,6 +46,7 @@ export * from './utils/readAppSchema';
 export * from './utils/getPageKeyFromPathname';
 export * from './utils/normilizeAppBasePath';
 export * from './utils/readTsConfig';
+export * from './utils/transformObjectToInnerString';
 
 // Constants
 export * from './constants/dataSourceTypes';

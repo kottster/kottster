@@ -1,6 +1,6 @@
 {
   "name": "@kottster/cli",
-  "version": "3.4.6",
+  "version": "3.4.7",
   "description": "CLI for Kottster",
   "main": "dist/index.js",
   "license": "Apache-2.0",
@@ -33,7 +33,7 @@
     "@babel/traverse": "^7.24.1",
     "@babel/types": "^7.24.0",
     "@eslint/js": "^9.2.0",
-    "@kottster/common": "^3.4.6",
+    "@kottster/common": "^3.4.7",
     "@types/babel__traverse": "^7.20.5",
     "@types/cross-spawn": "^6.0.6",
     "@types/dotenv": "^8.2.0",

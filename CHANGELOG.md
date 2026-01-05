@@ -1,5 +1,16 @@
 # Changelog
 
+## [3.4.8] - 2026-01-05
+
+- Fixed a critical privilege escalation vulnerability allowing users to modify restricted fields when updating their own profile. A security advisory and CVE will be published shortly.
+- Replaced `yarn` with `pnpm` in all core packages.
+- Exposed data source table configurations to the client.
+
+## [3.4.7] - 2025-12-05
+
+- Changed the way how data source connected. Improved UI and added TLS preference field for connection settings.
+- Fixed an issue with values from custom columns not being passed to hooks during record creation and update.
+
 ## [3.4.6] - 2025-11-18
 
 - Add proxy for API dev server through Vite dev server. **Now Kottster app doesn't require to have two ports exposed in development mode.**

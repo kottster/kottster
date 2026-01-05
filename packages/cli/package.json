@@ -1,17 +1,16 @@
 {
   "name": "@kottster/cli",
-  "version": "3.4.7",
+  "version": "3.4.8",
   "description": "CLI for Kottster",
   "main": "dist/index.js",
   "license": "Apache-2.0",
   "scripts": {
     "clean": "rimraf ./dist",
-    "build": "npm run clean && tsc",
+    "build": "pnpm run clean && tsc",
     "lint": "npx eslint ./cli",
     "test": "jest --coverage",
     "prepare": "husky",
-    "prepare-npm-package": "yarn add @kottster/common@latest && yarn generate-version && rimraf package-lock.json && npm run update-locks && npm run lint --fix && npm run build",
-    "update-locks": "yarn install && synp --source-file yarn.lock",
+    "prepare-npm-package": "pnpm add @kottster/common@latest && pnpm run generate-version && rimraf package-lock.json && pnpm run lint --fix && pnpm run build",
     "generate-version": "echo \"export const VERSION = '$npm_package_version';\" > cli/version.ts"
   },
   "bin": {
@@ -33,7 +32,7 @@
     "@babel/traverse": "^7.24.1",
     "@babel/types": "^7.24.0",
     "@eslint/js": "^9.2.0",
-    "@kottster/common": "^3.4.7",
+    "@kottster/common": "^3.4.8",
     "@types/babel__traverse": "^7.20.5",
     "@types/cross-spawn": "^6.0.6",
     "@types/dotenv": "^8.2.0",
@@ -72,5 +71,6 @@
   "bugs": {
     "url": "https://github.com/kottster/kottster/issues"
   },
-  "homepage": "https://kottster.app/"
+  "homepage": "https://kottster.app/",
+  "packageManager": "pnpm@9.10.0+sha512.73a29afa36a0d092ece5271de5177ecbf8318d454ecd701343131b8ebc0c1a91c487da46ab77c8e596d6acf1461e3594ced4becedf8921b074fbd8653ed7051c"
 }

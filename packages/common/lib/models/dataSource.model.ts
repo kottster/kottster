@@ -44,7 +44,7 @@ export interface DataSource<T = any> {
 }
 
 // Available on the client side
-export interface PublicDataSource extends Omit<DataSource, 'adapter' | 'tablesConfig'> {
+export interface PublicDataSource extends Omit<DataSource, 'adapter'> {
   name: string;
   adapterType: DataSourceAdapterType;
   databaseSchema?: RelationalDatabaseSchema;

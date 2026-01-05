@@ -27,6 +27,7 @@ export class GetDataSources extends Action {
       name: ds.name,
       status: ds.status,
       adapterType: (ds.adapter as DataSourceAdapter).type,
+      tablesConfig: ds.tablesConfig,
       databaseSchema: databaseSchemas[i] ?? null,
     } as PublicDataSource));
   }

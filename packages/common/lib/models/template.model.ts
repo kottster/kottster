@@ -5,4 +5,5 @@ export interface Template {
   previewUrl?: string;
   requiredDependencies: string[];
   description?: string;
+  availableInCommunityPlan: boolean;
 }

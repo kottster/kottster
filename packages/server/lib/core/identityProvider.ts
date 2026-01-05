@@ -286,6 +286,24 @@ export class IdentityProvider {
     return updatedUser;
   }
 
+  /**
+   * Update user with only non-sensitive fields
+   */
+  async updateUserNonSensitiveFields(
+    userId: IdentityProviderUser['id'], 
+    data: Partial<IdentityProviderUser>
+  ): Promise<IdentityProviderUser> {
+    const { username, email, firstName, lastName, avatarUrl } = data;
+    
+    return this.updateUser(userId, { 
+      username, 
+      email, 
+      firstName, 
+      lastName, 
+      avatarUrl 
+    });
+  }
+
   async updateUserPassword(userId: IdentityProviderUser['id'], newPassword: string, temporaryPassword?: boolean): Promise<void> {
     const existingUser = await this.getUserBy('id', userId);
     if (!existingUser) {

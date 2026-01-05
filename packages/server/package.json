@@ -1,6 +1,6 @@
 {
   "name": "@kottster/server",
-  "version": "3.4.7",
+  "version": "3.4.8",
   "description": "Instant admin panel for your project",
   "keywords": [
     "admin",
@@ -16,18 +16,21 @@
   "license": "Apache-2.0",
   "scripts": {
     "clean": "rimraf ./dist",
-    "build": "npm run clean && tsc",
+    "build": "pnpm run clean && tsc",
     "lint": "npx eslint ./lib",
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --coverage",
     "prepare": "husky",
-    "prepare-npm-package": "yarn add @kottster/common@latest && yarn generate-version && rimraf package-lock.json && npm run update-locks && npm run lint --fix && npm run build",
-    "update-locks": "yarn install && synp --source-file yarn.lock",
+    "prepare-npm-package": "pnpm add @kottster/common@latest && pnpm run generate-version && rimraf package-lock.json && pnpm run lint --fix && pnpm run build",
     "generate-version": "echo \"export const VERSION = '$npm_package_version';\" > lib/version.ts",
     "docs:generate": "typedoc"
   },
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "chalk": "4",
+    "cookie": "^1.1.1",
+    "cross-spawn": "^7.0.6",
+    "dayjs": "^1.11.19",
+    "dotenv": "^17.2.3",
     "exceljs": "^4.4.0",
     "express": "^5.1.0",
     "jose": "^5.8.0",
@@ -40,7 +43,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.2.0",
-    "@kottster/common": "^3.4.7",
+    "@kottster/common": "^3.4.8",
     "@trpc/server": "^10.45.2",
     "@types/dotenv": "^8.2.0",
     "@types/express": "^5.0.2",
@@ -76,5 +79,6 @@
   "bugs": {
     "url": "https://github.com/kottster/kottster/issues"
   },
-  "homepage": "https://kottster.app/"
+  "homepage": "https://kottster.app/",
+  "packageManager": "pnpm@9.10.0+sha512.73a29afa36a0d092ece5271de5177ecbf8318d454ecd701343131b8ebc0c1a91c487da46ab77c8e596d6acf1461e3594ced4becedf8921b074fbd8653ed7051c"
 }

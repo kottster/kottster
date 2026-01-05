@@ -29,6 +29,7 @@ export class GenerateSql extends DevAction {
       dataSource: {
         name: dataSource.name,
         adapterType: (dataSource.adapter as DataSourceAdapter).type,
+        tablesConfig: dataSource.tablesConfig,
         status: dataSource.status,
         type: dataSource.type,
         databaseSchema,

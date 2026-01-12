@@ -3,6 +3,7 @@ import chalk from 'chalk'
 import PackageInstaller from '../services/packageInstaller.service'
 import { KottsterApi } from '../services/kottsterApi.service';
 import { detectPackageManager } from '../utils/detectPackageManager';
+import fs from 'fs';
 
 const corePackages = [
   '@kottster/common',
@@ -21,7 +22,8 @@ const coreProPackages = [
  */
 export async function upgradeKottster (version: string | undefined): Promise<void> {
   const versions: string[] = await KottsterApi.getAvailableVersions();
-  const packageJson = require(`${process.cwd()}/package.json`) as { dependencies: Record<string, string>, devDependencies: Record<string, string> };
+  const packageJson = JSON.parse(fs.readFileSync(`${process.cwd()}/package.json`, 'utf-8'));
+  
   const proPackageInstalled = coreProPackages.some(pkg => 
     (packageJson.dependencies && packageJson.dependencies[pkg]) ||
     (packageJson.devDependencies && packageJson.devDependencies[pkg])

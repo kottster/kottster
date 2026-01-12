@@ -1,5 +1,10 @@
 # Changelog
 
+## [3.5.1] - 2026-01-12
+
+- Removed Enterprise Hub support.
+- Added Professional Plan license check.
+
 ## [3.4.8] - 2026-01-05
 
 - Fixed a critical privilege escalation vulnerability allowing users to modify restricted fields when updating their own profile. A security advisory and CVE will be published shortly.

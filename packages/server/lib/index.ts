@@ -1,3 +1,6 @@
+// Core
+export { ExternalIdentityProvider, ExternalIdentityProviderInput, ExternalIdentityProviderOutput, ExternalIdentityProviderType } from './core/externalIdentityProvider';
+
 // Factories
 export { createApp } from './factories/createApp';
 export { createDataSource } from './factories/createDataSource';

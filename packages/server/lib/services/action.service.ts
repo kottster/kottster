@@ -24,6 +24,7 @@ import { ChangePassword } from "../actions/changePassword.action";
 import { LogOutAllSessions } from "../actions/logOutAllSessions.action";
 import { GenerateSql } from "../actions/generateSql.action";
 import { GetKottsterContext } from "../actions/getKottsterContext.action";
+import { GetStorageValue } from "../actions/getStorageValue.action";
 
 /**
  * Service for working with actions.
@@ -79,6 +80,8 @@ export class ActionService {
         return new LogOutAllSessions(app);
       case 'getKottsterContext':
         return new GetKottsterContext(app);
+      case 'getStorageValue':
+        return new GetStorageValue(app);
       default:
         throw new Error(`Action ${action} not found`);
     }

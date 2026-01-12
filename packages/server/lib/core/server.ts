@@ -71,6 +71,7 @@ export class KottsterServer {
   private setupServiceRoutes() {
     this.expressApp.use(`${this.app.basePath}internal-api`, this.app.getInternalApiRoute());
     this.expressApp.use(`${this.app.basePath}download/:operationId`, this.app.getDownloadRoute());
+    this.expressApp.use(`${this.app.basePath}idp/:type`, this.app.getIdpRoute());
 
     if (this.app.stage === Stage.development) {
       this.expressApp.get(this.app.basePath, (req, res) => {

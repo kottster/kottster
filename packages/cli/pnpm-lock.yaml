@@ -49,8 +49,8 @@ importers:
         specifier: ^9.2.0
         version: 9.39.2
       '@kottster/common':
-        specifier: ^3.4.8
-        version: 3.4.8
+        specifier: link:/Users/arthur/Projects/kottster/kottster/packages/common
+        version: link:../common
       '@types/babel__traverse':
         specifier: ^7.20.5
         version: 7.28.0
@@ -644,9 +644,6 @@ packages:
 
   '@jridgewell/trace-mapping@0.3.9':
     resolution: {integrity: sha512-3Belt6tdc8bPgAtbcmdtNJlirVoTmEb5e2gC94PnkwEW9jI6CAHUeoG85tjWP5WquqfavoMtMwiG4P926ZKKuQ==}
-
-  '@kottster/common@3.4.8':
-    resolution: {integrity: sha512-SC4BuPI7o1VM3OKD+fNzk70at/q6deabtiCIuPXPjPqFxREhdFE58bY57qUw8rTOFYa8A59JqBk27qpLBcHrVQ==}
 
   '@noble/hashes@1.8.0':
     resolution: {integrity: sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==}
@@ -3195,8 +3192,6 @@ snapshots:
     dependencies:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.5
-
-  '@kottster/common@3.4.8': {}
 
   '@noble/hashes@1.8.0': {}
 

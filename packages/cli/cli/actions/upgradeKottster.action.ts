@@ -11,11 +11,21 @@ const corePackages = [
   '@kottster/react'
 ];
 
+const coreProPackages = [
+  '@kottster-pro/server',
+  '@kottster-pro/react',
+];
+
 /**
  * Upgrade Kottster core packages in the current project.
  */
 export async function upgradeKottster (version: string | undefined): Promise<void> {
   const versions: string[] = await KottsterApi.getAvailableVersions();
+  const packageJson = require(`${process.cwd()}/package.json`) as { dependencies: Record<string, string>, devDependencies: Record<string, string> };
+  const proPackageInstalled = coreProPackages.some(pkg => 
+    (packageJson.dependencies && packageJson.dependencies[pkg]) ||
+    (packageJson.devDependencies && packageJson.devDependencies[pkg])
+  );
   
   let selectedVersion: string;
   if (version) {
@@ -50,6 +60,11 @@ export async function upgradeKottster (version: string | undefined): Promise<voi
   corePackages.forEach(pkg => {
     packagesToInstall[pkg] = selectedVersion;
   });
+  if (proPackageInstalled) {
+    coreProPackages.forEach(pkg => {
+      packagesToInstall[pkg] = selectedVersion;
+    });
+  }
 
   const projectDir = process.cwd();
   const packageManager = detectPackageManager(projectDir);
@@ -62,6 +77,11 @@ export async function upgradeKottster (version: string | undefined): Promise<voi
     corePackages.forEach(pkg => {
       console.log(chalk.gray(`  - ${pkg}@${selectedVersion}`));
     });
+    if (proPackageInstalled) {
+      coreProPackages.forEach(pkg => {
+        console.log(chalk.gray(`  - ${pkg}@${selectedVersion}`));
+      });
+    }
   } catch (error) {
     console.log(chalk.red('\n✗ Failed to upgrade packages.'));
     console.error(error);

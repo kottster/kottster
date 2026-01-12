@@ -1,3 +1,7 @@
+export enum ExternalIdentityProviderType {
+  keycloak = 'keycloak',
+}
+
 export enum IdentityProviderUserPermission {
   manage_users = 'manage_users',
   manage_settings = 'manage_settings',

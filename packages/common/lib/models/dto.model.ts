@@ -5,7 +5,7 @@ import { DataSourceType, PublicDataSource } from "./dataSource.model";
 import { Page, PageFileStructure } from "./page.model";
 import { TablePageConfig } from "./tablePage.model";
 import { Template } from "./template.model";
-import { ClientIdentityProviderRole, ClientIdentityProviderUser, ClientIdentityProviderUserWithRoles, IdentityProviderUserPermission, User } from "./idp.model";
+import { ClientIdentityProviderRole, ClientIdentityProviderUser, ClientIdentityProviderUserWithRoles, ExternalIdentityProviderType, IdentityProviderUserPermission, User } from "./idp.model";
 
 export interface InternalApiSchema {
   getUsers: {
@@ -74,11 +74,25 @@ export interface InternalApiSchema {
     result: {
       schema: ClientAppSchema; 
 
+      loginFormEnabled: boolean;
+      externalIdentityProvider?: {
+        type: ExternalIdentityProviderType;
+      };
+
       // Pass only if user is authenticated
       user?: ClientIdentityProviderUserWithRoles;
       roles?: ClientIdentityProviderRole[];
       userPermissions?: (keyof typeof IdentityProviderUserPermission | string)[];
+
+      licensePublicToken?: string;
     };
+  };
+
+  getStorageValue: {
+    input: {
+      key: string;
+    };
+    result: string;
   };
 
   generateSql: {

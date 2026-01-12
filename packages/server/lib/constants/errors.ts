@@ -1,0 +1,1 @@
+export const NO_IDP_ERROR_MSG = 'No identity provider configured for the app.';

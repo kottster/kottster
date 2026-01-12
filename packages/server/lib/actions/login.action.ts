@@ -1,12 +1,17 @@
 import { IdentityProviderUser, IdentityProviderUserWithRoles, InternalApiInput, InternalApiResult } from "@kottster/common";
 import { Action } from "../models/action.model";
 import { Request } from "express";
+import { NO_IDP_ERROR_MSG } from "../constants/errors";
 
 /**
  * Login into an account
  */
 export class Login extends Action {
   public async execute({ usernameOrEmail, password, newPassword }: InternalApiInput<'login'>, _: IdentityProviderUserWithRoles, req?: Request): Promise<InternalApiResult<'login'>> {
+    if (!this.app.identityProvider) {
+      throw new Error(NO_IDP_ERROR_MSG);
+    }
+    
     const rootUser = this.app.identityProvider.getRootUserByUsername(usernameOrEmail);
     const ipAddress = this.getClientIp(req);
 
@@ -65,7 +70,7 @@ export class Login extends Action {
     const ipAddress = this.getClientIp(req);
     const userAgent = this.getBrowserUserAgent(req);
 
-    await this.app.identityProvider.recordLoginAttempt({
+    await this.app.identityProvider!.recordLoginAttempt({
       identifier,
       ipAddress,
       userId,
@@ -78,7 +83,7 @@ export class Login extends Action {
     const ipAddress = this.getClientIp(req);
     const userAgent = this.getBrowserUserAgent(req);
 
-    await this.app.identityProvider.recordLoginAttempt({
+    await this.app.identityProvider!.recordLoginAttempt({
       identifier,
       ipAddress,
       success: false,

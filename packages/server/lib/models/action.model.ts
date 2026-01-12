@@ -19,7 +19,7 @@ export abstract class Action {
       }
 
       for (const permission of this.requiredPermissions) {
-        const hasPermission = await this.app.identityProvider.userHasPermissions(user.id, [permission]);
+        const hasPermission = await this.app.identityProvider?.userHasPermissions(user.id, [permission]);
 
         if (!hasPermission) {
           throw new Error(`This action requires the '${permission}' permission.`);

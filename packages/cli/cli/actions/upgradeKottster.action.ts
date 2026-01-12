@@ -3,6 +3,7 @@ import chalk from 'chalk'
 import PackageInstaller from '../services/packageInstaller.service'
 import { KottsterApi } from '../services/kottsterApi.service';
 import { detectPackageManager } from '../utils/detectPackageManager';
+import fs from 'fs';
 
 const corePackages = [
   '@kottster/common',
@@ -11,11 +12,22 @@ const corePackages = [
   '@kottster/react'
 ];
 
+const coreProPackages = [
+  '@kottster-pro/server',
+  '@kottster-pro/react',
+];
+
 /**
  * Upgrade Kottster core packages in the current project.
  */
 export async function upgradeKottster (version: string | undefined): Promise<void> {
   const versions: string[] = await KottsterApi.getAvailableVersions();
+  const packageJson = JSON.parse(fs.readFileSync(`${process.cwd()}/package.json`, 'utf-8'));
+  
+  const proPackageInstalled = coreProPackages.some(pkg => 
+    (packageJson.dependencies && packageJson.dependencies[pkg]) ||
+    (packageJson.devDependencies && packageJson.devDependencies[pkg])
+  );
   
   let selectedVersion: string;
   if (version) {
@@ -50,6 +62,11 @@ export async function upgradeKottster (version: string | undefined): Promise<voi
   corePackages.forEach(pkg => {
     packagesToInstall[pkg] = selectedVersion;
   });
+  if (proPackageInstalled) {
+    coreProPackages.forEach(pkg => {
+      packagesToInstall[pkg] = selectedVersion;
+    });
+  }
 
   const projectDir = process.cwd();
   const packageManager = detectPackageManager(projectDir);
@@ -62,6 +79,11 @@ export async function upgradeKottster (version: string | undefined): Promise<voi
     corePackages.forEach(pkg => {
       console.log(chalk.gray(`  - ${pkg}@${selectedVersion}`));
     });
+    if (proPackageInstalled) {
+      coreProPackages.forEach(pkg => {
+        console.log(chalk.gray(`  - ${pkg}@${selectedVersion}`));
+      });
+    }
   } catch (error) {
     console.log(chalk.red('\n✗ Failed to upgrade packages.'));
     console.error(error);

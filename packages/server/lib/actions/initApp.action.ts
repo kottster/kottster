@@ -46,7 +46,7 @@ export class InitApp extends DevAction {
 
     // We have to build a jwt secret here because identity provider is not yet initialized when this action runs
     const jwtSecret = `${id}${secretKey}${jwtSecretSalt}`;
-    const rootUserJwtToken = await this.app.identityProvider.generateTokenForRootUser(86400, jwtSecret);
+    const rootUserJwtToken = await this.app.identityProvider?.generateTokenForRootUser(86400, jwtSecret) ?? '';
 
     return {
       rootUserJwtToken,

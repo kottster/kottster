@@ -1,4 +1,4 @@
-import { IdentityProviderUser, IdentityProviderRole, IdentityProviderUserPermission, ROOT_USER_ID, ClientIdentityProviderUser, IdentityProviderLoginAttempt, generateRandomString, Stage, IdentityProviderUserWithRoles, ClientIdentityProviderUserWithRoles } from "@kottster/common";
+import { IdentityProviderUser, IdentityProviderRole, IdentityProviderUserPermission, ROOT_USER_ID, IdentityProviderLoginAttempt, generateRandomString, Stage, IdentityProviderUserWithRoles } from "@kottster/common";
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { SignJWT, jwtVerify } from 'jose';
@@ -102,38 +102,6 @@ export class IdentityProvider {
       },
       useNullAsDefault: true
     });
-  }
-
-  /**
-   * Prepare a user object for sending to the client by removing sensitive fields
-   * @param user - The user object to prepare
-   * @returns The prepared user object
-   */
-  public prepareUserForClient<T extends IdentityProviderUser | IdentityProviderUserWithRoles>(
-    user: T
-  ): T extends IdentityProviderUserWithRoles 
-    ? ClientIdentityProviderUserWithRoles 
-    : ClientIdentityProviderUser {
-    const sanitized = { ...user };
-    
-    sanitized.passwordHash = '';
-    sanitized.twoFactorSecret = undefined;
-    sanitized.jwtTokenCheck = undefined;
-
-    if ('roles' in sanitized && Array.isArray(sanitized.roles)) {
-      sanitized.roles = sanitized.roles.map(role => this.app.identityProvider.prepareRoleForClient(role));
-    }
-
-    return sanitized as any;
-  }
-
-  /**
-   * Prepare a role object for sending to the client by removing sensitive fields
-   * @param role - The role object to prepare
-   * @returns The prepared role object
-   */
-  public prepareRoleForClient(role: IdentityProviderRole): IdentityProviderRole {
-    return role; 
   }
 
   get jwtSecret(): string | undefined {

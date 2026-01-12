@@ -8,7 +8,7 @@ import path from "path";
 import fs from "fs";
 
 /**
- * Verify and add data source to the project
+ * Add data source to the project
  */
 export class AddDataSource extends DevAction {
   private readonly dbDataStartMarker = '__DB_DATA_START__';

@@ -4,7 +4,6 @@ import { AppSchema, checkTsUsage, DataSource, Stage, Page, TablePageConfig, Dash
 import { DataSourceRegistry } from './dataSourceRegistry';
 import { ActionService } from '../services/action.service';
 import { DataSourceAdapter } from '../models/dataSourceAdapter.model';
-import { parse as parseCookie } from 'cookie';
 import { Request, Response, NextFunction } from 'express';
 import { createServer } from '../factories/createServer';
 import { IdentityProvider, PostAuthMiddleware } from './identityProvider';
@@ -13,6 +12,9 @@ import { FileReader } from '../services/fileReader.service';
 import { Exporter } from '../services/exporter.service';
 import dayjs from 'dayjs';
 import type { Express } from 'express';
+import { ExternalIdentityProvider } from './externalIdentityProvider';
+import { storageService } from '../services/storage.service';
+import { VERSION } from '../version';
 
 type RequestHandler = (req: Request, res: Response, next: NextFunction) => void;
 
@@ -31,7 +33,7 @@ export interface KottsterAppOptions {
   /**
    * The identity provider configuration
    */
-  identityProvider?: IdentityProvider;
+  identityProvider?: IdentityProvider | ExternalIdentityProvider;
 
   /** 
    * Custom validation middleware.
@@ -39,6 +41,11 @@ export interface KottsterAppOptions {
    * @example https://kottster.app/docs/security/authentication#custom-validation-middleware 
    */
   postAuthMiddleware?: PostAuthMiddleware;
+
+  /**
+   * Activates the Professional license features.
+   */
+  professional?: Function;
 
   /** 
    * Enable read-only mode 
@@ -92,7 +99,14 @@ export class KottsterApp {
   public readonly stage: Stage = process.env.KOTTSTER_APP_STAGE === Stage.development ? Stage.development : Stage.production;
   public readonly basePath: string = '/';
   private dataSources: DataSource[] = [];
-  public identityProvider: IdentityProvider;
+
+  public license?: string;
+  public licenseActivationObj?: Record<string, any>;
+  public licenseData?: Record<string, any>;
+
+  public identityProvider?: IdentityProvider;
+  public externalIdentityProvider?: ExternalIdentityProvider;
+
   public exporter: Exporter;
   public schema: AppSchema;
   
@@ -112,6 +126,10 @@ export class KottsterApp {
   }
 
   public extendProcedureContext: ExtendProcedureContextFunction;
+
+  public getServerPackageVersion() {
+    return VERSION;
+  }
 
   public getSecretKey() {
     return `${this.secretKey}`;
@@ -134,18 +152,33 @@ export class KottsterApp {
     this.readOnlyMode = options.__readOnlyMode ?? false;
     this.configureExpressApp = options.configureExpressApp;
     
+    // Set license
+    if (options.professional) {
+      const activationObj = options.professional?.(this);
+      this.licenseActivationObj = activationObj;
+      this.license = activationObj['license']; 
+      this.licenseData = activationObj['dl'](this.license);
+    }
+    
     // Set base path
     const basePath = appSchema.main.basePath;
     if (basePath) {
       this.basePath = normalizeAppBasePath(basePath);
     }
 
-    // Set identity provider
+    // Set identity providers
     if (!options.identityProvider) {
       throw new Error('Your KottsterApp must be configured with an identity provider. See https://kottster.app/docs/upgrade-to-v3-2 for more details.');
+    };
+    if (options.identityProvider?.['external']) {
+      if (!this.licenseData?.['features']?.includes('sso')) {
+        throw new Error('Professional license is required to use external identity providers.');
+      }
+
+      this.externalIdentityProvider = options.identityProvider as ExternalIdentityProvider;
     } else {
-      this.identityProvider = options.identityProvider;
-      this.identityProvider.setApp(this);
+      this.identityProvider = options.identityProvider as IdentityProvider;
+      this.identityProvider!.setApp(this);
     }
 
     // Set up exporter
@@ -153,7 +186,29 @@ export class KottsterApp {
   }
 
   async initialize() {
-    await this.identityProvider.initialize();
+    await this.identityProvider?.initialize();
+
+    // Load license data
+    if (this.licenseActivationObj && this.stage === Stage.production) {
+      const res = await fetch('https://api.kottster.app/v3/apps/license/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          license: this.license,
+        }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Invalid license`);
+      }
+
+      const data = await res.json();
+      if (JSON.stringify(data) !== JSON.stringify(this.licenseData)) {
+        throw new Error('Invalid license');
+      }      
+    }
   }
 
   /**
@@ -225,6 +280,74 @@ export class KottsterApp {
         return;
       }
     }
+  }
+
+  public getIdpRoute() {
+    return async (req: Request, res: Response) => {
+      try {
+        if (!this.externalIdentityProvider) {
+          res.status(400).json({ error: 'No connected identity provider configured' });
+          return;
+        }
+
+        if (req.method !== 'GET') {
+          res.status(405).json({ error: 'Method Not Allowed' });
+          return;
+        }
+
+        const type = req.params.type;
+        if (!type) {
+          res.status(400).json({ error: 'Bad Request' });
+          return;
+        }
+
+        switch (type) {
+          case 'callback': {
+            const searchParamsStr = req.url.split('?')[1] || '';
+            const searchParams = new URLSearchParams(searchParamsStr);
+            const code = searchParams.get('code') || '';
+            const stateSearchParam = searchParams.get('state') || '';
+            if (!code) {
+              res.status(400).json({ error: 'Bad Request: code is required' });
+              return;
+            }
+
+            const { accessToken } = await this.externalIdentityProvider.exchangeCodeForToken({
+              code,
+              stateSearchParam,
+            });
+            const storageKey = storageService.save(accessToken);
+            const url = `${this.basePath}auth?storageKeyForAccessToken=${storageKey}`;
+
+            res.redirect(url);
+            return;
+          };
+          case 'login': {
+            const redirectUri = req.query.redirectUri as string || '';
+            if (!redirectUri) {
+              res.status(400).json({ error: 'Bad Request: redirectUri is required' });
+              return;
+            }
+
+            const { redirectUri: finalUrl } = await this.externalIdentityProvider.getLoginUrl({
+              redirectUri,
+            });
+
+            res.redirect(finalUrl);
+            return;
+          }
+          default: {
+            res.status(404).json({ error: 'Not Found' });
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('IdP route error:', error);
+        if (!res.headersSent) {
+          res.status(500).json({ error: 'IdP route failed' });
+        }
+      }
+    };
   }
 
   public getDownloadRoute() {
@@ -304,7 +427,7 @@ export class KottsterApp {
         throw new Error('Action not found in request');
       }
 
-      if (!isTokenValid && action && !(['getApp', 'initApp', 'login'] as (keyof InternalApiSchema)[]).includes(action)) {
+      if (!isTokenValid && action && !(['getApp', 'initApp', 'login', 'getStorageValue'] as (keyof InternalApiSchema)[]).includes(action)) {
         throw new UnauthorizedError(`Invalid JWT token: ${invalidTokenErrorMessage}`);
       }
 
@@ -690,12 +813,7 @@ export class KottsterApp {
         return this.customEnsureValidToken(request);
       }
 
-      let token = request.get('authorization')?.replace('Bearer ', '');
-      if (!token) {
-        const cookieHeader = request.get('Cookie');
-        const cookieData = parseCookie(cookieHeader ?? '');
-        token = cookieData.jwtToken;
-      }
+      const token = request.get('authorization')?.replace('Bearer ', '');
       if (!token) {
         return {
           isTokenValid: false,
@@ -703,23 +821,34 @@ export class KottsterApp {
           invalidTokenErrorMessage: 'Invalid JWT token: token not passed'
         };
       }
+      
+      if (this.externalIdentityProvider) {
+        const { user } = await this.externalIdentityProvider.getUserData({ accessToken: token });
 
-      const user = await this.identityProvider.verifyTokenAndGetUser(token);
-      const userRoles = await this.identityProvider.getUserRoles(user.id);
-      const extendedUser: IdentityProviderUserWithRoles = {
-        ...user,
-        roles: userRoles,
-      };
+        return {
+          isTokenValid: true,
+          user,
+        };
+      } else if (this.identityProvider) {
+        const user = await this.identityProvider.verifyTokenAndGetUser(token);
+        const userRoles = await this.identityProvider.getUserRoles(user.id);
+        const extendedUser: IdentityProviderUserWithRoles = {
+          ...user,
+          roles: userRoles,
+        };
 
-      // If a post-auth middleware is provided, call it
-      if (this.postAuthMiddleware) {
-        await this.postAuthMiddleware(extendedUser, request);
+        // If a post-auth middleware is provided, call it
+        if (this.postAuthMiddleware) {
+          await this.postAuthMiddleware(extendedUser, request);
+        }
+
+        return {
+          isTokenValid: true,
+          user: extendedUser,
+        };
+      } else {
+        throw new Error('No identity provider configured for the app');
       }
-
-      return {
-        isTokenValid: true,
-        user: extendedUser,
-      };
     } catch (error) {
       return {
         isTokenValid: false,

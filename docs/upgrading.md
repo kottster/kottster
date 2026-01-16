@@ -23,25 +23,35 @@ Example output:
 @kottster/react@1.2.3
 ```
 
-## Upgrade to the latest version
+## Upgrade
 
-Run the following command in your project root:
+### Recommended: use the upgrade script
+
+Run the upgrade script and select the version you want to upgrade to:
+
+```bash
+npm run dev:upgrade-kottster
+```
+
+This is the safest way to upgrade because it upgrades all core packages (`@kottster/common`, `@kottster/cli`, `@kottster/server`, and `@kottster/react`) to the same selected version, ensuring they stay compatible.
+
+### Manual upgrade (advanced)
+
+If you prefer to upgrade manually, make sure all core packages end up on the same version.
+
+Upgrade to the latest version:
 
 ```bash
 npm install @kottster/common@latest @kottster/cli@latest @kottster/server@latest @kottster/react@latest --save
 ```
 
-This will install the latest stable versions of all core packages.
-
-## Upgrade to a specific version
-
-If you want to lock to a specific version (for example, `1.2.3`):
+Upgrade to a specific version (example: `1.2.3`):
 
 ```bash
 npm install @kottster/common@1.2.3 @kottster/cli@1.2.3 @kottster/server@1.2.3 @kottster/react@1.2.3 --save
 ```
 
-You can also upgrade just a single package:
+Upgrade just a single package:
 
 ```bash
 npm install @kottster/react@latest --save

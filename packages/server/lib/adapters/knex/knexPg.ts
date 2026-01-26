@@ -291,19 +291,24 @@ export class KnexPg extends DataSourceAdapter {
       ),
       fk_info AS (
         SELECT
-          conrelid::regclass::text AS table_name,
-          a.attname AS column_name,
-          confrelid::regclass::text AS foreign_table_name,
-          af.attname AS foreign_column_name
+            cl.relname AS table_name,
+            a.attname AS column_name,
+            clf.relname AS foreign_table_name,
+            af.attname AS foreign_column_name
         FROM
-          pg_constraint c
-          JOIN pg_namespace n ON n.oid = c.connamespace
-          JOIN LATERAL unnest(c.conkey, c.confkey) WITH ORDINALITY AS u(attnum, fattnum, ord) ON true
-          JOIN pg_attribute a ON a.attrelid = c.conrelid AND a.attnum = u.attnum
-          JOIN pg_attribute af ON af.attrelid = c.confrelid AND af.attnum = u.fattnum
+            pg_constraint c
+            JOIN pg_namespace n ON n.oid = c.connamespace
+            JOIN pg_class cl ON cl.oid = c.conrelid
+            JOIN pg_class clf ON clf.oid = c.confrelid
+            JOIN LATERAL unnest(c.conkey, c.confkey)
+            WITH ORDINALITY AS u(attnum, fattnum, ord) ON true
+            JOIN pg_attribute a
+            ON a.attrelid = c.conrelid AND a.attnum = u.attnum
+            JOIN pg_attribute af
+            ON af.attrelid = c.confrelid AND af.attnum = u.fattnum
         WHERE
-          c.contype = 'f'
-          AND n.nspname = COALESCE(?, current_schema())
+            c.contype = 'f'
+            AND n.nspname = COALESCE(?, current_schema())
       )
       SELECT
         t.table_name,
